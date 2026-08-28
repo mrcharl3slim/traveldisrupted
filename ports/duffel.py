@@ -125,17 +125,36 @@ def offers(origin: str, destination: str, day: datetime, after: datetime | None 
         if arr <= dep:
             continue        # a timezone we could not resolve; drop rather than invent
 
+        conditions = o.get("conditions") or {}
+        refund = conditions.get("refund_before_departure") or {}
+        change = conditions.get("change_before_departure") or {}
+        refundable = bool(refund.get("allowed"))
+        change_fee = None
+        if change.get("allowed"):
+            raw_fee = change.get("penalty_amount")
+            # A change that is allowed with no stated penalty is free; one with a
+            # penalty in another currency goes through the same conversion as the
+            # fare, because a EUR total with a CHF fee inside it is not a total.
+            fee = float(raw_fee) if raw_fee not in (None, "") else 0.0
+            change_fee = _to_trip_currency(fee, change.get("penalty_currency") or "")[0]
+
         stops = len(segments) - 1
         num = f"{o['owner']['iata_code']} {first['operating_carrier_flight_number']}"
         price, source, quoted = _to_trip_currency(
             float(o["total_amount"]), o.get("total_currency", ""))
         out.append(Offer(
-            id=o["id"][:12], mode="flight", carrier=o["owner"]["name"],
+            # The full id, never a prefix. Duffel ids all start "off_0000",
+            # so truncating to twelve characters made every offer look like
+            # every other one — and since the booking's ticket group is derived
+            # from it, two separately purchased flights became one contract.
+            # That is the exact fiction the whole scenario exists to disprove.
+            id=o["id"], mode="flight", carrier=o["owner"]["name"],
             label=f"{num} - {start['iata_code']} to {end['iata_code']}"
                   + (f" via {segments[0]['destination']['iata_code']}" if stops == 1
                      else f", {stops} stops" if stops else ""),
             depart=dep, arrive=arr,
             origin=start["iata_code"], destination=end["iata_code"],
             price=price, currency=TRIP_CURRENCY,
-            price_source=source, quoted=quoted, book_url=""))
+            price_source=source, quoted=quoted, book_url="",
+            refundable=refundable, change_fee=change_fee))
     return out

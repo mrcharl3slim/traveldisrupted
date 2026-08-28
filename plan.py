@@ -98,6 +98,11 @@ class Plan:
     delivered: set[str] = field(default_factory=set)
     wasted_ids: set[str] = field(default_factory=set)
     wasted: float = 0.0
+    #: Value that survives only because somebody can be told. Kept out of
+    #: ``total_damage`` deliberately: it is not lost, and pretending otherwise
+    #: would let every plan claim credit for rescuing it.
+    at_risk_ids: set[str] = field(default_factory=set)
+    at_risk: float = 0.0
     tightest: tuple[str, timedelta] | None = None
 
     @property
@@ -158,6 +163,42 @@ def _can_board(disruption: Disruption, trip: Trip, offer) -> bool:
     return at is not None and at <= offer.depart
 
 
+def _property(b: Booking) -> str:
+    """The name on the door, not the channel it was booked through.
+
+    "Tell LiteAPI you are not arriving" is an instruction nobody can follow.
+    The provider field is the booking channel and belongs in the lane table; the
+    title carries the property, which is who actually has to hear from you.
+    """
+    return b.title.split(" - ")[0].strip() or b.provider
+
+
+def _designator(label: str) -> str:
+    """"JU 0333 - ZRH to MXP via BEG" -> "JU 0333"."""
+    return label.split(" - ")[0].strip().upper()
+
+
+def _is_the_disrupted_flight(b: Booking, offer) -> bool:
+    """Is this "replacement" the very flight that just failed?
+
+    It has to be asked because the cancellation is ours, not the airline's. A
+    real cancellation empties the seats out of inventory and no search returns
+    them. A traveller pressing "my flight was cancelled" tells Duffel nothing,
+    so the search comes straight back with the same JU 0333 at two different
+    fares -- and the engine, which has no idea it is looking at the flight it
+    was asked to escape, prices it, ranks it second, and recommends re-buying a
+    seat on an aircraft that is not going.
+
+    Same designator, same airports, same minute. No two distinct flights share
+    all three.
+    """
+    if b.kind is not Kind.FLIGHT or offer is None:
+        return False
+    return ((b.origin, b.destination) == (offer.origin, offer.destination)
+            and b.start == offer.depart
+            and _designator(b.title) == _designator(offer.label))
+
+
 def build(trip: Trip, disruption: Disruption, now: datetime,
           baseline: Impact, offer) -> Plan | None:
     """One candidate, priced.
@@ -174,20 +215,43 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
         # inaction look thirty euros better than the trip as booked -- the
         # baseline was quietly rescuing itself. Waste here is taken straight
         # from the impact graph so the two modules cannot drift apart.
+        # The one thing inaction still has to do. The ledger calls this value
+        # "held by a phone call" -- it is only out of the damage column because
+        # somebody makes that call -- so a Do nothing plan with an empty action
+        # list was claiming a rescue it had not asked anyone to perform. Free,
+        # reversible, and available whether or not you rebook, so it moves no
+        # number and changes no ranking: it just stops the page contradicting
+        # itself.
+        held = [n for n in baseline.nodes
+                if n.severity is Severity.AT_RISK and n.booking.mitigation]
         return Plan(
-            id="noop", name="Do nothing", tagline="", actions=[],
+            id="noop", name="Do nothing", tagline="",
+            actions=[Action(
+                verb="notify", booking_id=n.id,
+                lane=lane_for(n.booking.provider, "notify"),
+                label=f"Call {_property(n.booking)} before "
+                      f"{n.booking.must_arrive_by:%H:%M}",
+                note=n.booking.mitigation or "") for n in held],
             arrives_at=None, arrives_where=None,
             wasted_ids={n.id for n in baseline.broken},
             wasted=baseline.do_nothing_cost,
+            at_risk_ids={n.id for n in baseline.nodes
+                         if n.severity is Severity.AT_RISK},
+            at_risk=baseline.at_risk_value,
         )
 
     if not _can_board(disruption, trip, offer):
         return None          # unreachable: not a worse plan, not a plan at all
 
+    if _is_the_disrupted_flight(trip.by_id(disruption.booking_id), offer):
+        return None          # the flight that failed is not its own replacement
+
     actions: list[Action] = []
     delivered: set[str] = set()
     wasted_ids: set[str] = set()
     wasted = 0.0
+    at_risk_ids: set[str] = set()
+    at_risk = 0.0
     tightest: tuple[str, timedelta] | None = None
 
     broken = [n for n in baseline.nodes
@@ -237,9 +301,28 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
             if ok:
                 actions.append(Action(
                     verb="notify", booking_id=b.id, lane=lane_for(b.provider, "notify"),
-                    label=f"Email the property about a late check-in",
+                    label=f"Email {_property(b)} about a late check-in",
                     note=b.mitigation or ""))
                 delivered.add(b.id)
+            elif b.mitigation:
+                # Unreachable tonight, and still not destroyed: the call that
+                # holds the room can be made from anywhere, including from the
+                # airport the traveller never left.
+                #
+                # This branch used to charge the full rate. Doing nothing did
+                # not, because its waste comes from the impact graph, which had
+                # already ruled the room defusable -- so inaction got the hotel
+                # free while every alternative paid EUR 443 for it, and the
+                # ranking was comparing two different ledgers. Whatever the
+                # right answer is, it cannot depend on which branch of this
+                # function computed it.
+                actions.append(Action(
+                    verb="notify", booking_id=b.id, lane=lane_for(b.provider, "notify"),
+                    label=f"Call {_property(b)} before {b.must_arrive_by:%H:%M} — "
+                          "this plan does not get you there tonight",
+                    note=b.mitigation,
+                    deadline=b.must_arrive_by))
+                at_risk_ids.add(b.id); at_risk += b.price
             else:
                 wasted_ids.add(b.id); wasted += b.price
             continue
@@ -283,6 +366,7 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
         arrives_at=offer.arrive if offer else None,
         arrives_where=offer.destination if offer else None,
         delivered=delivered, wasted_ids=wasted_ids, wasted=wasted,
+        at_risk_ids=at_risk_ids, at_risk=at_risk,
         tightest=tightest,
     )
 
@@ -340,15 +424,20 @@ def recovery_gap(trip: Trip, disruption: Disruption,
     baseline = propagate(trip, disruption, now or disruption.new_end)
     stranded = [
         n for n in baseline.nodes
-        if n.severity is Severity.BROKEN
+        # At risk counts as stranded. A hotel the traveller can still reach by
+        # getting there is exactly what the search is for; looking only at what
+        # is already broken means cancelling the last leg of a journey finds
+        # nothing to fix while the traveller sits in the wrong country.
+        if n.severity in (Severity.BROKEN, Severity.AT_RISK)
         and n.booking.where and n.booking.where != standing
-        # Only what is still ahead. Without this, cancelling the second leg
-        # proposes flying back to the first — a booking already taken, whose
-        # deadline is in the past and whose location is behind the traveller.
-        and n.booking.start >= affected.start
-        # And only what is still catchable. The earliest broken deadline is
-        # usually the one the disruption has already blown past; searching for a
-        # flight that must land before it departs returns nothing, slowly.
+        # Still ahead, measured by DEADLINE rather than start time. Start time
+        # looked equivalent and is not: hotel check-in opens at 14:00 while the
+        # room is held until 22:00, so a flight cancelled at 15:10 made the
+        # hotel look like something already behind the traveller — and the one
+        # place they most need to reach dropped out of the search.
+        #
+        # A booking genuinely behind them has a deadline in the past, so this
+        # one test does both jobs.
         and n.booking.must_arrive_by > disruption.new_end
     ]
     if not stranded:

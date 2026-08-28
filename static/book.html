@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Downstream — build it, then break it</title>
+<style>
+  :root{
+    --bg:#0b0f14; --card:#141b23; --edge:#232d38; --ink:#e8eef4; --dim:#93a1b0; --faint:#5d6b7a;
+    --ok:#3fb950; --bad:#f85149; --warn:#e3b341; --key:#58a6ff;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  .wrap{max-width:980px;margin:0 auto;padding:26px 22px 100px}
+  header{display:flex;justify-content:space-between;align-items:baseline;gap:20px;flex-wrap:wrap}
+  h1{font-size:20px;margin:0;letter-spacing:-.01em}
+  h2{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--faint);
+     margin:0 0 16px;font-weight:600}
+  .sub{color:var(--dim);font-size:13px}
+  a{color:var(--key);text-decoration:none}
+  section{background:var(--card);border:1px solid var(--edge);border-radius:11px;
+          padding:22px;margin-top:18px}
+  section[hidden]{display:none}
+
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+  label{display:block;font:11px var(--mono);letter-spacing:.1em;text-transform:uppercase;
+        color:var(--faint);margin-bottom:6px}
+  input{background:#0e151d;border:1px solid var(--edge);border-radius:8px;color:var(--ink);
+        font:inherit;font-size:14px;padding:9px 11px;width:110px}
+  input.wide{width:150px}
+  button{font:inherit}
+  .btn{background:#17222f;border:1px solid #2b3c4f;color:var(--ink);font:inherit;font-size:14px;
+       padding:9px 16px;border-radius:8px;cursor:pointer}
+  .btn:hover{background:#1d2b3b}
+  .btn.key{background:#173254;border-color:#2b5384}
+  .btn.bad{background:#2a1618;border-color:#4d2326;color:#ffb4ae}
+  .btn:disabled{opacity:.45;cursor:default}
+
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{text-align:left;font:11px var(--mono);letter-spacing:.1em;text-transform:uppercase;
+     color:var(--faint);font-weight:500;padding:0 10px 10px;border-bottom:1px solid var(--edge)}
+  th.n,td.n{text-align:right}
+  td{padding:11px 10px;border-bottom:1px solid #1b242e;vertical-align:top}
+  tr.pick{cursor:pointer}
+  tr.pick:hover{background:#18212b}
+  tr.sel{background:#12202f}
+  tr.sel td:first-child{border-left:2px solid var(--key)}
+  tr.best td:first-child{border-left:2px solid var(--key)}
+  .m{font:11.5px var(--mono);color:var(--faint)}
+  .neg{color:var(--ok)} .pos{color:var(--dim)}
+  .star{color:var(--warn)}
+
+  .ledger{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:18px}
+  .fig{font:650 32px/1 var(--mono);letter-spacing:-.02em}
+  .fig.bad{color:var(--bad)} .fig.ok{color:var(--ok)} .fig.warn{color:var(--warn)}
+  .figlabel{font:11px var(--mono);letter-spacing:.12em;text-transform:uppercase;
+            color:var(--faint);margin-bottom:8px}
+  .figfoot{font-size:12.5px;color:var(--dim);margin-top:7px}
+
+  .leg{display:flex;justify-content:space-between;align-items:center;gap:14px;
+       border:1px solid var(--edge);border-left:3px solid var(--edge);border-radius:8px;
+       padding:12px 14px;background:#101821;margin-bottom:8px}
+  .leg.flight{border-left-color:var(--key)}
+  .leg.lodging{border-left-color:var(--ok)}
+  .leg.gone{border-left-color:var(--bad);opacity:.6}
+  .leg .t{font-size:14px}
+
+  .lane{margin-top:18px}
+  .lane h3{font-size:14px;margin:0 0 4px}
+  .lane .who{font-size:12.5px;color:var(--faint);margin-bottom:10px}
+  .act{border:1px solid var(--edge);border-radius:8px;padding:12px 14px;margin-bottom:8px;
+       background:#101821}
+  .act .n{font-size:12.5px;color:var(--dim);margin-top:5px}
+  .act .cash{font:12px var(--mono);color:var(--faint);margin-top:5px}
+  .badge{display:inline-block;font:10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;
+         padding:2px 8px;border-radius:999px;border:1px solid var(--edge);color:var(--faint);margin-left:8px}
+  .badge.est{color:var(--warn);border-color:#3d3016}
+  .banner{font:12px var(--mono);color:var(--key);background:#101a27;border:1px solid #1d3350;
+          border-radius:8px;padding:11px 14px;margin-top:14px;line-height:1.7}
+  .banner.bad{color:#ffb4ae;background:#1b1113;border-color:#4d2326}
+  .note{font-size:12.5px;color:var(--dim);margin-top:14px;line-height:1.6}
+  .err{color:var(--bad)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Downstream</h1>
+      <div class="sub">Build a trip from live inventory. Then cancel a leg and watch what it costs.</div>
+    </div>
+    <div class="sub"><a href="/">the scripted delay demo →</a></div>
+  </header>
+
+  <div id="ports" class="banner"></div>
+
+  <section>
+    <h2>1 · Search</h2>
+    <div class="row">
+      <div><label>Leg 1</label><input id="a-from" value="SIN" class="wide"></div>
+      <div><label>to</label><input id="a-to" value="ZRH"></div>
+      <div><label>Leg 2</label><input id="b-from" value="ZRH"></div>
+      <div><label>to</label><input id="b-to" value="MXP"></div>
+      <div><label>City</label><input id="city" value="Milan" class="wide"></div>
+      <div><label>Depart</label><input id="on" type="date" class="wide"></div>
+      <div><label>Nights</label><input id="nights" type="number" value="2" min="1" max="14"></div>
+      <div><button class="btn key" id="go">Search</button></div>
+    </div>
+    <div class="note">Real schedules and real fares, from accounts that cannot take money.
+      The hard part was never the card — it was knowing what to buy and by when.</div>
+  </section>
+
+  <section id="s-in" hidden>
+    <h2>2 · Outbound</h2>
+    <table><thead><tr><th>Flight</th><th>Departs</th><th>Arrives</th><th class="n">Fare</th></tr></thead>
+      <tbody id="t-in"></tbody></table>
+  </section>
+
+  <section id="s-on" hidden>
+    <h2>3 · Onward <span id="on-note" class="m"></span></h2>
+    <table><thead><tr><th>Flight</th><th>Departs</th><th>Arrives</th><th class="n">Fare</th></tr></thead>
+      <tbody id="t-on"></tbody></table>
+  </section>
+
+  <section id="s-hotel" hidden>
+    <h2>4 · Where you sleep</h2>
+    <table><thead><tr><th>Hotel</th><th>Check-in</th><th>Room held until</th><th class="n">Total</th></tr></thead>
+      <tbody id="t-hotel"></tbody></table>
+  </section>
+
+  <section id="s-trip" hidden>
+    <h2>5 · Your trip <span id="trip-total" class="m"></span></h2>
+    <div id="trip-problems"></div>
+    <div id="trip-legs"></div>
+    <div class="note">Two flights bought in two searches are two contracts. Nobody owes you
+      the connection — and nothing in the engine had to be told that.</div>
+  </section>
+
+  <section id="s-out" hidden>
+    <h2>6 · What the cancellation costs</h2>
+    <div id="signal" class="note" style="margin-top:0;font-size:15px;color:var(--ink)"></div>
+    <div class="ledger" style="margin-top:18px">
+      <div><div class="figlabel">Destroyed</div><div class="fig bad" id="f-dead">–</div>
+        <div class="figfoot" id="f-dead-foot"></div></div>
+      <div><div class="figlabel">Held by a phone call</div><div class="fig warn" id="f-risk">–</div>
+        <div class="figfoot">not lost, and not safe either</div></div>
+      <div><div class="figlabel">Acting is worth</div><div class="fig ok" id="f-saved">–</div>
+        <div class="figfoot" id="f-saved-foot"></div></div>
+    </div>
+    <div id="gap" class="banner"></div>
+    <table style="margin-top:18px"><thead><tr>
+      <th>Option</th><th class="n">Tonight</th><th class="n">Total damage</th><th>Arrives</th>
+    </tr></thead><tbody id="t-plans"></tbody></table>
+    <div class="note" id="plan-note"></div>
+  </section>
+
+  <section id="s-hand" hidden>
+    <h2>7 · Who can actually do each thing</h2>
+    <div id="handoff"></div>
+  </section>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const eur = n => (n < 0 ? '−' : '') + '€' + Math.abs(Math.round(n)).toLocaleString();
+// Times arrive pre-formatted in the trip's own timezone. Formatting them here
+// renders a Zurich arrival in whatever zone this laptop is set to, which is a
+// different flight as far as the traveller is concerned.
+const at = w => w ? w.d : '—';
+const hm = w => w ? w.t : '—';
+
+const LANES = {
+  auto: ['Downstream handles it', 'no payment, no authorisation, nobody to phone'],
+  tap:  ['One tap, you authorise', 'a deep link into the provider’s own checkout'],
+  call: ['You will have to call', 'no consumer API exists for this — saying so beats pretending'],
+};
+
+let IN = [], ON = [], HOTELS = [], PICK = {in:null, on:null, hotel:null};
+let TRIP = null, OUT = null, PICKED = null;
+
+// The recordings were made three weeks out, and replay shifts them to whatever
+// date is asked for. Defaulting to that same distance keeps the demo on live
+// data rather than on a shifted copy of it.
+const soon = new Date(Date.now() + 21 * 86400e3);
+$('#on').value = soon.toISOString().slice(0, 10);
+
+const iso = (d, plus) => {
+  const t = new Date(d + 'T12:00:00Z');
+  t.setUTCDate(t.getUTCDate() + plus);
+  return t.toISOString().slice(0, 10);
+};
+
+async function api(path, body){
+  const r = await fetch(path, body
+    ? {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(body)}
+    : undefined);
+  const j = await r.json().catch(() => ({detail:'unreadable response'}));
+  if (!r.ok) throw new Error(typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail));
+  return j;
+}
+
+function fail(where, e){
+  $(where).innerHTML = `<div class="banner bad">${esc(e.message)}</div>`;
+}
+
+$('#go').onclick = async () => {
+  const on = $('#on').value, nights = Math.max(1, +$('#nights').value || 1);
+  $('#go').disabled = true;
+  try {
+    [IN, ON, HOTELS] = await Promise.all([
+      api(`/api/search/flights?origin=${$('#a-from').value}&destination=${$('#a-to').value}&on=${on}`)
+        .then(r => r.offers),
+      api(`/api/search/flights?origin=${$('#b-from').value}&destination=${$('#b-to').value}&on=${on}`)
+        .then(r => r.offers),
+      api(`/api/search/hotels?city=${encodeURIComponent($('#city').value)}&country=IT`
+        + `&check_in=${on}&check_out=${iso(on, nights)}`).then(r => r.stays),
+    ]);
+    PICK = {in:null, on:null, hotel:null}; TRIP = OUT = null;
+    ['#s-trip','#s-out','#s-hand'].forEach(x => $(x).hidden = true);
+    paintFlights();
+  } catch (e) { fail('#ports', e); }
+  $('#go').disabled = false;
+};
+
+function flightRows(list, which){
+  return list.map(o => `
+    <tr class="pick ${PICK[which] === o.id ? 'sel' : ''}" data-id="${esc(o.id)}" data-w="${which}">
+      <td>${esc(o.label)}<div class="m">${esc(o.carrier)}${
+        o.refundable ? ' · refundable' : o.change_fee != null
+          ? ` · change ${eur(o.change_fee)}` : ' · non-refundable'}</div></td>
+      <td>${at(o.depart)}</td>
+      <td>${at(o.arrive)}${o.overnight ? '<div class="m">next day</div>' : ''}</td>
+      <td class="n">${eur(o.price)}${o.estimated ? '<span class="star"> *</span>' : ''}
+        ${o.quoted ? `<div class="m">${esc(o.quoted)}</div>` : ''}</td>
+    </tr>`).join('');
+}
+
+function paintFlights(){
+  $('#s-in').hidden = false; $('#s-on').hidden = false; $('#s-hotel').hidden = false;
+  $('#t-in').innerHTML = flightRows(IN, 'in');
+
+  // The onward leg is only searchable once the first one is chosen: "cheapest of
+  // each leg" assembles a trip whose second flight leaves before the first one
+  // lands, and the connection window is the only thing that stops it.
+  const chosen = IN.find(o => o.id === PICK.in);
+  const usable = chosen
+    ? ON.filter(o => new Date(o.depart.iso) - new Date(chosen.arrive.iso) >= 90 * 60e3)
+    : ON;
+  $('#on-note').textContent = chosen
+    ? `${usable.length} of ${ON.length} leave at least 90 min after you land`
+    : 'pick an outbound first — a connection needs 90 minutes on the ground';
+  $('#t-on').innerHTML = flightRows(usable, 'on');
+
+  $('#t-hotel').innerHTML = HOTELS.map(h => `
+    <tr class="pick ${PICK.hotel === h.id ? 'sel' : ''}" data-id="${esc(h.id)}" data-w="hotel">
+      <td>${esc(h.name)}<div class="m">${esc(h.city)}${h.stars ? ' · ' + h.stars + '★' : ''}
+        · ${h.nights} night${h.nights === 1 ? '' : 's'}</div></td>
+      <td>${at(h.check_in)}</td>
+      <td>${at(h.held_until)}<div class="m">then the room is gone</div></td>
+      <td class="n">${eur(h.price)}</td>
+    </tr>`).join('');
+
+  document.querySelectorAll('tr.pick[data-w]').forEach(tr => tr.onclick = () => {
+    PICK[tr.dataset.w] = PICK[tr.dataset.w] === tr.dataset.id ? null : tr.dataset.id;
+    paintFlights();
+    if (PICK.in && PICK.on) select();
+  });
+}
+
+async function select(){
+  const on = $('#on').value, nights = Math.max(1, +$('#nights').value || 1);
+  const body = {
+    label: 'Booked here',
+    flights: [
+      {origin:$('#a-from').value, destination:$('#a-to').value, on, offer_id:PICK.in},
+      {origin:$('#b-from').value, destination:$('#b-to').value, on, offer_id:PICK.on},
+    ],
+    hotels: PICK.hotel ? [{city:$('#city').value, country:'IT', check_in:on,
+                           check_out:iso(on, nights), hotel_id:PICK.hotel}] : [],
+  };
+  try { TRIP = await api('/api/select', body); } catch (e) { return fail('#ports', e); }
+  OUT = null; PICKED = null;
+  $('#s-out').hidden = true; $('#s-hand').hidden = true;
+  paintTrip();
+}
+
+function paintTrip(){
+  $('#s-trip').hidden = false;
+  $('#trip-total').textContent = `${eur(TRIP.total)} · ${TRIP.bookings.length} bookings`
+    + (TRIP.durable ? '' : ' · stored in memory, lost on restart');
+
+  // Problems come back WITH the trip rather than instead of it. A selection with
+  // an unreachable room is still the selection somebody made, and showing the
+  // itinerary next to the reason it does not work is the only version of this
+  // that teaches anything.
+  $('#trip-problems').innerHTML = TRIP.problems.length
+    ? `<div class="banner bad">this selection cannot be taken:<br>`
+      + TRIP.problems.map(esc).join('<br>') + `</div>`
+    : '';
+
+  $('#trip-legs').innerHTML = TRIP.bookings.map(b => `
+    <div class="leg ${b.kind === 'lodging' ? 'lodging' : 'flight'} ${
+      OUT && OUT.signal.booking_id === b.id ? 'gone' : ''}">
+      <div>
+        <div class="t">${esc(b.title)}</div>
+        <div class="m">${esc(b.where)} · ${at(b.starts)}${
+          b.ends ? ' → ' + hm(b.ends) : ''} · last moment ${at(b.must_arrive_by)}
+          ${b.ticket_group ? ' · ticket ' + esc(b.ticket_group.slice(-6)) : ''}</div>
+      </div>
+      <div style="text-align:right;white-space:nowrap">
+        <div class="m">${esc(b.currency)} ${Math.round(b.price).toLocaleString()}</div>
+        ${b.kind === 'flight' ? `<button class="btn bad" style="margin-top:6px"
+          data-cancel="${esc(b.id)}">Cancel this flight</button>` : ''}
+      </div>
+    </div>`).join('');
+
+  document.querySelectorAll('[data-cancel]').forEach(el =>
+    el.onclick = () => cancel(el.dataset.cancel));
+}
+
+async function cancel(bookingId){
+  try {
+    OUT = await api('/api/cancel', {trip_id: TRIP.trip_id, booking_id: bookingId});
+  } catch (e) { return fail('#trip-problems', e); }
+  PICKED = null;
+  paintTrip();
+  paintOutcome();
+  $('#s-out').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function paintOutcome(){
+  const s = OUT.signal, i = OUT.impact;
+  $('#s-out').hidden = false; $('#s-hand').hidden = false;
+
+  $('#signal').innerHTML = `<b>${esc(s.title)}</b> is cancelled. You are standing at `
+    + `${esc(OUT.gap ? OUT.gap.origin : '—')} at ${hm(s.now_arrives)}, and nobody owes you `
+    + `a seat: it was bought on its own ticket.`;
+
+  $('#f-dead').textContent = eur(i.do_nothing);
+  $('#f-dead-foot').textContent = i.broken
+    ? `gone across ${i.broken} booking${i.broken === 1 ? '' : 's'}`
+    : 'nothing on this trip is unrecoverable';
+  $('#f-risk').textContent = eur(i.at_risk);
+  $('#f-saved').textContent = eur(OUT.saved);
+  $('#f-saved-foot').textContent = OUT.saved > 0
+    ? 'the best plan against doing nothing'
+    : 'doing nothing wins — the engine will say so';
+
+  $('#gap').innerHTML = OUT.gap
+    ? `gap derived, not configured: ${esc(OUT.gap.origin)} → ${esc(OUT.gap.destination)}, `
+      + `land by ${at(OUT.gap.by)} (${OUT.gap.hours}h) · `
+      + `${OUT.searched.length} live replacements searched`
+    : 'nothing downstream is out of reach — no search needed, which is the normal answer';
+
+  $('#t-plans').innerHTML = OUT.plans.map(p => `
+    <tr class="pick ${p.best ? 'best' : ''} ${PICKED === p.id ? 'sel' : ''}" data-plan="${esc(p.id)}">
+      <td>${esc(p.name)}${p.estimated ? '<span class="star"> *</span>' : ''}
+        ${p.best ? '<span class="badge">recommended</span>' : ''}</td>
+      <td class="n ${p.net_cash < 0 ? 'neg' : 'pos'}">${p.net_cash ? eur(p.net_cash) : '—'}</td>
+      <td class="n">${eur(p.total_damage)}</td>
+      <td>${p.arrives_at ? esc(p.arrives_where) + ' ' + at(p.arrives_at) : '—'}</td>
+    </tr>`).join('');
+  document.querySelectorAll('[data-plan]').forEach(tr =>
+    tr.onclick = () => { PICKED = tr.dataset.plan; paintOutcome(); });
+
+  $('#plan-note').innerHTML = OUT.plans.some(p => p.estimated)
+    ? '<span class="star">*</span> that fare is an estimate or a conversion — a real number '
+      + 'with a guess applied. Said here rather than discovered at checkout.'
+    : 'Every fare on this page was quoted by the airline that sells it.';
+
+  const chosen = OUT.plans.find(p => p.id === PICKED) || OUT.plans[0];
+  PICKED = chosen.id;
+  $('#handoff').innerHTML =
+    `<div class="note" style="margin-top:0">For <b>${esc(chosen.name)}</b>${
+      chosen.tightest ? ` — tightest connection has ${chosen.tightest.minutes} minutes to spare` : ''}.</div>`
+    + (Object.entries(LANES).map(([key, [title, who]]) => {
+        const acts = chosen.lanes[key];
+        if (!acts.length) return '';
+        return `<div class="lane"><h3>${esc(title)}</h3><div class="who">${esc(who)}</div>`
+          + acts.map(a => `
+            <div class="act">
+              <div>${esc(a.label)}${a.estimated ? '<span class="badge est">estimated fare</span>' : ''}</div>
+              <div class="n">${esc(a.note)}</div>
+              <div class="cash">${a.net ? (a.net > 0 ? 'costs ' : 'returns ') + eur(Math.abs(a.net))
+                : 'no money moves'}${a.deadline ? ' · before ' + at(a.deadline) : ''}</div>
+            </div>`).join('') + `</div>`;
+      }).join('') || '<div class="note">This plan asks nothing of anybody.</div>');
+}
+
+api('/health').then(h => {
+  $('#ports').innerHTML = `ports: ${esc(h.ports_mode)} · model: ${esc(h.model)} · `
+    + `storage: ${esc(h.storage)}`;
+}).catch(e => fail('#ports', e));
+</script>
+</body>
+</html>

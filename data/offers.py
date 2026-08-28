@@ -46,6 +46,12 @@ class Offer:
     book_url: str = ""
     #: What the provider actually said, before any conversion: "USD 767".
     quoted: str = ""
+    #: Fare conditions, straight from the airline rather than assumed. A fare
+    #: with neither a refund nor a change is genuinely non-refundable, and the
+    #: engine treats an absent rule the same way — so reading these turns an
+    #: under-promise into the real number.
+    refundable: bool = False
+    change_fee: float | None = None
 
 
 OFFERS = [

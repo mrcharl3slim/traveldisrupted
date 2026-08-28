@@ -98,6 +98,32 @@ def no_action_model(disruption: Disruption, trip: Trip) -> ReachModel:
     return ReachModel(arrivals=arrivals, settled_from=day_end + timedelta(minutes=1))
 
 
+def exposed_to(trip: Trip, disruption: Disruption) -> list[Booking]:
+    """The bookings this disruption can still damage, in itinerary order.
+
+    Downstream is a question about DEADLINES, not start times. The first version
+    walked everything starting within a day of the event, which is a proxy for
+    two different things and gets both wrong. A hotel whose check-in opens at
+    14:00 but whose room is held until 22:00 starts before a 15:10 cancellation
+    and is very much still at stake; the long-haul that landed at 08:15 that
+    morning starts inside the same window and is already flown. Walking by start
+    time charged that morning's EUR 1,031 fare to the cancellation of a EUR 170
+    onward hop -- a headline six times too large, and wrong in the direction
+    that flatters us.
+
+    The boundary is the earlier of the disrupted booking's original end and the
+    moment the traveller learns. For a delay that is the original arrival, so
+    everything the delay pushes past is in scope. For a cancellation it is the
+    moment of learning, so anything still ahead of a traveller standing at the
+    origin stays in scope -- including things back at the airport they never
+    left.
+    """
+    source = trip.by_id(disruption.booking_id)
+    boundary = min(source.end or source.start, disruption.new_end)
+    return [b for b in trip.in_order()
+            if b.id != source.id and b.must_arrive_by > boundary]
+
+
 @dataclass
 class Node:
     booking: Booking
@@ -131,6 +157,18 @@ class Impact:
         return sum(n.exposure for n in self.broken)
 
     @property
+    def at_risk_value(self) -> float:
+        """Money a phone call keeps alive. Not damage, and not safe either.
+
+        Reported next to ``do_nothing_cost`` rather than folded into it. Folding
+        it in doubles the headline for value nobody has lost yet; leaving it out
+        entirely -- which is what happened until a live trip had nothing else in
+        it -- prints EUR 0 over a EUR 443 room and looks like the engine has
+        stopped working.
+        """
+        return sum(n.exposure for n in self.nodes if n.severity is Severity.AT_RISK)
+
+    @property
     def act_now_value(self) -> float:
         """What intervening is worth before the first deadline passes."""
         return sum(n.recoverable for n in self.nodes)
@@ -153,10 +191,7 @@ def propagate(trip: Trip, disruption: Disruption, now: datetime,
     )]
 
     prior: list[str] = [source.id]
-    for b in trip.after(disruption.new_end - timedelta(days=1)):
-        if b.id == source.id:
-            continue
-
+    for b in exposed_to(trip, disruption):
         attends = model.can_attend(b)
         recoverable = b.recoverable_at(now)
         cut = b.policy.next_cutoff(now)

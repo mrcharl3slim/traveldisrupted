@@ -8,7 +8,7 @@ python serve.py                   # the web app, first free port from 8000
 python cli.py                     # the same numbers, in a terminal
 python cli.py --base written      # the October scenario, as the tests assert it
 python mcp_server.py              # the engine as MCP tools, over stdio
-python -m pytest tests/ -q        # 48 tests, no keys, no network
+python -m pytest tests/ -q        # 82 tests, no keys, no network
 ```
 
 Runs in **replay** by default: every API response is a committed fixture, so
@@ -60,6 +60,35 @@ Times are formatted server-side in the trip's own timezone. Letting the browser 
 a Zurich arrival in the viewer's zone, which is a different flight as far as the traveller is
 concerned.
 
+
+## Buying a trip, then breaking it
+
+`/book` is the same engine with nothing scripted. Search real inventory (Duffel
+for flights, LiteAPI for stays — both on accounts that cannot take money), pick
+an outbound, an onward leg and a room, then press **Cancel this flight** on any
+leg and watch the consequences come out of live data. `flow.py` is the whole
+loop: `search_flights`, `search_hotels`, `select`, `cancel`, `replan`.
+
+Nothing about the scenario is configured. The recovery query — where the
+traveller now stands, where they are contractually due next, by when — is
+derived in `plan.recovery_gap`, so cancelling a different leg searches a
+different route without an edit. Four things this flow made visible that a
+literal trip had hidden:
+
+- **A cancelled flight is not its own replacement.** The cancellation is ours,
+  not the airline's, so its seats are still in inventory and the search returns
+  them. Filtered by designator, airports and departure minute.
+- **Downstream is a question about deadlines, not start times.** Walking by
+  start time charged a EUR 1,031 long-haul that landed that morning to the
+  cancellation of a EUR 170 onward hop.
+- **A stay is where the hotel is.** Inferring it from the itinerary filed a
+  Milan hotel under Zurich the moment the onward leg landed the next morning.
+- **One ledger for every plan, inaction included.** A room defusable by a phone
+  call was free under "do nothing" and charged in full to every alternative, so
+  the ranking compared two different ledgers.
+
+The old scripted demo — one late flight, eleven bookings, EUR 282 — still runs
+at `/`, from the same fixtures, asserting the same numbers.
 
 ## Dates
 

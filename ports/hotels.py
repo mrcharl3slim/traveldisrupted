@@ -82,12 +82,20 @@ def _first_price(entry: dict) -> tuple[float, str] | None:
 
 
 def stays(city: str, country: str, checkin: datetime, checkout: datetime,
-          tz, limit: int = 5) -> list[dict]:
+          tz, limit: int = 5, code: str = "") -> list[dict]:
     """City + dates -> priced stays, ready to become Bookings.
 
     ``tz`` is required rather than inferred: a hotel's check-in time is local to
     the hotel, and a naive timestamp entering the engine is the failure that
     silently moves a deadline into another country.
+
+    ``code`` is the place code the search was pointed at -- MXP for Milan. It
+    has to be carried because LiteAPI answers "Milan", which is a fine thing to
+    print and useless to search on, and because the alternative was inferring
+    the hotel's location from the itinerary. That inference is right until it is
+    not: pick an onward flight that lands the following morning and the Milan
+    hotel gets filed under Zurich, the trip reads as feasible, and the engine
+    reports no damage for a night the traveller spends in the wrong country.
     """
     listing = catalogue(city, country, limit=limit)
     hotels = listing.get("data") or listing.get("hotels") or []
@@ -110,6 +118,7 @@ def stays(city: str, country: str, checkin: datetime, checkout: datetime,
             "provider": "LiteAPI",
             "name": hotel.get("name") or f"Hotel {hotel_id}",
             "city": hotel.get("city") or city,
+            "city_code": code or "",
             "address": hotel.get("address") or "",
             "stars": hotel.get("stars") or hotel.get("starRating"),
             "check_in": datetime.combine(checkin.date(), CHECK_IN, tzinfo=tz),
