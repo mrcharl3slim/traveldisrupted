@@ -1,0 +1,12 @@
+# The engine itself needs nothing. domain/policy/graph/plan are stdlib only, on
+# purpose: the arithmetic a judge is asked to believe should not depend on a
+# wheel resolving. `python cli.py` runs on a clean interpreter.
+#
+# These are for the agent layer and the API.
+langgraph>=0.6
+langchain-core>=0.3
+langchain-aws>=1.4.3          # LLM_PROVIDER=bedrock
+langchain-anthropic>=0.3      # LLM_PROVIDER=anthropic
+fastapi>=0.115                # day 9-10
+uvicorn>=0.32
+# mcp>=1.2                    # optional, first on the cut list

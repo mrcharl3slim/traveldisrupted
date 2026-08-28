@@ -1,0 +1,20 @@
+{
+  "_recorded": "hand-authored placeholder in the exact wire shape of transport.opendata.ch. Overwrite with a real response: DOWNSTREAM_PORTS=record python record.py",
+  "connections": [
+    {
+      "from": {"station": {"id": "8503000", "name": "Zürich HB"}, "departure": "2026-10-12T11:33:00+0200", "platform": "7"},
+      "to": {"station": {"id": "8300085", "name": "Milano Centrale"}, "arrival": "2026-10-12T15:20:00+0200"},
+      "duration": "00d03:47:00", "transfers": 0, "products": ["EC"]
+    },
+    {
+      "from": {"station": {"id": "8503000", "name": "Zürich HB"}, "departure": "2026-10-12T13:33:00+0200", "platform": "7"},
+      "to": {"station": {"id": "8300085", "name": "Milano Centrale"}, "arrival": "2026-10-12T17:20:00+0200"},
+      "duration": "00d03:47:00", "transfers": 0, "products": ["EC"]
+    },
+    {
+      "from": {"station": {"id": "8503000", "name": "Zürich HB"}, "departure": "2026-10-12T12:00:00+0200"},
+      "to": {"station": {"id": "8300085", "name": "Milano Centrale"}, "arrival": "2026-10-12T17:55:00+0200"},
+      "duration": "00d05:55:00", "transfers": 2, "products": ["IC", "EC"]
+    }
+  ]
+}

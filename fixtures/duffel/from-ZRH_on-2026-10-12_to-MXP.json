@@ -1,0 +1,22 @@
+{
+  "_recorded": "hand-authored placeholder in Duffel v2 offer_requests wire shape. Overwrite with a real test-mode response: DOWNSTREAM_PORTS=record python record.py",
+  "data": {
+    "offers": [
+      {"id": "off_0000AaBbCc01", "total_amount": "118.00", "total_currency": "EUR",
+       "owner": {"name": "SWISS", "iata_code": "LX"},
+       "slices": [{"segments": [{"operating_carrier_flight_number": "1626",
+         "departing_at": "2026-10-12T15:30:00", "arriving_at": "2026-10-12T16:35:00",
+         "origin": {"iata_code": "ZRH"}, "destination": {"iata_code": "MXP"}}]}]},
+      {"id": "off_0000AaBbCc02", "total_amount": "89.00", "total_currency": "EUR",
+       "owner": {"name": "SWISS", "iata_code": "LX"},
+       "slices": [{"segments": [{"operating_carrier_flight_number": "1902",
+         "departing_at": "2026-10-12T18:05:00", "arriving_at": "2026-10-12T19:10:00",
+         "origin": {"iata_code": "ZRH"}, "destination": {"iata_code": "MXP"}}]}]},
+      {"id": "off_0000AaBbCc03", "total_amount": "104.00", "total_currency": "EUR",
+       "owner": {"name": "SWISS", "iata_code": "LX"},
+       "slices": [{"segments": [{"operating_carrier_flight_number": "1604",
+         "departing_at": "2026-10-12T07:05:00", "arriving_at": "2026-10-12T08:10:00",
+         "origin": {"iata_code": "ZRH"}, "destination": {"iata_code": "MXP"}}]}]}
+    ]
+  }
+}

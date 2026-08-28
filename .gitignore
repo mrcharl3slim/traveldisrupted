@@ -1,0 +1,18 @@
+# ---- secrets. Never commit these. -------------------------------------
+# ports/ read AERODATABOX_KEY and DUFFEL_TOKEN from the environment; nothing
+# needs a file, and nothing should create one.
+.env
+*.pem
+credentials
+
+# ---- caches -----------------------------------------------------------
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+.DS_Store
+
+# ---- transfer artefacts -----------------------------------------------
+_to_delete/
+*.tar.gz
