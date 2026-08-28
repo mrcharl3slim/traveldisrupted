@@ -134,9 +134,10 @@ def _action(a) -> dict:
         "note": a.note,
         "deadline": _when(a.deadline),
         "price_source": a.price_source,
-        # The one number in the engine no reachable API can quote. Read off the
-        # field, never off the prose.
-        "estimated": a.price_source == "estimate",
+        # Anything that is not a firm quote is flagged, not just the rail
+        # estimate: a converted fare is a real number with a guess applied, and
+        # a traveller comparing totals deserves to know which is which.
+        "estimated": a.price_source not in ("quoted", ""),
     }
 
 
@@ -151,7 +152,7 @@ def _plan(p, best: bool) -> dict:
         "arrives_at": _when(p.arrives_at),
         "arrives_where": p.arrives_where,
         "best": best,
-        "estimated": any(a.price_source == "estimate" for a in p.actions),
+        "estimated": any(a.price_source not in ("quoted", "") for a in p.actions),
         "tightest": ({"booking_id": p.tightest[0],
                       "minutes": int(p.tightest[1].total_seconds() // 60)}
                      if p.tightest else None),

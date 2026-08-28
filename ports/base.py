@@ -27,6 +27,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import sys
 import urllib.error
 import urllib.request
 from datetime import date, timedelta
@@ -34,6 +35,14 @@ from pathlib import Path
 from typing import Any, Callable
 
 FIXTURES = Path(__file__).resolve().parent.parent / "fixtures"
+
+# Before MODE and before any port reads a token: a .env that nothing loads is
+# a credential that silently does not exist.
+sys.path.insert(0, str(FIXTURES.parent))
+import env as _env  # noqa: E402
+
+_env.load()
+
 MODE = os.environ.get("DOWNSTREAM_PORTS", "replay").strip().lower()
 
 # Ports that fell back to a recording after a live call failed. Surfaced by
@@ -134,6 +143,48 @@ def get_json(url: str, headers: dict[str, str] | None = None,
         return json.loads(r.read().decode())
 
 
+#: How many of each list to keep when recording. The recordings are committed
+#: as evidence, and a provider returning ninety-four offers of which the engine
+#: uses four is seven megabytes of repository nobody reads.
+#:
+#: Shape is preserved exactly — same keys, same nesting, same types — because
+#: the point of a recording is that it parses identically to the live response.
+#: Only the count changes, and the trimming keeps a spread across the day rather
+#: than the first N, or an afternoon cancellation would find no afternoon
+#: replacements and the demo would quietly have no options.
+KEEP = {"duffel": 24, "rail": 12, "rates": 1}
+
+
+def _spread(items: list, keep: int) -> list:
+    """``keep`` items spaced evenly across the list, endpoints included."""
+    if len(items) <= keep:
+        return items
+    step = (len(items) - 1) / (keep - 1)
+    return [items[round(i * step)] for i in range(keep)]
+
+
+def trim(name: str, data: Any) -> Any:
+    """Shrink a recording without changing what it looks like."""
+    if name == "duffel":
+        offers = (data.get("data") or {}).get("offers")
+        if isinstance(offers, list):
+            ordered = sorted(offers, key=lambda o: (
+                o.get("slices", [{}])[0].get("segments", [{}])[0].get("departing_at", "")))
+            data["data"]["offers"] = _spread(ordered, KEEP["duffel"])
+    elif name == "rail":
+        if isinstance(data.get("connections"), list):
+            data["connections"] = _spread(data["connections"], KEEP["rail"])
+    elif name == "rates":
+        for entry in (data.get("data") or []):
+            rooms = entry.get("roomTypes")
+            if isinstance(rooms, list) and rooms:
+                entry["roomTypes"] = rooms[:KEEP["rates"]]
+                for room in entry["roomTypes"]:
+                    if isinstance(room.get("rates"), list):
+                        room["rates"] = room["rates"][:KEEP["rates"]]
+    return data
+
+
 def call(name: str, key: dict[str, Any], fetch: Callable[[], Any]) -> Any:
     """Fetch or replay, according to MODE. Never raises in replay-backed paths."""
     fixture = _path(name, key)
@@ -153,5 +204,5 @@ def call(name: str, key: dict[str, Any], fetch: Callable[[], Any]) -> Any:
 
     if MODE == "record":
         fixture.parent.mkdir(parents=True, exist_ok=True)
-        fixture.write_text(json.dumps(data, indent=2, ensure_ascii=False))
+        fixture.write_text(json.dumps(trim(name, data), indent=2, ensure_ascii=False))
     return data

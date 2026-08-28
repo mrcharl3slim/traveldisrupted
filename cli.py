@@ -69,14 +69,27 @@ print(f"  NEXT DEADLINE    {when:%H:%M} - {node.booking.title} "
       f"(in {when - NOW})\n")
 
 plans = generate(TRIP, D, NOW, OFFERS)
+
+# A real search returns twenty-odd options. Ranking them all is the engine's
+# job; showing them all is nobody's. The cheapest few and the baseline are the
+# comparison that means something.
+SHOWN = 6
+shown = plans[:SHOWN]
+if not any(p.id == "noop" for p in shown):
+    shown = shown + [next(p for p in plans if p.id == "noop")]
+
 print(f"  {'PLAN':<44}{'TONIGHT':>10}{'DAMAGE':>9}   ARRIVES")
 print("  " + "-" * 78)
-for p in plans:
+for p in shown:
     cash = f"{p.net_cash:+,.0f}" if p.net_cash else "0"
     arr = f"{p.arrives_where} {p.arrives_at:%H:%M}" if p.arrives_at else "-"
-    est = " *" if any(a.price_source == "estimate" for a in p.actions) else ""
-    print(f"  {p.name[:43]:<44}{cash:>10}{p.total_damage:>9,.0f}   {arr}{est}")
-print("\n  * fare is an estimate - no reachable API quotes Swiss rail prices")
+    sources = {a.price_source for a in p.actions}
+    mark = (" *" if "estimate" in sources else "") + (" +" if "converted" in sources else "")
+    print(f"  {p.name[:43]:<44}{cash:>10}{p.total_damage:>9,.0f}   {arr}{mark}")
+if len(plans) > len(shown):
+    print(f"  {f'... and {len(plans) - len(shown)} more, all worse':<44}")
+print("\n  * fare estimated - no reachable API sells Swiss rail tickets"
+      "\n  + fare quoted in another currency, converted at a fixed rate")
 
 best = plans[0]
 print(f"\n  BEST: {best.name}")

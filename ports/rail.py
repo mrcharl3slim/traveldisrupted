@@ -15,7 +15,7 @@ what it can and cannot touch does not get to quietly invent a fare.
 from __future__ import annotations
 
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from base import call, get_json
 
@@ -39,7 +39,13 @@ ESTIMATE_EUR = 72.0
 DEEP_LINK = "https://www.sbb.ch/en/buying/pages/fahrplan/fahrplan.xhtml"
 
 
-def connections(origin: str, destination: str, when: datetime, limit: int = 4):
+#: Ask for more than we show. `offers` keeps direct services only — a plan whose
+#: hero number rests on changing trains in a foreign station at midnight is not
+#: a plan — and on a real timetable the first four results are often all
+#: connecting. Asking for four and filtering to direct returned nothing at all,
+#: which reads as "no rail option exists" when the truth is "we did not look far
+#: enough down the list".
+def connections(origin: str, destination: str, when: datetime, limit: int = 12):
     key = {"from": origin, "to": destination, "at": when.strftime("%Y-%m-%dT%H:%M")}
     url = (f"{BASE}?from={origin.replace(' ', '%20')}"
            f"&to={destination.replace(' ', '%20')}"
@@ -47,23 +53,54 @@ def connections(origin: str, destination: str, when: datetime, limit: int = 4):
     return call("rail", key, lambda: get_json(url))
 
 
+#: At most one change, and only with real time to make it. The original rule was
+#: no changes at all — a plan resting on a same-day transfer in a foreign station
+#: is not a plan for somebody awake fourteen hours. Against the actual timetable
+#: that rule deleted the entire mode: there is no direct Zurich-Milano service,
+#: because the EC terminates at the border and a regional continues. One change
+#: at Chiasso with half an hour in hand is ordinary railway, not a gamble. The
+#: original instinct survives as the buffer.
+MAX_TRANSFERS = 1
+MIN_BUFFER = timedelta(minutes=20)
+
+
+def _change(c: dict) -> tuple[str, timedelta] | None:
+    """Where the traveller changes and how long they have. None if direct."""
+    sections = [s for s in (c.get("sections") or []) if s.get("journey")]
+    if len(sections) < 2:
+        return None
+    arrive = _iso(sections[0]["arrival"].get("arrival"))
+    depart = _iso(sections[1]["departure"].get("departure"))
+    if arrive is None or depart is None:
+        return None
+    return sections[0]["arrival"]["station"]["name"], depart - arrive
+
+
 def offers(origin: str, destination: str, when: datetime, station_map: dict):
-    """Wire format -> Offer. Direct services only: a plan whose hero number
-    rests on a same-day transfer in a foreign station is not a plan we should
-    be recommending to somebody who has just been awake for fourteen hours."""
+    """Wire format -> Offer, with any change named in the label."""
     from offers import Offer
 
     out = []
     for c in connections(origin, destination, when).get("connections", []):
-        if int(c.get("transfers", 0)) != 0:
+        transfers = int(c.get("transfers", 0))
+        if transfers > MAX_TRANSFERS:
             continue
+
+        change = _change(c) if transfers else None
+        if transfers and (change is None or change[1] < MIN_BUFFER):
+            continue          # unknown or tight connection: not offered at all
+
         dep = _iso(c["from"]["departure"])
         arr = _iso(c["to"]["arrival"])
         product = (c.get("products") or ["train"])[0]
+        via = ""
+        if change:
+            station, buffer = change
+            via = f", change at {station} ({int(buffer.total_seconds() // 60)} min)"
         out.append(Offer(
             id=f"rail-{dep:%H%M}", mode="rail", carrier="SBB",
             label=f"{product} {dep:%H:%M} - {c['from']['station']['name']} "
-                  f"to {c['to']['station']['name']}",
+                  f"to {c['to']['station']['name']}{via}",
             depart=dep, arrive=arr,
             origin=station_map.get(c["from"]["station"]["name"], "ZRH_HB"),
             destination=station_map.get(c["to"]["station"]["name"], "MILANO_C"),

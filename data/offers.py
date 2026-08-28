@@ -38,8 +38,14 @@ class Offer:
     # matters: transport.opendata.ch returns timetables, not prices, so the
     # number underneath the headline -EUR 14 is the one figure in the whole
     # engine we cannot quote. Saying so is cheaper than being caught.
+    # "quoted"    a real fare from a booking API, safe to put in a total
+    # "estimate"  ours, because no reachable API sells this fare
+    # "converted" quoted, but in another currency and turned into this one at a
+    #             fixed rate — a real number that has had a guess applied to it
     price_source: str = "quoted"
     book_url: str = ""
+    #: What the provider actually said, before any conversion: "USD 767".
+    quoted: str = ""
 
 
 OFFERS = [

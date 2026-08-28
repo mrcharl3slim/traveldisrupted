@@ -26,6 +26,13 @@ quota, and a demo asking questions quickly will hit it.
 from __future__ import annotations
 
 import os
+import pathlib
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import env as _env  # noqa: E402
+
+_env.load()
 
 PROVIDER = os.environ.get("LLM_PROVIDER", "none").strip().lower()
 

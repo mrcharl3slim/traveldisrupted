@@ -1,12 +1,31 @@
 [
   {
     "_recorded": "hand-authored placeholder in AeroDataBox flights/number wire shape. Overwrite with a real response: DOWNSTREAM_PORTS=record python record.py",
-    "number": "SQ 346", "status": "Delayed",
-    "departure": {"airport": {"iata": "SIN", "name": "Singapore Changi"},
-                  "scheduledTime": {"local": "2026-10-11 23:55+08:00"},
-                  "actualTime": {"local": "2026-10-12 03:45+08:00"}},
-    "arrival": {"airport": {"iata": "ZRH", "name": "Zurich"},
-                "scheduledTime": {"local": "2026-10-12 06:35+02:00"},
-                "predictedTime": {"local": "2026-10-12 10:25+02:00"}}
+    "number": "SQ 346",
+    "status": "Delayed",
+    "departure": {
+      "airport": {
+        "iata": "SIN",
+        "name": "Singapore Changi"
+      },
+      "scheduledTime": {
+        "local": "2026-10-11 23:55+08:00"
+      },
+      "actualTime": {
+        "local": "2026-10-12 03:45+08:00"
+      }
+    },
+    "arrival": {
+      "airport": {
+        "iata": "ZRH",
+        "name": "Zurich"
+      },
+      "scheduledTime": {
+        "local": "2026-10-12 06:35+02:00"
+      },
+      "predictedTime": {
+        "local": "2026-10-12 10:25+02:00"
+      }
+    }
   }
 ]

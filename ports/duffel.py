@@ -18,6 +18,28 @@ from base import call, get_json
 
 BASE = "https://api.duffel.com/air/offer_requests"
 
+#: The engine sums money. Duffel quotes in the account's currency — USD on a
+#: test account — while the itinerary is in EUR, and adding the two produced a
+#: total in no currency at all. Converting at the boundary keeps one unit in the
+#: engine; the rate is fixed and therefore a guess, so anything converted says
+#: so in `price_source` exactly as the rail estimate does.
+TRIP_CURRENCY = os.environ.get("TRIP_CURRENCY", "EUR").upper()
+FX = {"USD": float(os.environ.get("FX_USD_EUR", "0.92")),
+      "GBP": float(os.environ.get("FX_GBP_EUR", "1.17")),
+      "CHF": float(os.environ.get("FX_CHF_EUR", "1.06")),
+      "EUR": 1.0}
+
+
+def _to_trip_currency(amount: float, currency: str) -> tuple[float, str, str]:
+    """(amount, price_source, what the provider said)."""
+    currency = (currency or TRIP_CURRENCY).upper()
+    if currency == TRIP_CURRENCY:
+        return amount, "quoted", ""
+    rate = FX.get(currency)
+    if rate is None:
+        return amount, "estimate", f"{currency} {amount:,.0f} (no rate)"
+    return round(amount * rate, 2), "converted", f"{currency} {amount:,.0f}"
+
 # Duffel timestamps are local wall-clock with NO offset -- "2026-10-12T15:30:00"
 # means half past three in Zurich, and Python will happily compare that to an
 # aware datetime by raising. The itinerary is entirely tz-aware, so the zone has
@@ -27,10 +49,33 @@ BASE = "https://api.duffel.com/air/offer_requests"
 AIRPORT_TZ = {"ZRH": 2, "MXP": 2, "SIN": 8, "FLR": 2}
 
 
-def _aware(stamp: str, iata: str, fallback):
+def _zone(place: dict | None):
+    """The airport's own zone, from Duffel's reference data, if it is there.
+
+    The table above covers the four airports this scenario touches, which was
+    fine while the route was fixed. Now that any leg can be cancelled and any
+    replacement searched, an unknown airport would silently borrow the zone of
+    the day being searched — a Bangkok departure stamped as Swiss time, off by
+    five hours, wrong in a way that looks plausible.
+    """
+    name = (place or {}).get("time_zone")
+    if not name:
+        return None
+    try:
+        from zoneinfo import ZoneInfo
+
+        return ZoneInfo(name)
+    except Exception:            # unknown zone name, or no tzdata on the host
+        return None
+
+
+def _aware(stamp: str, iata: str, fallback, place: dict | None = None):
     t = datetime.fromisoformat(stamp)
     if t.tzinfo is not None:
         return t
+    zone = _zone(place)
+    if zone is not None:
+        return t.replace(tzinfo=zone)
     hours = AIRPORT_TZ.get(iata)
     return t.replace(tzinfo=timezone(timedelta(hours=hours)) if hours is not None
                      else fallback)
@@ -62,18 +107,35 @@ def offers(origin: str, destination: str, day: datetime, after: datetime | None 
 
     out = []
     for o in search(origin, destination, day).get("data", {}).get("offers", []):
-        seg = o["slices"][0]["segments"][0]
-        dep = _aware(seg["departing_at"], seg["origin"]["iata_code"], day.tzinfo)
-        arr = _aware(seg["arriving_at"], seg["destination"]["iata_code"], day.tzinfo)
+        slice_ = o["slices"][0]
+        segments = slice_["segments"]
+        first, last = segments[0], segments[-1]
+
+        # Endpoints come from the SLICE, not from a segment. A segment is one
+        # leg: on SIN -> ZRH the first is SIN -> MUC, so reading it labelled the
+        # offer "SIN to MUC", priced a Munich flight as a Zurich one, and told
+        # the engine the traveller would arrive at the wrong airport six hours
+        # early. Direct routes hid this; every long-haul is connecting.
+        start = slice_.get("origin") or first["origin"]
+        end = slice_.get("destination") or last["destination"]
+        dep = _aware(first["departing_at"], start["iata_code"], day.tzinfo, start)
+        arr = _aware(last["arriving_at"], end["iata_code"], day.tzinfo, end)
         if after and dep < after:
             continue        # already on the ground before the traveller lands
-        carrier = o["owner"]["name"]
-        num = f"{o['owner']['iata_code']} {seg['operating_carrier_flight_number']}"
+        if arr <= dep:
+            continue        # a timezone we could not resolve; drop rather than invent
+
+        stops = len(segments) - 1
+        num = f"{o['owner']['iata_code']} {first['operating_carrier_flight_number']}"
+        price, source, quoted = _to_trip_currency(
+            float(o["total_amount"]), o.get("total_currency", ""))
         out.append(Offer(
-            id=o["id"][:12], mode="flight", carrier=carrier,
-            label=f"{num} - {seg['origin']['iata_code']} to {seg['destination']['iata_code']}",
+            id=o["id"][:12], mode="flight", carrier=o["owner"]["name"],
+            label=f"{num} - {start['iata_code']} to {end['iata_code']}"
+                  + (f" via {segments[0]['destination']['iata_code']}" if stops == 1
+                     else f", {stops} stops" if stops else ""),
             depart=dep, arrive=arr,
-            origin=seg["origin"]["iata_code"], destination=seg["destination"]["iata_code"],
-            price=float(o["total_amount"]), currency=o["total_currency"],
-            price_source="quoted", book_url=""))
+            origin=start["iata_code"], destination=end["iata_code"],
+            price=price, currency=TRIP_CURRENCY,
+            price_source=source, quoted=quoted, book_url=""))
     return out
