@@ -198,3 +198,27 @@ def anchor(base: date | None, day: int, hh: int, mm: int, tz=CEST) -> datetime:
     """A datetime on trip-day ``day`` (11-17), under the same shift as build_trip."""
     offset = 0 if base is None else (base - DEFAULT_BASE).days
     return dt(day, hh, mm, tz) + timedelta(days=offset)
+
+
+def resolve_base(raw: str | None = None) -> date | None:
+    """One place that turns a request into an anchor date.
+
+        ""  /  "today"   -> today, which is the default everywhere
+        "written"        -> the trip exactly as written, October 2026
+        "+3" / "-1"      -> days from today
+        "2026-09-07"     -> that date
+
+    Today is the default because live flight status only covers about a week
+    either side of now: a scenario pinned to October cannot be demonstrated
+    live in September, so "as written" is the special case rather than the norm.
+    Returning None for it keeps the original literal reachable for the tests,
+    which assert against dates a human can check by hand.
+    """
+    raw = (raw or "").strip().lower()
+    if raw in ("written", "as-written", "aswritten"):
+        return None
+    if raw in ("", "today", "now"):
+        return date.today()
+    if raw[0] in "+-":
+        return date.today() + timedelta(days=int(raw))
+    return date.fromisoformat(raw)

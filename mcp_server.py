@@ -1,12 +1,20 @@
 """The engine as MCP tools, so any agent can ask it questions.
 
-Sponsor-stack tick, and first on the cut list -- nothing else depends on it.
-It exists because the interesting claim is not "we built an agent" but "the
-replanning engine is a tool other agents can call": detection is commodity,
-cross-provider replanning is not, and an MCP surface is how that becomes
-someone else's building block rather than our demo.
+The interesting claim is not "we built an agent" but "the replanning engine is
+a tool other agents can call". Detection is commodity; cross-provider replanning
+is not, and an MCP surface is how that becomes somebody else's building block
+rather than our demo. An assistant holding a traveller's itinerary can ask what
+one delay costs without knowing anything about fare rules or ground transit.
 
     python mcp_server.py          # stdio, replay-backed, no keys needed
+
+Add to a client's config (Claude Desktop, Cursor, anything speaking MCP):
+
+    {"mcpServers": {"downstream": {
+        "command": "python", "args": ["/absolute/path/to/mcp_server.py"]}}}
+
+Every tool takes ``base`` and defaults to today, because live flight status only
+covers about a week either side of now.
 """
 
 from __future__ import annotations
@@ -18,7 +26,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path[:0] = [str(ROOT), str(ROOT / "data"), str(ROOT / "ports")]
 
-from demo_trip import TRIP, CEST, dt          # noqa: E402
+from demo_trip import anchor, build_trip, resolve_base   # noqa: E402
 from graph import propagate                   # noqa: E402
 from plan import generate                     # noqa: E402
 import aerodatabox, duffel, rail              # noqa: E402,E401
@@ -26,20 +34,38 @@ import aerodatabox, duffel, rail              # noqa: E402,E401
 STATIONS = {"Zürich HB": "ZRH_HB", "Milano Centrale": "MILANO_C"}
 
 
-def _now(iso: str | None) -> datetime:
-    return datetime.fromisoformat(iso) if iso else datetime(2026, 10, 12, 2, 38, tzinfo=CEST)
+def _scene(base: str | None, now: str | None):
+    """Trip, disruption and clock for one anchoring. Every tool starts here.
+
+    Returning the disruption alongside the trip matters: they have to come from
+    the same anchor or the engine compares a delay in October with an itinerary
+    running next Tuesday and answers confidently about nothing.
+    """
+    basis = resolve_base(base)
+    trip = build_trip(basis)
+    when = datetime.fromisoformat(now) if now else anchor(basis, 12, 2, 38)
+    return trip, basis, when
 
 
-def impact_of(flight: str = "SQ346", now: str | None = None) -> dict:
-    """What a delay breaks, what it costs, and which deadline falls first."""
-    d = aerodatabox.disruption(flight, dt(11, 9, 0), "sq346")
+def impact_of(flight: str = "SQ346", base: str = "today",
+              now: str | None = None) -> dict:
+    """What a delay breaks, what it costs, and which deadline falls first.
+
+    Args:
+        flight: flight number to check, e.g. "SQ346".
+        base: when the trip runs — "today", "written", "+3", or a date.
+        now: the moment to judge from, ISO. Defaults to the scenario's own clock.
+    """
+    trip, basis, at = _scene(base, now)
+    d = aerodatabox.disruption(flight, anchor(basis, 11, 9, 0), "sq346")
     if not d:
         return {"disrupted": False}
-    imp = propagate(TRIP, d, _now(now))
+    imp = propagate(trip, d, at)
     when, node = imp.next_cutoff
     return {
         "disrupted": True,
-        "delay_minutes": int(d.delay(TRIP).total_seconds() // 60),
+        "anchored_to": trip.in_order()[0].start.date().isoformat(),
+        "delay_minutes": int(d.delay(trip).total_seconds() // 60),
         "do_nothing_eur": imp.do_nothing_cost,
         "recoverable_eur": imp.act_now_value,
         "next_cutoff": {"at": when.isoformat(), "booking": node.booking.title},
@@ -49,23 +75,53 @@ def impact_of(flight: str = "SQ346", now: str | None = None) -> dict:
     }
 
 
-def recovery_plans(flight: str = "SQ346", now: str | None = None) -> dict:
-    """Ranked recovery options, cheapest total damage first."""
-    d = aerodatabox.disruption(flight, dt(11, 9, 0), "sq346")
+def recovery_plans(flight: str = "SQ346", base: str = "today",
+                   now: str | None = None) -> dict:
+    """Ranked recovery options, cheapest total damage first.
+
+    Each action carries the lane that can perform it: "auto" needs nobody,
+    "tap" needs the traveller to authorise a payment, "call" has no consumer
+    API at all. An agent must not present a "call" action as something it did.
+    """
+    trip, basis, at = _scene(base, now)
+    d = aerodatabox.disruption(flight, anchor(basis, 11, 9, 0), "sq346")
     if not d:
         return {"disrupted": False}
-    at = _now(now)
-    offers = (duffel.offers("ZRH", "MXP", dt(12, 9, 0), after=d.new_end)
-              + rail.offers("Zurich HB", "Milano Centrale", dt(12, 9, 0), STATIONS))
+    offers = (duffel.offers("ZRH", "MXP", anchor(basis, 12, 9, 0), after=d.new_end)
+              + rail.offers("Zurich HB", "Milano Centrale",
+                            anchor(basis, 12, 9, 0), STATIONS))
     return {"plans": [{
         "id": p.id, "name": p.name,
         "net_cash_eur": p.net_cash, "total_damage_eur": p.total_damage,
         "arrives": p.arrives_at.isoformat() if p.arrives_at else None,
         "actions": [{"lane": a.lane.value, "label": a.label,
                      "out_eur": a.cash_out, "in_eur": a.cash_in,
+                     # "estimate" means no reachable API quotes this fare and
+                     # the number is ours. An agent repeating it must say so.
+                     "price_source": a.price_source or "n/a",
                      "deadline": a.deadline.isoformat() if a.deadline else None}
                     for a in p.actions],
-    } for p in generate(TRIP, d, at, offers)]}
+    } for p in generate(trip, d, at, offers)]}
+
+
+def itinerary(base: str = "today") -> dict:
+    """The trip itself: every booking, what it cost, and its deadline.
+
+    Here so an agent can see what it is reasoning about before asking what a
+    delay does to it.
+    """
+    trip, _basis, _at = _scene(base, None)
+    return {"bookings": [{
+        "id": b.id, "title": b.title, "provider": b.provider,
+        "starts": b.start.isoformat(),
+        "ends": b.end.isoformat() if b.end else None,
+        "must_arrive_by": b.must_arrive_by.isoformat(),
+        "where": b.where, "price": b.price, "currency": b.currency,
+        # Two bookings sharing a ticket_group are one contract and the airline
+        # owes a reaccommodation. Different groups mean nobody owes anything —
+        # which is this trip's entire failure mode.
+        "ticket_group": b.ticket_group,
+    } for b in trip.in_order()]}
 
 
 def main():
@@ -75,6 +131,7 @@ def main():
         sys.exit("pip install mcp   (this server is optional -- the engine, "
                  "the agent and the API do not depend on it)")
     server = FastMCP("downstream")
+    server.tool()(itinerary)
     server.tool()(impact_of)
     server.tool()(recovery_plans)
     server.run()

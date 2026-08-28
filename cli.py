@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path[:0] = [str(ROOT), str(ROOT / "data"), str(ROOT / "ports")]
 
-from demo_trip import CEST, DEFAULT_BASE, anchor, build_trip   # noqa: E402
+from demo_trip import CEST, DEFAULT_BASE, anchor, build_trip, resolve_base  # noqa: E402
 from domain import Disruption                   # noqa: E402
 from graph import propagate                     # noqa: E402
 import aerodatabox, duffel, rail                 # noqa: E402,E401
@@ -21,20 +21,11 @@ from offers import build_offers                  # noqa: E402
 
 
 def _base(argv: list[str]) -> date | None:
-    """--base today | +N | YYYY-MM-DD | (omitted -> the trip as written).
-
-    Live flight status covers roughly a week either side of today, so the
-    October scenario cannot be demonstrated live in September. Anchoring the
-    trip to run time is what makes "live" checkable rather than asserted.
-    """
+    """--base today | +N | YYYY-MM-DD | written.  Defaults to today."""
     if "--base" not in argv:
-        return None
-    raw = argv[argv.index("--base") + 1] if len(argv) > argv.index("--base") + 1 else "today"
-    if raw == "today":
-        return date.today()
-    if raw.startswith(("+", "-")):
-        return date.today() + timedelta(days=int(raw))
-    return date.fromisoformat(raw)
+        return resolve_base("today")
+    index = argv.index("--base")
+    return resolve_base(argv[index + 1] if len(argv) > index + 1 else "today")
 
 
 BASE = _base(sys.argv)

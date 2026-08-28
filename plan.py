@@ -142,8 +142,24 @@ def _can_reach(offer, b: Booking) -> tuple[bool, timedelta | None]:
     return at <= b.must_arrive_by, b.must_arrive_by - at
 
 
+def _can_board(disruption: Disruption, trip: Trip, offer) -> bool:
+    """Can the traveller actually be standing where this offer departs from?
+
+    Every plan assumed they could. That held while the only disruption was a
+    delay, because a delayed flight still lands you at the airport the
+    replacement leaves from. A cancellation does not: it leaves you where you
+    started, and without this check the engine offers somebody stranded in
+    Singapore a train from Zurich — priced, ranked, and recommended.
+    """
+    if offer is None:
+        return True
+    base = no_action_model(disruption, trip)
+    at = base.presence(offer.origin, offer.depart)
+    return at is not None and at <= offer.depart
+
+
 def build(trip: Trip, disruption: Disruption, now: datetime,
-          baseline: Impact, offer) -> Plan:
+          baseline: Impact, offer) -> Plan | None:
     """One candidate, priced.
 
     Repairs are chosen by booking Kind, never by id -- the engine has no idea
@@ -164,6 +180,9 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
             wasted_ids={n.id for n in baseline.broken},
             wasted=baseline.do_nothing_cost,
         )
+
+    if not _can_board(disruption, trip, offer):
+        return None          # unreachable: not a worse plan, not a plan at all
 
     actions: list[Action] = []
     delivered: set[str] = set()
@@ -277,7 +296,69 @@ def generate(trip: Trip, disruption: Disruption, now: datetime,
     loses.
     """
     baseline = propagate(trip, disruption, now)
-    plans = [build(trip, disruption, now, baseline, o) for o in [None, *offers]]
+    built = [build(trip, disruption, now, baseline, o) for o in [None, *offers]]
+    plans = [p for p in built if p is not None]
     return sorted(plans, key=lambda p: (p.total_damage,
                                         p.arrives_at or datetime.max.replace(
                                             tzinfo=now.tzinfo)))
+
+
+@dataclass(frozen=True)
+class Gap:
+    """The hole the disruption left: where they are, where they must be, by when."""
+
+    origin: str
+    destination: str
+    not_before: datetime
+    by: datetime
+    for_booking: str
+
+    @property
+    def hours(self) -> float:
+        return (self.by - self.not_before).total_seconds() / 3600
+
+
+def recovery_gap(trip: Trip, disruption: Disruption,
+                 now: datetime | None = None) -> Gap | None:
+    """What to search for, derived rather than configured.
+
+    The demo searched Zurich to Milan because the scenario said so. That is
+    fine until somebody cancels a different leg, and then the engine offers a
+    train nobody can reach. Where the traveller stands after the disruption is
+    knowable — the origin if the flight is cancelled, the destination if it is
+    merely late — and the next place they are contractually due is the first
+    booking they can no longer attend. Those two points and a deadline are the
+    entire search query.
+
+    Returns None when nothing downstream is out of reach, which is the common
+    case and not a failure.
+    """
+    affected = trip.by_id(disruption.booking_id)
+    standing = (affected.origin or affected.where) if disruption.cancelled else (
+        affected.destination or affected.where)
+
+    baseline = propagate(trip, disruption, now or disruption.new_end)
+    stranded = [
+        n for n in baseline.nodes
+        if n.severity is Severity.BROKEN
+        and n.booking.where and n.booking.where != standing
+        # Only what is still ahead. Without this, cancelling the second leg
+        # proposes flying back to the first — a booking already taken, whose
+        # deadline is in the past and whose location is behind the traveller.
+        and n.booking.start >= affected.start
+        # And only what is still catchable. The earliest broken deadline is
+        # usually the one the disruption has already blown past; searching for a
+        # flight that must land before it departs returns nothing, slowly.
+        and n.booking.must_arrive_by > disruption.new_end
+    ]
+    if not stranded:
+        return None
+
+    target = min(stranded, key=lambda n: n.booking.must_arrive_by)
+    return Gap(
+        origin=standing,
+        destination=target.booking.where,
+        not_before=disruption.new_end,
+        by=target.booking.must_arrive_by,
+        for_booking=target.id,
+    )

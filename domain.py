@@ -130,13 +130,26 @@ class Trip:
 
 @dataclass
 class Disruption:
-    """The signal. One booking now ends somewhere other than promised."""
+    """The signal. One booking now ends somewhere other than promised.
+
+    A cancellation is not a very long delay, and modelling it as one gets the
+    answer wrong in a way that matters: a delayed flight eventually puts the
+    traveller at the destination, so everything downstream is merely late. A
+    cancelled flight leaves them exactly where they started, which is a
+    different place, with different things reachable from it.
+
+    ``new_end`` on a cancellation is the moment the traveller learns and can
+    start acting — not an arrival, because there is no arrival.
+    """
 
     booking_id: str
     new_end: datetime
     reason: str = ""
     confidence: float = 1.0
+    cancelled: bool = False
 
     def delay(self, trip: Trip) -> timedelta:
+        if self.cancelled:
+            return timedelta(0)          # not late, not going
         original = trip.by_id(self.booking_id).end
         return self.new_end - original if original else timedelta(0)

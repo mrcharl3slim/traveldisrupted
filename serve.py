@@ -26,11 +26,15 @@ sys.path[:0] = [str(ROOT), str(ROOT / "data"), str(ROOT / "ports")]
 
 from fastapi import FastAPI, HTTPException                    # noqa: E402
 from fastapi.responses import FileResponse                    # noqa: E402
+from pydantic import BaseModel                                # noqa: E402
 
 import _model                                                 # noqa: E402
+import ingest                                                 # noqa: E402
+import store as store_module                                  # noqa: E402
+from domain import Kind, Trip                                 # noqa: E402
 import aerodatabox, duffel, rail                              # noqa: E402,E401
 from base import MODE, degraded, shifted                      # noqa: E402
-from demo_trip import DEFAULT_BASE, anchor, build_trip        # noqa: E402
+from demo_trip import DEFAULT_BASE, anchor, build_trip, resolve_base   # noqa: E402
 from graph import propagate                                   # noqa: E402
 from plan import Lane, generate                               # noqa: E402
 
@@ -39,23 +43,62 @@ app = FastAPI(title="downstream")
 
 LANE_KEY = {Lane.AUTO: "auto", Lane.TAP: "tap", Lane.CALL: "call"}
 
+#: A stored trip is reached by an unguessable id and nothing else — the same
+#: bargain a shared document link makes. 96 bits of randomness is the whole of
+#: the protection, so the id must never appear in a log, a referrer or a URL
+#: anybody pastes. Real accounts are the next thing this needs; saying that
+#: plainly beats implying an authentication layer that is not here.
+OWNER = "anon"
+
+
+class Paste(BaseModel):
+    text: str
+    label: str = ""
+
+
+#: Live flight status covers roughly a week either side of now. Asking about a
+#: flight two months out returns nothing useful, and judging a trip that has not
+#: started against the current clock produces arithmetic about a day nobody is
+#: living yet — the first version of this reported EUR 906 of damage and no
+#: deadline at all for a trip six weeks away.
+DETECTION_WINDOW = timedelta(days=7)
+
+
+def _detect(trip: Trip, now: datetime) -> tuple[object | None, str]:
+    """Ask each imminent flight whether it is late.
+
+    Most days nothing is wrong, and a product that replans those days is one
+    nobody keeps installed. Returning nothing is the normal answer, not a
+    failure, so it comes back with a reason rather than as a bare None.
+    """
+    from base import PortError
+
+    flights = [b for b in trip.in_order() if b.kind is Kind.FLIGHT]
+    if not flights:
+        return None, "this trip has no flights to watch"
+
+    imminent = [b for b in flights if abs(b.start - now) <= DETECTION_WINDOW]
+    if not imminent:
+        soonest = min(flights, key=lambda b: abs(b.start - now))
+        days = abs((soonest.start - now).days)
+        return None, (f"nothing departing within {DETECTION_WINDOW.days} days — "
+                      f"the next flight is {days} days away, and live status "
+                      f"does not reach that far")
+
+    for booking in imminent:
+        code = booking.title.split(" - ")[0].replace(" ", "")
+        try:
+            found = aerodatabox.disruption(code, booking.start, booking.id)
+        except PortError:
+            continue          # no recording for this flight; not a disruption
+        if found:
+            return found, ""
+    return None, "every flight checked is running to schedule"
+
 
 def _base(raw: str) -> date | None:
-    """today | +N | -N | YYYY-MM-DD | "" -> the trip exactly as written.
-
-    Live flight status covers about a week either side of today, so a scenario
-    pinned to October cannot be shown live in September. Anchoring to run time
-    is what makes "live" checkable rather than asserted.
-    """
-    raw = (raw or "").strip()
-    if not raw:
-        return None
-    if raw == "today":
-        return date.today()
-    if raw[0] in "+-":
-        return date.today() + timedelta(days=int(raw))
     try:
-        return date.fromisoformat(raw)
+        return resolve_base(raw)
     except ValueError as exc:
         raise HTTPException(400, f"cannot read a date from {raw!r}") from exc
 
@@ -117,11 +160,41 @@ def _plan(p, best: bool) -> dict:
     }
 
 
-def _assemble(basis: date | None) -> dict:
-    trip = build_trip(basis)
-    now = anchor(basis, 12, 2, 38)
+def _assemble(basis: date | None, trip: Trip | None = None,
+              trip_id: str = "") -> dict:
+    demo = trip is None
+    trip = trip or build_trip(basis)
+    now = anchor(basis, 12, 2, 38) if demo else datetime.now(trip.in_order()[0].start.tzinfo)
 
-    disruption = aerodatabox.disruption("SQ346", anchor(basis, 11, 9, 0), "sq346")
+    quiet = ""
+    if demo:
+        disruption = aerodatabox.disruption("SQ346", anchor(basis, 11, 9, 0), "sq346")
+    else:
+        disruption, quiet = _detect(trip, now)
+        if disruption is not None:
+            # Consequences are judged from the moment the delay is known, which
+            # is no earlier than the flight leaving. Evaluating from a "now"
+            # before departure asks what a trip nobody has started yet has
+            # already cost, and the engine answers — the first version of this
+            # reported EUR 906 of damage and no deadline at all, for a flight
+            # that had not taken off.
+            departure = trip.by_id(disruption.booking_id).start
+            now = max(now, departure)
+    if disruption is None:
+        return {
+            "trip_id": trip_id,
+            "disrupted": False,
+            "quiet_because": quiet,
+            "ports": {"mode": MODE, "degraded": list(degraded), "shifted": list(shifted)},
+            "model": _model.label(),
+            "anchor": {"starts": _when(trip.in_order()[0].start), "now": _when(now),
+                       "as_written": basis is None,
+                       "default_base": DEFAULT_BASE.isoformat()},
+            "bookings": [{"id": b.id, "title": b.title, "provider": b.provider,
+                          "starts": _when(b.start), "price": b.price,
+                          "currency": b.currency, "ticket_group": b.ticket_group}
+                         for b in trip.in_order()],
+        }
     offers = (duffel.offers("ZRH", "MXP", anchor(basis, 12, 9, 0), after=disruption.new_end)
               + rail.offers("Zurich HB", "Milano Centrale", anchor(basis, 12, 9, 0),
                             {"Zürich HB": "ZRH_HB", "Milano Centrale": "MILANO_C"}))
@@ -132,6 +205,8 @@ def _assemble(basis: date | None) -> dict:
     cutoff = impact.next_cutoff
 
     return {
+        "trip_id": trip_id,
+        "disrupted": True,
         "ports": {"mode": MODE, "degraded": list(degraded), "shifted": list(shifted)},
         "model": _model.label(),
         "anchor": {
@@ -184,17 +259,64 @@ def health() -> dict:
         "degraded": list(degraded),
         "shifted": list(shifted),
         "model": _model.label(),
+        "storage": "postgres" if store_module.store().durable else "memory (lost on restart)",
         "fixtures": sorted(p.name for p in (ROOT / "fixtures").glob("*")),
     }
 
 
+@app.post("/api/trip")
+def add_trip(body: Paste) -> dict:
+    """Pasted or forwarded confirmations -> a stored, checked trip.
+
+    Problems and warnings come back with the trip rather than blocking it: a
+    traveller with eleven good bookings and one unreadable one should see the
+    eleven and be told about the twelfth, not be handed an error.
+    """
+    if len(body.text.strip()) < 20:
+        raise HTTPException(400, "paste the confirmation emails, not just a subject line")
+
+    result = ingest.extract(body.text, _model.get_model())
+    if not result.trip.bookings:
+        raise HTTPException(422, {"problems": result.problems})
+
+    saved = store_module.store().save(
+        OWNER, {"bookings": ingest.to_dicts(result.trip.bookings)},
+        body.label or "Untitled trip")
+    return {
+        "trip_id": saved.id,
+        "label": saved.label,
+        "durable": store_module.store().durable,
+        "bookings": [{"title": b.title, "provider": b.provider,
+                      "starts": _when(b.start), "price": b.price,
+                      "currency": b.currency, "ticket_group": b.ticket_group,
+                      "source": result.sources.get(b.id, "")}
+                     for b in result.trip.in_order()],
+        "problems": result.problems,
+        "warnings": result.warnings,
+    }
+
+
 @app.get("/api/state")
-def state(base: str = "") -> dict:
-    """The whole assessment. Same two engine calls the CLI makes."""
+def state(base: str = "today", trip: str = "") -> dict:
+    """The whole assessment. Same two engine calls the CLI makes.
+
+    Without ``trip`` this answers about the built-in scenario, which is what the
+    demo and the tests use. With one, it answers about a real stored itinerary.
+    """
     from base import PortError
 
+    loaded = None
+    if trip:
+        saved = store_module.store().get(trip)
+        if saved is None:
+            raise HTTPException(404, "no trip with that id")
+        bookings, problems, _sources = ingest.to_bookings(saved.payload)
+        if not bookings:
+            raise HTTPException(422, {"problems": problems})
+        loaded = Trip(bookings)
+
     try:
-        return _assemble(_base(base))
+        return _assemble(_base(base), loaded, trip)
     except PortError as exc:
         raise HTTPException(503, str(exc)) from exc
 

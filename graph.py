@@ -81,13 +81,21 @@ def no_action_model(disruption: Disruption, trip: Trip) -> ReachModel:
     otherwise would inflate the headline number, and an inflated number is the
     first thing a judge will pull on.
     """
-    landed = trip.by_id(disruption.booking_id)
+    affected = trip.by_id(disruption.booking_id)
     day_end = datetime.combine(
         disruption.new_end.date(), time(23, 59), tzinfo=disruption.new_end.tzinfo)
-    return ReachModel(
-        arrivals={landed.destination or landed.where: disruption.new_end},
-        settled_from=day_end + timedelta(minutes=1),
-    )
+
+    if disruption.cancelled:
+        # The flight is not going. Doing nothing leaves the traveller at the
+        # origin, not late at the destination — so anything reachable only from
+        # the destination is not reachable at all, and the plans have to search
+        # from where the traveller actually is.
+        where = affected.origin or affected.where
+        arrivals = {where: disruption.new_end}
+    else:
+        arrivals = {affected.destination or affected.where: disruption.new_end}
+
+    return ReachModel(arrivals=arrivals, settled_from=day_end + timedelta(minutes=1))
 
 
 @dataclass

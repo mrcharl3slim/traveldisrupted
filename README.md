@@ -6,7 +6,8 @@ that is not.
 ```bash
 python serve.py                   # the web app, first free port from 8000
 python cli.py                     # the same numbers, in a terminal
-python cli.py --base today        # anchor the trip to run time
+python cli.py --base written      # the October scenario, as the tests assert it
+python mcp_server.py              # the engine as MCP tools, over stdio
 python -m pytest tests/ -q        # 48 tests, no keys, no network
 ```
 
@@ -58,3 +59,33 @@ the handoff. Two things it refuses to hide:
 Times are formatted server-side in the trip's own timezone. Letting the browser format them renders
 a Zurich arrival in the viewer's zone, which is a different flight as far as the traveller is
 concerned.
+
+
+## Dates
+
+Everything anchors to **today** by default. Live flight status only covers about a week either side
+of now, so a trip pinned to 12 October cannot be demonstrated live in September — "as written" is
+the special case, reachable with `--base written` or `?base=written`, and it is what the tests
+assert against because those figures can be checked by hand.
+
+`--base` takes `today`, `written`, `+3`, `-1`, or a date. Recordings made on a different day are
+replayed with every date inside them shifted to match, and each shift is announced in the banner and
+in `/health`. Ambiguity refuses: if two recordings differ only by date there is no way to know which
+was meant, and guessing would answer with the wrong day's flight.
+
+## MCP
+
+The engine is a tool other agents can call. Detection is commodity; cross-provider replanning is
+not, and an MCP surface is how that becomes somebody else's building block rather than our demo.
+
+```json
+{"mcpServers": {"downstream": {
+    "command": "python", "args": ["/absolute/path/to/mcp_server.py"]}}}
+```
+
+Three tools: `itinerary` (what the trip is, including the two ticket groups that make nobody
+responsible for the connection), `impact_of` (what a delay breaks and which deadline falls first),
+and `recovery_plans` (ranked options). Two things travel with the output on purpose — every action's
+**lane**, because a `call` action has no consumer API and an agent reporting it as done has lied to
+a stranded traveller; and every fare's **price_source**, because the Swiss rail number is ours
+rather than a quote.

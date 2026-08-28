@@ -88,9 +88,9 @@
       <div class="sub">What one late flight costs, and what is still catchable.</div>
     </div>
     <div class="anchor" id="anchor">
-      <button data-base="" class="on">As written</button>
-      <button data-base="today">Today</button>
+      <button data-base="today" class="on">Today</button>
       <button data-base="+3">In 3 days</button>
+      <button data-base="written">As written</button>
     </div>
   </header>
 
@@ -268,7 +268,7 @@ document.querySelectorAll('#anchor button').forEach(b => b.onclick = () => {
   load(b.dataset.base);
 });
 
-load('');
+load('today');
 </script>
 </body>
 </html>
