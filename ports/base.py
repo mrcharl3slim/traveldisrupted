@@ -98,18 +98,59 @@ def _shift_dates(text: str, days: int) -> str:
     return _ISO.sub(bump, text)
 
 
-def _replay(name: str, key: dict[str, Any]) -> Any:
-    """The recording for this key, or the one recording that differs only by date.
+def _pick(name: str, candidates: list[Path], prefer: date | None,
+          wanted: date | None) -> Path:
+    """Which of several recordings of the same route to replay.
+
+    The first version refused outright: two recordings differing only by date
+    meant there was no way to know which was meant, so it raised and told you to
+    re-record. That was right about the risk and wrong about the remedy --
+    recording again adds a THIRD candidate and the next run fails the same way,
+    which is how the scripted demo broke the morning after a second ZRH -> MXP
+    search was captured for the booking flow.
+
+    Two rules instead:
+
+      * a caller that knows which recording it means says so. The scripted
+        demo's replacement leg is pinned by tests and shown to judges, so it
+        names the October capture and keeps its figures whatever date the trip
+        is anchored to. That is what makes the demo immune to this choice
+        rather than dependent on it.
+      * anything else takes the recording nearest the day being asked about,
+        because the shift is the distortion and the smallest one is the least
+        wrong. A booking search three weeks out lands on the capture made for
+        three weeks out, not on a scenario fixture from six weeks later.
+
+    Note what the date in a filename is: the day the search was FOR, not the day
+    it was captured. So "the newest file" is not "the freshest evidence" -- it
+    is whichever recording reaches furthest into the calendar, which justifies
+    nothing. Nearest is the rule that survives knowing that.
+
+    Either way the choice goes into `shifted` and onto the banner. The original
+    worry was a silent wrong answer; this answer is not silent.
+    """
+    if len(candidates) == 1:
+        return candidates[0]
+    if prefer is not None:
+        for candidate in candidates:
+            if _first_date(candidate.stem) == prefer:
+                return candidate
+    if wanted is None:
+        return candidates[0]          # sorted: stable, and nothing better to go on
+    return min(candidates,
+               key=lambda p: (abs(((_first_date(p.stem) or date.min) - wanted).days),
+                              p.name))
+
+
+def _replay(name: str, key: dict[str, Any], prefer: date | None = None) -> Any:
+    """The recording for this key, or one that differs from it only by date.
 
     The scenario is anchored to run time so that live flight status -- which
     only covers about a week either side of today -- can be demonstrated at all.
     That moves every fixture lookup off the date the recordings were captured
-    on. Rather than re-record before every demo, an unambiguous match is
-    accepted and its dates are shifted to suit.
-
-    Unambiguous is the whole safeguard: if two recordings in a directory differ
-    only by date, there is no way to know which one was meant, and guessing
-    would silently answer with the wrong day's flight.
+    on. Rather than re-record before every demo, a date-shifted match is
+    accepted and its dates are moved to suit; `_pick` decides which one when
+    there is more than one, and the shift is announced either way.
     """
     exact = _path(name, key)
     if exact.exists():
@@ -118,21 +159,22 @@ def _replay(name: str, key: dict[str, Any]) -> Any:
     wanted = _slug(key)
     pattern = _ISO.sub("DATE", wanted)
     folder = FIXTURES / name
-    candidates = [p for p in folder.glob("*.json")
-                  if _ISO.sub("DATE", p.stem) == pattern] if folder.exists() else []
+    candidates = sorted(p for p in folder.glob("*.json")
+                        if _ISO.sub("DATE", p.stem) == pattern) if folder.exists() else []
 
-    if len(candidates) != 1:
+    if not candidates:
         raise PortError(
-            f"no recording at {exact.relative_to(FIXTURES.parent)}"
-            + (f" ({len(candidates)} date-shifted candidates -- too ambiguous to pick)"
-               if candidates else "")
-            + ". Run `DOWNSTREAM_PORTS=record python record.py` on a machine "
-              "with network access.")
+            f"no recording at {exact.relative_to(FIXTURES.parent)}. Run "
+            "`DOWNSTREAM_PORTS=record python record.py` on a machine with "
+            "network access.")
 
-    found = candidates[0]
-    want, have = _first_date(wanted), _first_date(found.stem)
+    want = _first_date(wanted)
+    found = _pick(name, candidates, prefer, want)
+    have = _first_date(found.stem)
     days = (want - have).days if (want and have) else 0
-    shifted.append(f"{name}: replayed {found.name} shifted {days:+d} days")
+    among = (f", chosen from {len(candidates)} recordings of this route"
+             if len(candidates) > 1 else "")
+    shifted.append(f"{name}: replayed {found.name} shifted {days:+d} days{among}")
     return json.loads(_shift_dates(found.read_text(), days))
 
 
@@ -185,18 +227,24 @@ def trim(name: str, data: Any) -> Any:
     return data
 
 
-def call(name: str, key: dict[str, Any], fetch: Callable[[], Any]) -> Any:
-    """Fetch or replay, according to MODE. Never raises in replay-backed paths."""
+def call(name: str, key: dict[str, Any], fetch: Callable[[], Any],
+         prefer: date | None = None) -> Any:
+    """Fetch or replay, according to MODE. Never raises in replay-backed paths.
+
+    ``prefer`` names the capture date a caller means when several recordings of
+    the same request exist. It is a hint for replay only -- a live call has no
+    use for it, and a recording overwrites whichever file the key names.
+    """
     fixture = _path(name, key)
 
     if MODE == "replay":
-        return _replay(name, key)
+        return _replay(name, key, prefer)
 
     try:
         data = fetch()
     except (urllib.error.URLError, TimeoutError, OSError, ValueError) as exc:
         try:
-            data = _replay(name, key)
+            data = _replay(name, key, prefer)
         except PortError:
             raise PortError(f"{name}: live call failed and no recording exists: {exc}")
         degraded.append(f"{name}: live call failed ({type(exc).__name__}), replayed a recording")

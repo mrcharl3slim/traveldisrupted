@@ -8,7 +8,7 @@ python serve.py                   # the web app, first free port from 8000
 python cli.py                     # the same numbers, in a terminal
 python cli.py --base written      # the October scenario, as the tests assert it
 python mcp_server.py              # the engine as MCP tools, over stdio
-python -m pytest tests/ -q        # 100 tests, no keys, no network
+python -m pytest tests/ -q        # 104 tests, no keys, no network
 ```
 
 Runs in **replay** by default: every API response is a committed fixture, so
@@ -130,8 +130,13 @@ assert against because those figures can be checked by hand.
 
 `--base` takes `today`, `written`, `+3`, `-1`, or a date. Recordings made on a different day are
 replayed with every date inside them shifted to match, and each shift is announced in the banner and
-in `/health`. Ambiguity refuses: if two recordings differ only by date there is no way to know which
-was meant, and guessing would answer with the wrong day's flight.
+in `/health`. When one route has been recorded more than once, a caller that knows which capture it means
+names it — the scripted scenario asks for the October one, so its figures do not move when the
+trip is anchored to a different week. Everything else takes the recording nearest the day being
+asked about, because the shift is the distortion and the smallest one is the least wrong. Note
+what the date in a fixture name is: the day the search was *for*, not the day it was captured,
+which is why "newest file" justifies nothing. Only a route with no recording at all still
+refuses — that is the failure re-recording actually fixes.
 
 ## MCP
 

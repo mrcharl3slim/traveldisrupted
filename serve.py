@@ -40,7 +40,8 @@ import store as store_module                                  # noqa: E402
 from domain import Booking, Kind, Trip                        # noqa: E402
 import aerodatabox, duffel, rail                              # noqa: E402,E401
 from base import MODE, degraded, shifted                      # noqa: E402
-from demo_trip import DEFAULT_BASE, anchor, build_trip, resolve_base   # noqa: E402
+from demo_trip import (DEFAULT_BASE, anchor, as_written, build_trip,   # noqa: E402
+                        resolve_base)
 from graph import Impact, propagate                           # noqa: E402
 from plan import Gap, Lane, generate                          # noqa: E402
 
@@ -320,7 +321,8 @@ def _assemble(basis: date | None, trip: Trip | None = None,
                           "currency": b.currency, "ticket_group": b.ticket_group}
                          for b in trip.in_order()],
         }
-    offers = (duffel.offers("ZRH", "MXP", anchor(basis, 12, 9, 0), after=disruption.new_end)
+    offers = (duffel.offers("ZRH", "MXP", anchor(basis, 12, 9, 0), after=disruption.new_end,
+                              prefer=as_written(12))
               + rail.offers("Zurich HB", "Milano Centrale", anchor(basis, 12, 9, 0),
                             {"Zürich HB": "ZRH_HB", "Milano Centrale": "MILANO_C"}))
 

@@ -11,7 +11,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path[:0] = [str(ROOT), str(ROOT / "data"), str(ROOT / "ports")]
 
-from demo_trip import CEST, DEFAULT_BASE, anchor, build_trip, resolve_base  # noqa: E402
+from demo_trip import (CEST, DEFAULT_BASE, anchor, as_written,  # noqa: E402
+                        build_trip, resolve_base)
 from domain import Disruption                   # noqa: E402
 from graph import propagate                     # noqa: E402
 import aerodatabox, duffel, rail                 # noqa: E402,E401
@@ -38,7 +39,8 @@ NOW = anchor(BASE, 12, 2, 38)
 # Detection and options now come through the ports. In replay that is a
 # recorded response; in live it is the provider. Nothing below knows which.
 D = aerodatabox.disruption("SQ346", anchor(BASE, 11, 9, 0), "sq346")
-OFFERS = (duffel.offers("ZRH", "MXP", anchor(BASE, 12, 9, 0), after=D.new_end)
+OFFERS = (duffel.offers("ZRH", "MXP", anchor(BASE, 12, 9, 0), after=D.new_end,
+                              prefer=as_written(12))
           + rail.offers("Zurich HB", "Milano Centrale", anchor(BASE, 12, 9, 0),
                         {"Zürich HB": "ZRH_HB", "Milano Centrale": "MILANO_C"}))
 print(f"\n  ports: {MODE}"

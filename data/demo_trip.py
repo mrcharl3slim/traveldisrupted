@@ -194,6 +194,18 @@ def build_trip(base: date | None = None) -> Trip:
     return shift_trip(TRIP, (base - DEFAULT_BASE).days)
 
 
+def as_written(day: int) -> date:
+    """The calendar date trip-day ``day`` falls on in the literal above.
+
+    The scenario's fixtures were captured against these dates, so this is what a
+    port is told to prefer when a route has been recorded more than once. Pinned
+    to the literal rather than to run time on purpose: the demo's figures are
+    asserted by tests and shown to judges, and they must not move because the
+    trip is being anchored to a different week.
+    """
+    return dt(day, 12, 0).date()
+
+
 def anchor(base: date | None, day: int, hh: int, mm: int, tz=CEST) -> datetime:
     """A datetime on trip-day ``day`` (11-17), under the same shift as build_trip."""
     offset = 0 if base is None else (base - DEFAULT_BASE).days

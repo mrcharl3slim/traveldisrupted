@@ -25,6 +25,7 @@ from langgraph.graph import END, StateGraph
 import aerodatabox
 import duffel
 import rail
+from demo_trip import as_written
 from graph import propagate
 from plan import Lane, generate
 
@@ -64,7 +65,8 @@ def do_propagate(s: State) -> State:
 
 def replan(s: State) -> State:
     d, day = s["disruption"], s["search_day"]
-    offers = (duffel.offers("ZRH", "MXP", day, after=d.new_end)
+    offers = (duffel.offers("ZRH", "MXP", day, after=d.new_end,
+                              prefer=as_written(12))
               + rail.offers("Zurich HB", "Milano Centrale", day, STATIONS))
     plans = generate(s["trip"], d, s["now"], offers)
     return {"plans": plans, "chosen": plans[0]}

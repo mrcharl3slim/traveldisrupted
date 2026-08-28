@@ -26,7 +26,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path[:0] = [str(ROOT), str(ROOT / "data"), str(ROOT / "ports")]
 
-from demo_trip import anchor, build_trip, resolve_base   # noqa: E402
+from demo_trip import anchor, as_written, build_trip, resolve_base   # noqa: E402
 from graph import propagate                   # noqa: E402
 from plan import generate                     # noqa: E402
 import aerodatabox, duffel, rail              # noqa: E402,E401
@@ -87,7 +87,8 @@ def recovery_plans(flight: str = "SQ346", base: str = "today",
     d = aerodatabox.disruption(flight, anchor(basis, 11, 9, 0), "sq346")
     if not d:
         return {"disrupted": False}
-    offers = (duffel.offers("ZRH", "MXP", anchor(basis, 12, 9, 0), after=d.new_end)
+    offers = (duffel.offers("ZRH", "MXP", anchor(basis, 12, 9, 0), after=d.new_end,
+                              prefer=as_written(12))
               + rail.offers("Zurich HB", "Milano Centrale",
                             anchor(basis, 12, 9, 0), STATIONS))
     return {"plans": [{

@@ -89,7 +89,8 @@ def _headers():
             "Content-Type": "application/json"}
 
 
-def search(origin: str, destination: str, day: datetime, passengers: int = 1):
+def search(origin: str, destination: str, day: datetime, passengers: int = 1,
+           prefer=None):
     key = {"from": origin, "to": destination, "on": f"{day:%Y-%m-%d}"}
     payload = json.dumps({"data": {
         "slices": [{"origin": origin, "destination": destination,
@@ -98,15 +99,23 @@ def search(origin: str, destination: str, day: datetime, passengers: int = 1):
         "cabin_class": "economy"}}).encode()
     return call("duffel", key,
                 lambda: get_json(f"{BASE}?return_offers=true",
-                                 headers=_headers(), body=payload))
+                                 headers=_headers(), body=payload),
+                prefer=prefer)
 
 
-def offers(origin: str, destination: str, day: datetime, after: datetime | None = None):
-    """Wire format -> Offer, keeping only departures the traveller can reach."""
+def offers(origin: str, destination: str, day: datetime,
+           after: datetime | None = None, prefer=None):
+    """Wire format -> Offer, keeping only departures the traveller can reach.
+
+    ``prefer`` is the capture date to replay when this route has been recorded
+    more than once. The scripted scenario passes the date it is written against
+    so its figures do not move when the trip is anchored to a different day.
+    """
     from offers import Offer
 
     out = []
-    for o in search(origin, destination, day).get("data", {}).get("offers", []):
+    for o in search(origin, destination, day, prefer=prefer).get(
+            "data", {}).get("offers", []):
         slice_ = o["slices"][0]
         segments = slice_["segments"]
         first, last = segments[0], segments[-1]

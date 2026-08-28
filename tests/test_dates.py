@@ -84,16 +84,70 @@ def test_replayed_dates_are_moved_but_times_are_not():
     assert exact and moved
 
 
-def test_an_ambiguous_directory_refuses_rather_than_guessing(tmp_path, monkeypatch):
-    """Two recordings differing only by date: there is no way to know which was
-    meant, and picking one would answer with the wrong day's flight."""
+def _two_recordings(tmp_path, monkeypatch):
     folder = tmp_path / "status"
     folder.mkdir()
-    (folder / "flight-XX1_on-2026-10-11.json").write_text("{}")
-    (folder / "flight-XX1_on-2026-10-12.json").write_text("{}")
+    (folder / "flight-XX1_on-2026-10-11.json").write_text('{"which": "october"}')
+    (folder / "flight-XX1_on-2026-09-18.json").write_text('{"which": "september"}')
     monkeypatch.setattr(ports_base, "FIXTURES", tmp_path)
-    with pytest.raises(ports_base.PortError, match="ambiguous"):
+
+
+def test_a_caller_can_name_the_recording_it_means(tmp_path, monkeypatch):
+    """Two recordings of one route are not interchangeable -- they are two
+    different days' inventory. The scripted demo's figures are asserted by tests
+    and shown to judges, so it asks for its own capture and keeps them whatever
+    date the trip is anchored to."""
+    _two_recordings(tmp_path, monkeypatch)
+    got = ports_base.call("status", {"flight": "XX1", "on": "2026-09-01"},
+                          lambda: None, prefer=date(2026, 10, 11))
+    assert got == {"which": "october"}
+
+
+def test_without_a_hint_the_nearest_recording_wins(tmp_path, monkeypatch):
+    """The shift is the distortion, so the smallest one is the least wrong. A
+    booking search three weeks out has to land on the capture made for three
+    weeks out, not on a scenario fixture from six weeks later -- and "newest
+    file" would have picked the latter, because the date in a fixture name is
+    the day the search was FOR, not the day it was captured."""
+    _two_recordings(tmp_path, monkeypatch)
+    assert ports_base.call("status", {"flight": "XX1", "on": "2026-09-01"},
+                           lambda: None) == {"which": "september"}
+    assert ports_base.call("status", {"flight": "XX1", "on": "2026-10-20"},
+                           lambda: None) == {"which": "october"}
+
+
+def test_choosing_between_recordings_is_announced(tmp_path, monkeypatch):
+    """The original worry was a silent wrong answer. Refusing outright was the
+    wrong remedy -- recording again adds a THIRD candidate and the next run
+    fails identically, which is exactly how the scripted demo broke the morning
+    after a second ZRH -> MXP search was captured. This is the safeguard that
+    replaced it."""
+    _two_recordings(tmp_path, monkeypatch)
+    ports_base.shifted.clear()
+    ports_base.call("status", {"flight": "XX1", "on": "2026-09-01"}, lambda: None)
+    assert any("chosen from 2 recordings" in note for note in ports_base.shifted)
+
+
+def test_no_recording_at_all_still_refuses(tmp_path, monkeypatch):
+    """The failure that re-recording actually fixes keeps saying so."""
+    (tmp_path / "status").mkdir()
+    monkeypatch.setattr(ports_base, "FIXTURES", tmp_path)
+    with pytest.raises(ports_base.PortError, match="record.py"):
         ports_base.call("status", {"flight": "XX1", "on": "2026-09-01"}, lambda: None)
+
+
+def test_the_scripted_demo_is_unambiguous_on_any_day():
+    """The regression. `--base today` searched ZRH -> MXP for today's date, found
+    two recordings of that route and refused -- so the default page broke the
+    day after a second one was captured."""
+    import duffel
+    from demo_trip import as_written
+
+    for basis in (None, date(2026, 8, 29), date(2026, 12, 25)):
+        day = anchor(basis, 12, 9, 0)
+        found = duffel.offers("ZRH", "MXP", day, prefer=as_written(12))
+        assert found, f"no offers for basis {basis}"
+        assert all(o.depart.date() == day.date() for o in found)
 
 
 def test_date_regex_ignores_longer_digit_runs():
