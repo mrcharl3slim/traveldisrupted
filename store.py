@@ -69,8 +69,34 @@ class MemoryStore:
     def get(self, trip_id: str) -> Saved | None:
         return self._trips.get(trip_id)
 
+    def update(self, trip_id: str, payload: dict) -> Saved | None:
+        """Replace a stored trip's payload, keeping its id and creation time.
+
+        The id is what a traveller has in their hand. Re-saving under a new one
+        would leave them holding a link to the version before the thing they
+        just did.
+        """
+        with self._lock:
+            record = self._trips.get(trip_id)
+            if record is None:
+                return None
+            updated = Saved(record.id, record.owner, record.created,
+                            record.label, payload)
+            self._trips[trip_id] = updated
+            return updated
+
     def list(self, owner: str, limit: int = 20) -> list[Saved]:
         rows = [t for t in self._trips.values() if t.owner == owner]
+        return sorted(rows, key=lambda t: t.created, reverse=True)[:limit]
+
+    def watching(self, limit: int = 50) -> list[Saved]:
+        """Trips with a live disruption -- the only ones a ticker has work for.
+
+        Asked of the store rather than filtered in the caller so the database
+        does it in the WHERE clause. A watch that loads every itinerary anybody
+        ever pasted, once a minute, is a watch that gets switched off.
+        """
+        rows = [t for t in self._trips.values() if t.payload.get("disruption")]
         return sorted(rows, key=lambda t: t.created, reverse=True)[:limit]
 
     def delete(self, trip_id: str, owner: str) -> bool:
@@ -114,6 +140,22 @@ class PostgresStore:
                 "SELECT id, owner, created, label, payload FROM trips WHERE id = %s",
                 (trip_id,)).fetchone()
         return Saved(*row) if row else None
+
+    def update(self, trip_id: str, payload: dict) -> Saved | None:
+        with self._conn() as conn:
+            row = conn.execute(
+                "UPDATE trips SET payload = %s WHERE id = %s"
+                " RETURNING id, owner, created, label, payload",
+                (json.dumps(payload), trip_id)).fetchone()
+        return Saved(*row) if row else None
+
+    def watching(self, limit: int = 50) -> list[Saved]:
+        with self._conn() as conn:
+            rows = conn.execute(
+                "SELECT id, owner, created, label, payload FROM trips"
+                " WHERE payload ? 'disruption' ORDER BY created DESC LIMIT %s",
+                (limit,)).fetchall()
+        return [Saved(*r) for r in rows]
 
     def list(self, owner: str, limit: int = 20) -> list[Saved]:
         with self._conn() as conn:

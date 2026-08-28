@@ -4,14 +4,14 @@
     "offers": [
       {
         "total_emissions_kg": "52",
-        "intended_total_amount": "504.27",
+        "intended_total_amount": "504.50",
         "intended_services": null,
-        "intended_base_amount": "360.21",
+        "intended_base_amount": "360.37",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -67,9 +67,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "144.06",
-        "base_amount": "360.21",
+        "tax_amount": "144.13",
         "base_currency": "USD",
+        "base_amount": "360.37",
         "total_currency": "USD",
         "slices": [
           {
@@ -90,7 +90,6 @@
                 "departing_at": "2026-10-12T06:55:00",
                 "arriving_at": "2026-10-12T08:05:00",
                 "stops": [],
-                "operating_carrier_flight_number": "1068",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LX.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LX.svg",
@@ -99,7 +98,6 @@
                   "name": "SWISS",
                   "id": "arl_00009VME7DDSWSIAygCT1z"
                 },
-                "marketing_carrier_flight_number": "5737",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LH.svg",
@@ -108,6 +106,8 @@
                   "name": "Lufthansa",
                   "id": "arl_00009VME7DCkZ5j0wTrtvG"
                 },
+                "operating_carrier_flight_number": "1068",
+                "marketing_carrier_flight_number": "5737",
                 "passengers": [
                   {
                     "baggages": [
@@ -117,7 +117,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -183,7 +183,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9pstvnYv83h0oqiyP"
+                "id": "seg_0000B9pz9370m1NPzYhNJd"
               },
               {
                 "origin_terminal": "1",
@@ -196,7 +196,6 @@
                 "departing_at": "2026-10-12T09:15:00",
                 "arriving_at": "2026-10-12T10:35:00",
                 "stops": [],
-                "operating_carrier_flight_number": "0248",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LH.svg",
@@ -205,7 +204,6 @@
                   "name": "Lufthansa",
                   "id": "arl_00009VME7DCkZ5j0wTrtvG"
                 },
-                "marketing_carrier_flight_number": "0248",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LH.svg",
@@ -214,6 +212,8 @@
                   "name": "Lufthansa",
                   "id": "arl_00009VME7DCkZ5j0wTrtvG"
                 },
+                "operating_carrier_flight_number": "0248",
+                "marketing_carrier_flight_number": "0248",
                 "passengers": [
                   {
                     "baggages": [
@@ -223,7 +223,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -301,7 +301,7 @@
                   "name": "Frankfurt am Main Airport",
                   "id": "arp_fra_de"
                 },
-                "id": "seg_0000B9pstvnYv83h0oqiyS"
+                "id": "seg_0000B9pz9370m1NPzYhNJe"
               }
             ],
             "conditions": {
@@ -355,12 +355,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9pstvnYv83h0oqiyU"
+            "id": "sli_0000B9pz9370m1NPzYhNJf"
           }
         ],
-        "total_amount": "504.27",
+        "total_amount": "504.50",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:25.135398Z",
+        "created_at": "2026-08-28T16:57:22.874557Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -369,7 +369,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
@@ -384,8 +384,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:25.135398Z",
-        "expires_at": "2026-08-28T16:17:24.000000Z",
+        "updated_at": "2026-08-28T16:57:22.874557Z",
+        "expires_at": "2026-08-28T17:27:22.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -395,7 +395,7 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9pstvnYv83h0oqiyh"
+        "id": "off_0000B9pz9370m1NPzYhNJh"
       },
       {
         "total_emissions_kg": "47",
@@ -406,7 +406,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:00Z"
+          "payment_required_by": "2026-08-29T16:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -419,8 +419,8 @@
         "supported_loyalty_programmes": [],
         "private_fares": [],
         "tax_amount": "75.9",
-        "base_amount": "102.00",
         "base_currency": "USD",
+        "base_amount": "102.00",
         "total_currency": "USD",
         "slices": [
           {
@@ -441,7 +441,6 @@
                 "departing_at": "2026-10-12T08:00:00",
                 "arriving_at": "2026-10-12T09:00:00",
                 "stops": [],
-                "operating_carrier_flight_number": "4312",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/DE.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/DE.svg",
@@ -450,7 +449,6 @@
                   "name": "Condor Flugdienst",
                   "id": "arl_0000Aiejdnd3GRJ3kD0vS5"
                 },
-                "marketing_carrier_flight_number": "4312",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/DE.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/DE.svg",
@@ -459,6 +457,8 @@
                   "name": "Condor Flugdienst",
                   "id": "arl_0000Aiejdnd3GRJ3kD0vS5"
                 },
+                "operating_carrier_flight_number": "4312",
+                "marketing_carrier_flight_number": "4312",
                 "passengers": [
                   {
                     "baggages": [
@@ -472,7 +472,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -538,7 +538,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9pstyhI8tpE0EwG7U"
+                "id": "seg_0000B9pz91ho0FcVd5tjOp"
               },
               {
                 "origin_terminal": null,
@@ -551,7 +551,6 @@
                 "departing_at": "2026-10-12T14:40:00",
                 "arriving_at": "2026-10-12T15:50:00",
                 "stops": [],
-                "operating_carrier_flight_number": "4357",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/DE.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/DE.svg",
@@ -560,7 +559,6 @@
                   "name": "Condor Flugdienst",
                   "id": "arl_0000Aiejdnd3GRJ3kD0vS5"
                 },
-                "marketing_carrier_flight_number": "4357",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/DE.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/DE.svg",
@@ -569,6 +567,8 @@
                   "name": "Condor Flugdienst",
                   "id": "arl_0000Aiejdnd3GRJ3kD0vS5"
                 },
+                "operating_carrier_flight_number": "4357",
+                "marketing_carrier_flight_number": "4357",
                 "passengers": [
                   {
                     "baggages": [
@@ -582,7 +582,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -660,7 +660,7 @@
                   "name": "Frankfurt am Main Airport",
                   "id": "arp_fra_de"
                 },
-                "id": "seg_0000B9pstyhI8tpE0EwG7V"
+                "id": "seg_0000B9pz91ho0FcVd5tjOv"
               }
             ],
             "conditions": {
@@ -710,12 +710,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9pstyhI8tpE0EwG7W"
+            "id": "sli_0000B9pz91i9yvu5eC40wN"
           }
         ],
         "total_amount": "177.90",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:25.638756Z",
+        "created_at": "2026-08-28T16:57:22.613376Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -724,15 +724,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:25.638756Z",
-        "expires_at": "2026-08-28T16:47:25.634935Z",
+        "updated_at": "2026-08-28T16:57:22.613376Z",
+        "expires_at": "2026-08-28T17:57:22.603355Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/DE.svg",
@@ -742,18 +742,18 @@
           "name": "Condor Flugdienst",
           "id": "arl_0000Aiejdnd3GRJ3kD0vS5"
         },
-        "id": "off_0000B9pstyhI8tpE0EwG7Y"
+        "id": "off_0000B9pz91i9yvu5eC40wX"
       },
       {
         "total_emissions_kg": "19",
-        "intended_total_amount": "706.80",
+        "intended_total_amount": "707.13",
         "intended_services": null,
-        "intended_base_amount": "604.07",
+        "intended_base_amount": "604.36",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -809,9 +809,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "102.73",
-        "base_amount": "604.07",
+        "tax_amount": "102.77",
         "base_currency": "USD",
+        "base_amount": "604.36",
         "total_currency": "USD",
         "slices": [
           {
@@ -832,7 +832,6 @@
                 "departing_at": "2026-10-12T08:55:00",
                 "arriving_at": "2026-10-12T09:50:00",
                 "stops": [],
-                "operating_carrier_flight_number": "1612",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LX.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LX.svg",
@@ -841,7 +840,6 @@
                   "name": "SWISS",
                   "id": "arl_00009VME7DDSWSIAygCT1z"
                 },
-                "marketing_carrier_flight_number": "1612",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LX.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LX.svg",
@@ -850,6 +848,8 @@
                   "name": "SWISS",
                   "id": "arl_00009VME7DDSWSIAygCT1z"
                 },
+                "operating_carrier_flight_number": "1612",
+                "marketing_carrier_flight_number": "1612",
                 "passengers": [
                   {
                     "baggages": [
@@ -859,7 +859,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -925,7 +925,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9pstvqOkaKL9cAzOi"
+                "id": "seg_0000B9pz9398e74u69h4dC"
               }
             ],
             "conditions": {
@@ -979,12 +979,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9pstvqkjGbvAiLGwW"
+            "id": "sli_0000B9pz9398e74u69h4dE"
           }
         ],
-        "total_amount": "706.80",
+        "total_amount": "707.13",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:25.135398Z",
+        "created_at": "2026-08-28T16:57:22.874557Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -993,7 +993,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
@@ -1008,8 +1008,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:25.135398Z",
-        "expires_at": "2026-08-28T16:17:24.000000Z",
+        "updated_at": "2026-08-28T16:57:22.874557Z",
+        "expires_at": "2026-08-28T17:27:22.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -1019,13 +1019,13 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9pstvqkjGbvAiLGwZ"
+        "id": "off_0000B9pz9398e74u69h4dH"
       },
       {
         "total_emissions_kg": "50",
-        "intended_total_amount": "81.48",
+        "intended_total_amount": "81.40",
         "intended_services": null,
-        "intended_base_amount": "11.35",
+        "intended_base_amount": "11.34",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": true,
@@ -1038,9 +1038,9 @@
         "available_services": null,
         "supported_loyalty_programmes": [],
         "private_fares": [],
-        "tax_amount": "70.13",
-        "base_amount": "11.35",
+        "tax_amount": "70.06",
         "base_currency": "USD",
+        "base_amount": "11.34",
         "total_currency": "USD",
         "slices": [
           {
@@ -1057,7 +1057,6 @@
                 "departing_at": "2026-10-12T09:25:00",
                 "arriving_at": "2026-10-12T11:15:00",
                 "stops": [],
-                "operating_carrier_flight_number": "6247",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VY.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/VY.svg",
@@ -1066,7 +1065,6 @@
                   "name": "Vueling",
                   "id": "arl_00009VME7DDoV8ZkzmMkak"
                 },
-                "marketing_carrier_flight_number": "6247",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VY.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/VY.svg",
@@ -1075,11 +1073,13 @@
                   "name": "Vueling",
                   "id": "arl_00009VME7DDoV8ZkzmMkak"
                 },
+                "operating_carrier_flight_number": "6247",
+                "marketing_carrier_flight_number": "6247",
                 "passengers": [
                   {
                     "baggages": [],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": null,
                       "marketing_name": "Economy",
@@ -1120,7 +1120,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psttSZcC55l90vzN"
+                "id": "seg_0000B9pz8yj74vsqOHUEVn"
               },
               {
                 "origin_terminal": null,
@@ -1129,7 +1129,6 @@
                 "departing_at": "2026-10-12T19:15:00",
                 "arriving_at": "2026-10-12T20:55:00",
                 "stops": [],
-                "operating_carrier_flight_number": "6336",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VY.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/VY.svg",
@@ -1138,7 +1137,6 @@
                   "name": "Vueling",
                   "id": "arl_00009VME7DDoV8ZkzmMkak"
                 },
-                "marketing_carrier_flight_number": "6336",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VY.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/VY.svg",
@@ -1147,11 +1145,13 @@
                   "name": "Vueling",
                   "id": "arl_00009VME7DDoV8ZkzmMkak"
                 },
+                "operating_carrier_flight_number": "6336",
+                "marketing_carrier_flight_number": "6336",
                 "passengers": [
                   {
                     "baggages": [],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": null,
                       "marketing_name": "Economy",
@@ -1204,7 +1204,7 @@
                   "name": "Barcelona–El Prat Josep Tarradellas Airport",
                   "id": "arp_bcn_es"
                 },
-                "id": "seg_0000B9psttSZcC55l90vzQ"
+                "id": "seg_0000B9pz8yj74vsqOHUEVo"
               }
             ],
             "conditions": {
@@ -1254,12 +1254,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psttSZcC55l90vzS"
+            "id": "sli_0000B9pz8yj74vsqOHUEVr"
           }
         ],
-        "total_amount": "81.48",
+        "total_amount": "81.40",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:24.733289Z",
+        "created_at": "2026-08-28T16:57:22.112829Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -1268,15 +1268,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:24.733289Z",
-        "expires_at": "2026-08-28T16:02:24.700597Z",
+        "updated_at": "2026-08-28T16:57:22.112829Z",
+        "expires_at": "2026-08-28T17:12:22.058563Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VY.svg",
@@ -1286,13 +1286,13 @@
           "name": "Vueling",
           "id": "arl_00009VME7DDoV8ZkzmMkak"
         },
-        "id": "off_0000B9psttSZcC55l90vzX"
+        "id": "off_0000B9pz8yj74vsqOHUEVw"
       },
       {
         "total_emissions_kg": "50",
-        "intended_total_amount": "81.48",
+        "intended_total_amount": "81.40",
         "intended_services": null,
-        "intended_base_amount": "11.35",
+        "intended_base_amount": "11.34",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": true,
@@ -1305,9 +1305,9 @@
         "available_services": null,
         "supported_loyalty_programmes": [],
         "private_fares": [],
-        "tax_amount": "70.13",
-        "base_amount": "11.35",
+        "tax_amount": "70.06",
         "base_currency": "USD",
+        "base_amount": "11.34",
         "total_currency": "USD",
         "slices": [
           {
@@ -1324,7 +1324,6 @@
                 "departing_at": "2026-10-12T09:25:00",
                 "arriving_at": "2026-10-12T11:15:00",
                 "stops": [],
-                "operating_carrier_flight_number": "6247",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VY.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/VY.svg",
@@ -1333,7 +1332,6 @@
                   "name": "Vueling",
                   "id": "arl_00009VME7DDoV8ZkzmMkak"
                 },
-                "marketing_carrier_flight_number": "6247",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VY.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/VY.svg",
@@ -1342,11 +1340,13 @@
                   "name": "Vueling",
                   "id": "arl_00009VME7DDoV8ZkzmMkak"
                 },
+                "operating_carrier_flight_number": "6247",
+                "marketing_carrier_flight_number": "6247",
                 "passengers": [
                   {
                     "baggages": [],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": null,
                       "marketing_name": "Economy",
@@ -1387,7 +1387,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psttTHZYeFnLLV5l"
+                "id": "seg_0000B9pz8yjp2IS0QToncZ"
               },
               {
                 "origin_terminal": null,
@@ -1396,7 +1396,6 @@
                 "departing_at": "2026-10-12T12:55:00",
                 "arriving_at": "2026-10-12T14:40:00",
                 "stops": [],
-                "operating_carrier_flight_number": "6340",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VY.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/VY.svg",
@@ -1405,7 +1404,6 @@
                   "name": "Vueling",
                   "id": "arl_00009VME7DDoV8ZkzmMkak"
                 },
-                "marketing_carrier_flight_number": "6340",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VY.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/VY.svg",
@@ -1414,11 +1412,13 @@
                   "name": "Vueling",
                   "id": "arl_00009VME7DDoV8ZkzmMkak"
                 },
+                "operating_carrier_flight_number": "6340",
+                "marketing_carrier_flight_number": "6340",
                 "passengers": [
                   {
                     "baggages": [],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": null,
                       "marketing_name": "Economy",
@@ -1471,7 +1471,7 @@
                   "name": "Barcelona–El Prat Josep Tarradellas Airport",
                   "id": "arp_bcn_es"
                 },
-                "id": "seg_0000B9psttTHZYeFnLLV5n"
+                "id": "seg_0000B9pz8yjp2IS0QToncb"
               }
             ],
             "conditions": {
@@ -1521,12 +1521,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psttTHZYeFnLLV5o"
+            "id": "sli_0000B9pz8yjp2IS0QToncc"
           }
         ],
-        "total_amount": "81.48",
+        "total_amount": "81.40",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:24.733289Z",
+        "created_at": "2026-08-28T16:57:22.112829Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -1535,15 +1535,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:24.733289Z",
-        "expires_at": "2026-08-28T16:02:24.700467Z",
+        "updated_at": "2026-08-28T16:57:22.112829Z",
+        "expires_at": "2026-08-28T17:12:22.058424Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VY.svg",
@@ -1553,7 +1553,7 @@
           "name": "Vueling",
           "id": "arl_00009VME7DDoV8ZkzmMkak"
         },
-        "id": "off_0000B9psttTHZYeFnLLV5u"
+        "id": "off_0000B9pz8yjp2IS0QToncf"
       },
       {
         "total_emissions_kg": "67",
@@ -1564,7 +1564,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:25.634091Z"
+          "payment_required_by": "2026-08-29T16:57:22.598721Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -1577,8 +1577,8 @@
         "supported_loyalty_programmes": [],
         "private_fares": [],
         "tax_amount": "85.3",
-        "base_amount": "130.00",
         "base_currency": "USD",
+        "base_amount": "130.00",
         "total_currency": "USD",
         "slices": [
           {
@@ -1599,7 +1599,6 @@
                 "departing_at": "2026-10-12T09:30:00",
                 "arriving_at": "2026-10-12T11:15:00",
                 "stops": [],
-                "operating_carrier_flight_number": "0331",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JU.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/JU.svg",
@@ -1608,7 +1607,6 @@
                   "name": "Air Serbia",
                   "id": "arl_00009VME7DCOaPRQvNhcNQ"
                 },
-                "marketing_carrier_flight_number": "0331",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JU.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/JU.svg",
@@ -1617,6 +1615,8 @@
                   "name": "Air Serbia",
                   "id": "arl_00009VME7DCOaPRQvNhcNQ"
                 },
+                "operating_carrier_flight_number": "0331",
+                "marketing_carrier_flight_number": "0331",
                 "passengers": [
                   {
                     "baggages": [
@@ -1630,7 +1630,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -1696,7 +1696,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9pstygwADXdz8lyYw"
+                "id": "seg_0000B9pz91gO5WUBYhEbBL"
               },
               {
                 "origin_terminal": null,
@@ -1709,7 +1709,6 @@
                 "departing_at": "2026-10-13T06:40:00",
                 "arriving_at": "2026-10-13T08:30:00",
                 "stops": [],
-                "operating_carrier_flight_number": "0416",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JU.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/JU.svg",
@@ -1718,7 +1717,6 @@
                   "name": "Air Serbia",
                   "id": "arl_00009VME7DCOaPRQvNhcNQ"
                 },
-                "marketing_carrier_flight_number": "0416",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JU.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/JU.svg",
@@ -1727,6 +1725,8 @@
                   "name": "Air Serbia",
                   "id": "arl_00009VME7DCOaPRQvNhcNQ"
                 },
+                "operating_carrier_flight_number": "0416",
+                "marketing_carrier_flight_number": "0416",
                 "passengers": [
                   {
                     "baggages": [
@@ -1740,7 +1740,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -1818,7 +1818,7 @@
                   "name": "Belgrade Nikola Tesla Airport",
                   "id": "arp_beg_rs"
                 },
-                "id": "seg_0000B9pstygwADXdz8lyYx"
+                "id": "seg_0000B9pz91gO5WUBYhEbBP"
               }
             ],
             "conditions": {
@@ -1868,12 +1868,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9pstygwADXdz8lyYy"
+            "id": "sli_0000B9pz91gO5WUBYhEbBR"
           }
         ],
         "total_amount": "215.30",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:25.638756Z",
+        "created_at": "2026-08-28T16:57:22.613376Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -1882,15 +1882,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:25.638756Z",
-        "expires_at": "2026-08-28T16:47:25.634122Z",
+        "updated_at": "2026-08-28T16:57:22.613376Z",
+        "expires_at": "2026-08-28T17:57:22.598784Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JU.svg",
@@ -1900,7 +1900,7 @@
           "name": "Air Serbia",
           "id": "arl_00009VME7DCOaPRQvNhcNQ"
         },
-        "id": "off_0000B9pstygwADXdz8lyZ0"
+        "id": "off_0000B9pz91gO5WUBYhEbBV"
       },
       {
         "total_emissions_kg": "56",
@@ -1911,7 +1911,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:25.635727Z"
+          "payment_required_by": "2026-08-29T16:57:22.607044Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -1944,8 +1944,8 @@
         ],
         "private_fares": [],
         "tax_amount": "135.3",
-        "base_amount": "135.00",
         "base_currency": "USD",
+        "base_amount": "135.00",
         "total_currency": "USD",
         "slices": [
           {
@@ -1966,7 +1966,6 @@
                 "departing_at": "2026-10-12T10:25:00",
                 "arriving_at": "2026-10-12T12:10:00",
                 "stops": [],
-                "operating_carrier_flight_number": "0602",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/SK.svg",
@@ -1975,7 +1974,6 @@
                   "name": "SAS",
                   "id": "arl_00009VME7DDSWSIAygCT1S"
                 },
-                "marketing_carrier_flight_number": "0602",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/SK.svg",
@@ -1984,6 +1982,8 @@
                   "name": "SAS",
                   "id": "arl_00009VME7DDSWSIAygCT1S"
                 },
+                "operating_carrier_flight_number": "0602",
+                "marketing_carrier_flight_number": "0602",
                 "passengers": [
                   {
                     "baggages": [
@@ -1997,7 +1997,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -2063,7 +2063,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9pstyiM4wfy3XR6lr"
+                "id": "seg_0000B9pz91kHr1bZkn3iG3"
               },
               {
                 "origin_terminal": null,
@@ -2076,7 +2076,6 @@
                 "departing_at": "2026-10-13T06:20:00",
                 "arriving_at": "2026-10-13T08:30:00",
                 "stops": [],
-                "operating_carrier_flight_number": "0683",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/SK.svg",
@@ -2085,7 +2084,6 @@
                   "name": "SAS",
                   "id": "arl_00009VME7DDSWSIAygCT1S"
                 },
-                "marketing_carrier_flight_number": "0683",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/SK.svg",
@@ -2094,6 +2092,8 @@
                   "name": "SAS",
                   "id": "arl_00009VME7DDSWSIAygCT1S"
                 },
+                "operating_carrier_flight_number": "0683",
+                "marketing_carrier_flight_number": "0683",
                 "passengers": [
                   {
                     "baggages": [
@@ -2107,7 +2107,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -2185,7 +2185,7 @@
                   "name": "Copenhagen Airport",
                   "id": "arp_cph_dk"
                 },
-                "id": "seg_0000B9pstyiM4wfy3XR6ls"
+                "id": "seg_0000B9pz91kHr1bZkn3iG8"
               }
             ],
             "conditions": {
@@ -2235,12 +2235,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9pstyiM4wfy3XR6lt"
+            "id": "sli_0000B9pz91kHr1bZkn3iGI"
           }
         ],
         "total_amount": "270.30",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:25.638756Z",
+        "created_at": "2026-08-28T16:57:22.613376Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -2249,15 +2249,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:25.638756Z",
-        "expires_at": "2026-08-28T16:47:25.635759Z",
+        "updated_at": "2026-08-28T16:57:22.613376Z",
+        "expires_at": "2026-08-28T17:57:22.607141Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
@@ -2267,7 +2267,7 @@
           "name": "SAS",
           "id": "arl_00009VME7DDSWSIAygCT1S"
         },
-        "id": "off_0000B9pstyiM4wfy3XR6lv"
+        "id": "off_0000B9pz91kHr1bZkn3iGQ"
       },
       {
         "total_emissions_kg": "56",
@@ -2278,7 +2278,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:25.632385Z"
+          "payment_required_by": "2026-08-29T16:57:22.590042Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -2311,8 +2311,8 @@
         ],
         "private_fares": [],
         "tax_amount": "179.1",
-        "base_amount": "170.00",
         "base_currency": "USD",
+        "base_amount": "170.00",
         "total_currency": "USD",
         "slices": [
           {
@@ -2333,7 +2333,6 @@
                 "departing_at": "2026-10-12T10:25:00",
                 "arriving_at": "2026-10-12T12:10:00",
                 "stops": [],
-                "operating_carrier_flight_number": "0602",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/SK.svg",
@@ -2342,7 +2341,6 @@
                   "name": "SAS",
                   "id": "arl_00009VME7DDSWSIAygCT1S"
                 },
-                "marketing_carrier_flight_number": "0602",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/SK.svg",
@@ -2351,6 +2349,8 @@
                   "name": "SAS",
                   "id": "arl_00009VME7DDSWSIAygCT1S"
                 },
+                "operating_carrier_flight_number": "0602",
+                "marketing_carrier_flight_number": "0602",
                 "passengers": [
                   {
                     "baggages": [
@@ -2364,7 +2364,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -2430,7 +2430,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9pstyfAGo7jtdwYnQ"
+                "id": "seg_0000B9pz91cUK1MnMbPU6G"
               },
               {
                 "origin_terminal": null,
@@ -2443,7 +2443,6 @@
                 "departing_at": "2026-10-12T12:55:00",
                 "arriving_at": "2026-10-12T15:05:00",
                 "stops": [],
-                "operating_carrier_flight_number": "1683",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/SK.svg",
@@ -2452,7 +2451,6 @@
                   "name": "SAS",
                   "id": "arl_00009VME7DDSWSIAygCT1S"
                 },
-                "marketing_carrier_flight_number": "1683",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/SK.svg",
@@ -2461,6 +2459,8 @@
                   "name": "SAS",
                   "id": "arl_00009VME7DDSWSIAygCT1S"
                 },
+                "operating_carrier_flight_number": "1683",
+                "marketing_carrier_flight_number": "1683",
                 "passengers": [
                   {
                     "baggages": [
@@ -2474,7 +2474,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -2552,7 +2552,7 @@
                   "name": "Copenhagen Airport",
                   "id": "arp_cph_dk"
                 },
-                "id": "seg_0000B9pstyfAGo7jtdwYnR"
+                "id": "seg_0000B9pz91cUK1MnMbPU6L"
               }
             ],
             "conditions": {
@@ -2602,12 +2602,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9pstyfAGo7jtdwYnS"
+            "id": "sli_0000B9pz91cUK1MnMbPU6P"
           }
         ],
         "total_amount": "349.10",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:25.638756Z",
+        "created_at": "2026-08-28T16:57:22.613376Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -2616,15 +2616,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:25.638756Z",
-        "expires_at": "2026-08-28T16:47:25.632419Z",
+        "updated_at": "2026-08-28T16:57:22.613376Z",
+        "expires_at": "2026-08-28T17:57:22.590109Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
@@ -2634,7 +2634,7 @@
           "name": "SAS",
           "id": "arl_00009VME7DDSWSIAygCT1S"
         },
-        "id": "off_0000B9pstyfAGo7jtdwYnU"
+        "id": "off_0000B9pz91cUK1MnMbPU6X"
       },
       {
         "total_emissions_kg": "57",
@@ -2645,7 +2645,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:25.633004Z"
+          "payment_required_by": "2026-08-29T16:57:22.593977Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -2658,8 +2658,8 @@
         "supported_loyalty_programmes": [],
         "private_fares": [],
         "tax_amount": "175.8",
-        "base_amount": "589.00",
         "base_currency": "USD",
+        "base_amount": "589.00",
         "total_currency": "USD",
         "slices": [
           {
@@ -2680,7 +2680,6 @@
                 "departing_at": "2026-10-12T10:30:00",
                 "arriving_at": "2026-10-12T12:30:00",
                 "stops": [],
-                "operating_carrier_flight_number": "0412",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LO.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LO.svg",
@@ -2689,7 +2688,6 @@
                   "name": "LOT Polish Airlines",
                   "id": "arl_00009VME7DCkZ5j0wTrtuw"
                 },
-                "marketing_carrier_flight_number": "0412",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LO.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LO.svg",
@@ -2698,6 +2696,8 @@
                   "name": "LOT Polish Airlines",
                   "id": "arl_00009VME7DCkZ5j0wTrtuw"
                 },
+                "operating_carrier_flight_number": "0412",
+                "marketing_carrier_flight_number": "0412",
                 "passengers": [
                   {
                     "baggages": [
@@ -2707,7 +2707,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -2761,7 +2761,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9pstyfsEAgtvqH7tw"
+                "id": "seg_0000B9pz91duEkV7R04cJI"
               },
               {
                 "origin_terminal": null,
@@ -2774,7 +2774,6 @@
                 "departing_at": "2026-10-12T16:40:00",
                 "arriving_at": "2026-10-12T18:55:00",
                 "stops": [],
-                "operating_carrier_flight_number": "0319",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LO.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LO.svg",
@@ -2783,7 +2782,6 @@
                   "name": "LOT Polish Airlines",
                   "id": "arl_00009VME7DCkZ5j0wTrtuw"
                 },
-                "marketing_carrier_flight_number": "0319",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LO.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LO.svg",
@@ -2792,6 +2790,8 @@
                   "name": "LOT Polish Airlines",
                   "id": "arl_00009VME7DCkZ5j0wTrtuw"
                 },
+                "operating_carrier_flight_number": "0319",
+                "marketing_carrier_flight_number": "0319",
                 "passengers": [
                   {
                     "baggages": [
@@ -2801,7 +2801,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -2867,7 +2867,7 @@
                   "name": "Warsaw Chopin Airport",
                   "id": "arp_waw_pl"
                 },
-                "id": "seg_0000B9pstyfsEAgtvqH7tx"
+                "id": "seg_0000B9pz91duEkV7R04cJO"
               }
             ],
             "conditions": {
@@ -2917,12 +2917,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9pstyfsEAgtvqH7ty"
+            "id": "sli_0000B9pz91duEkV7R04cJS"
           }
         ],
         "total_amount": "764.80",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:25.638756Z",
+        "created_at": "2026-08-28T16:57:22.613376Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -2931,15 +2931,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:25.638756Z",
-        "expires_at": "2026-08-28T16:47:25.633036Z",
+        "updated_at": "2026-08-28T16:57:22.613376Z",
+        "expires_at": "2026-08-28T17:57:22.594062Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LO.svg",
@@ -2949,7 +2949,7 @@
           "name": "LOT Polish Airlines",
           "id": "arl_00009VME7DCkZ5j0wTrtuw"
         },
-        "id": "off_0000B9pstyfsEAgtvqH7u0"
+        "id": "off_0000B9pz91duEkV7R04cJY"
       },
       {
         "total_emissions_kg": "67",
@@ -2960,7 +2960,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:25.635091Z"
+          "payment_required_by": "2026-08-29T16:57:22.604245Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -2993,8 +2993,8 @@
         ],
         "private_fares": [],
         "tax_amount": "71.2",
-        "base_amount": "229.00",
         "base_currency": "USD",
+        "base_amount": "229.00",
         "total_currency": "USD",
         "slices": [
           {
@@ -3015,7 +3015,6 @@
                 "departing_at": "2026-10-12T11:05:00",
                 "arriving_at": "2026-10-12T13:30:00",
                 "stops": [],
-                "operating_carrier_flight_number": "1676",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/UX.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/UX.svg",
@@ -3024,7 +3023,6 @@
                   "name": "Air Europa",
                   "id": "arl_00009VME7DAGiJjwomhv3I"
                 },
-                "marketing_carrier_flight_number": "1676",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/UX.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/UX.svg",
@@ -3033,6 +3031,8 @@
                   "name": "Air Europa",
                   "id": "arl_00009VME7DAGiJjwomhv3I"
                 },
+                "operating_carrier_flight_number": "1676",
+                "marketing_carrier_flight_number": "1676",
                 "passengers": [
                   {
                     "baggages": [
@@ -3046,7 +3046,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -3112,7 +3112,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9pstyhe7a6o1L6XfL"
+                "id": "seg_0000B9pz91iVxcBffIEIUc"
               },
               {
                 "origin_terminal": null,
@@ -3125,7 +3125,6 @@
                 "departing_at": "2026-10-12T15:15:00",
                 "arriving_at": "2026-10-12T17:20:00",
                 "stops": [],
-                "operating_carrier_flight_number": "1061",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/UX.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/UX.svg",
@@ -3134,7 +3133,6 @@
                   "name": "Air Europa",
                   "id": "arl_00009VME7DAGiJjwomhv3I"
                 },
-                "marketing_carrier_flight_number": "1061",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/UX.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/UX.svg",
@@ -3143,6 +3141,8 @@
                   "name": "Air Europa",
                   "id": "arl_00009VME7DAGiJjwomhv3I"
                 },
+                "operating_carrier_flight_number": "1061",
+                "marketing_carrier_flight_number": "1061",
                 "passengers": [
                   {
                     "baggages": [
@@ -3156,7 +3156,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -3234,7 +3234,7 @@
                   "name": "Adolfo Suárez Madrid-Barajas Airport",
                   "id": "arp_mad_es"
                 },
-                "id": "seg_0000B9pstyhe7a6o1L6XfM"
+                "id": "seg_0000B9pz91iVxcBffIEIUe"
               }
             ],
             "conditions": {
@@ -3284,12 +3284,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9pstyhe7a6o1L6XfN"
+            "id": "sli_0000B9pz91iVxcBffIEIUh"
           }
         ],
         "total_amount": "300.20",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:25.638756Z",
+        "created_at": "2026-08-28T16:57:22.613376Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -3298,15 +3298,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:25.638756Z",
-        "expires_at": "2026-08-28T16:47:25.635129Z",
+        "updated_at": "2026-08-28T16:57:22.613376Z",
+        "expires_at": "2026-08-28T17:57:22.604316Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/UX.svg",
@@ -3316,18 +3316,18 @@
           "name": "Air Europa",
           "id": "arl_00009VME7DAGiJjwomhv3I"
         },
-        "id": "off_0000B9pstyhe7a6o1L6XfP"
+        "id": "off_0000B9pz91irwITFgOOa3Q"
       },
       {
         "total_emissions_kg": "22",
-        "intended_total_amount": "767.46",
+        "intended_total_amount": "767.81",
         "intended_services": null,
-        "intended_base_amount": "664.73",
+        "intended_base_amount": "665.04",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -3383,9 +3383,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "102.73",
-        "base_amount": "664.73",
+        "tax_amount": "102.77",
         "base_currency": "USD",
+        "base_amount": "665.04",
         "total_currency": "USD",
         "slices": [
           {
@@ -3406,7 +3406,6 @@
                 "departing_at": "2026-10-12T12:55:00",
                 "arriving_at": "2026-10-12T13:50:00",
                 "stops": [],
-                "operating_carrier_flight_number": "1628",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LX.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LX.svg",
@@ -3415,7 +3414,6 @@
                   "name": "SWISS",
                   "id": "arl_00009VME7DDSWSIAygCT1z"
                 },
-                "marketing_carrier_flight_number": "1628",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LX.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LX.svg",
@@ -3424,6 +3422,8 @@
                   "name": "SWISS",
                   "id": "arl_00009VME7DDSWSIAygCT1z"
                 },
+                "operating_carrier_flight_number": "1628",
+                "marketing_carrier_flight_number": "1628",
                 "passengers": [
                   {
                     "baggages": [
@@ -3437,7 +3437,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -3503,7 +3503,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9pstvq2lu2l8W0hq0"
+                "id": "seg_0000B9pz938QgkVk3xMVWe"
               }
             ],
             "conditions": {
@@ -3557,12 +3557,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9pstvq2lu2l8W0hq3"
+            "id": "sli_0000B9pz938QgkVk3xMVWf"
           }
         ],
-        "total_amount": "767.46",
+        "total_amount": "767.81",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:25.135398Z",
+        "created_at": "2026-08-28T16:57:22.874557Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -3571,7 +3571,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
@@ -3586,8 +3586,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:25.135398Z",
-        "expires_at": "2026-08-28T16:17:24.000000Z",
+        "updated_at": "2026-08-28T16:57:22.874557Z",
+        "expires_at": "2026-08-28T17:27:22.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -3597,18 +3597,18 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9pstvq2lu2l8W0hq9"
+        "id": "off_0000B9pz938QgkVk3xMVWh"
       },
       {
         "total_emissions_kg": "40",
-        "intended_total_amount": "846.74",
+        "intended_total_amount": "847.13",
         "intended_services": null,
-        "intended_base_amount": "664.73",
+        "intended_base_amount": "665.04",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -3664,9 +3664,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "182.01",
-        "base_amount": "664.73",
+        "tax_amount": "182.09",
         "base_currency": "USD",
+        "base_amount": "665.04",
         "total_currency": "USD",
         "slices": [
           {
@@ -3687,7 +3687,6 @@
                 "departing_at": "2026-10-12T13:15:00",
                 "arriving_at": "2026-10-12T14:20:00",
                 "stops": [],
-                "operating_carrier_flight_number": "1104",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LX.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LX.svg",
@@ -3696,7 +3695,6 @@
                   "name": "SWISS",
                   "id": "arl_00009VME7DDSWSIAygCT1z"
                 },
-                "marketing_carrier_flight_number": "5765",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LH.svg",
@@ -3705,6 +3703,8 @@
                   "name": "Lufthansa",
                   "id": "arl_00009VME7DCkZ5j0wTrtvG"
                 },
+                "operating_carrier_flight_number": "1104",
+                "marketing_carrier_flight_number": "5765",
                 "passengers": [
                   {
                     "baggages": [
@@ -3718,7 +3718,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -3784,7 +3784,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9pstvmqxlUWycW9rc"
+                "id": "seg_0000B9pz936IoeoFxMMoDC"
               },
               {
                 "origin_terminal": "2",
@@ -3797,7 +3797,6 @@
                 "departing_at": "2026-10-12T15:30:00",
                 "arriving_at": "2026-10-12T16:40:00",
                 "stops": [],
-                "operating_carrier_flight_number": "1856",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LH.svg",
@@ -3806,7 +3805,6 @@
                   "name": "Lufthansa",
                   "id": "arl_00009VME7DCkZ5j0wTrtvG"
                 },
-                "marketing_carrier_flight_number": "1856",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LH.svg",
@@ -3815,6 +3813,8 @@
                   "name": "Lufthansa",
                   "id": "arl_00009VME7DCkZ5j0wTrtvG"
                 },
+                "operating_carrier_flight_number": "1856",
+                "marketing_carrier_flight_number": "1856",
                 "passengers": [
                   {
                     "baggages": [
@@ -3828,7 +3828,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -3906,7 +3906,7 @@
                   "name": "Munich Airport",
                   "id": "arp_muc_de"
                 },
-                "id": "seg_0000B9pstvmqxlUWycW9rd"
+                "id": "seg_0000B9pz936IoeoFxMMoDD"
               }
             ],
             "conditions": {
@@ -3960,12 +3960,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9pstvmqxlUWycW9re"
+            "id": "sli_0000B9pz936IoeoFxMMoDE"
           }
         ],
-        "total_amount": "846.74",
+        "total_amount": "847.13",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:25.135398Z",
+        "created_at": "2026-08-28T16:57:22.874557Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -3974,7 +3974,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
@@ -3989,8 +3989,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:25.135398Z",
-        "expires_at": "2026-08-28T16:17:24.000000Z",
+        "updated_at": "2026-08-28T16:57:22.874557Z",
+        "expires_at": "2026-08-28T17:27:22.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -4000,7 +4000,7 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9pstvmqxlUWycW9rg"
+        "id": "off_0000B9pz936IoeoFxMMoDG"
       },
       {
         "total_emissions_kg": "67",
@@ -4011,7 +4011,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:25.633528Z"
+          "payment_required_by": "2026-08-29T16:57:22.596646Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -4024,8 +4024,8 @@
         "supported_loyalty_programmes": [],
         "private_fares": [],
         "tax_amount": "85.3",
-        "base_amount": "52.00",
         "base_currency": "USD",
+        "base_amount": "52.00",
         "total_currency": "USD",
         "slices": [
           {
@@ -4046,7 +4046,6 @@
                 "departing_at": "2026-10-12T14:35:00",
                 "arriving_at": "2026-10-12T16:20:00",
                 "stops": [],
-                "operating_carrier_flight_number": "0333",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JU.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/JU.svg",
@@ -4055,7 +4054,6 @@
                   "name": "Air Serbia",
                   "id": "arl_00009VME7DCOaPRQvNhcNQ"
                 },
-                "marketing_carrier_flight_number": "0333",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JU.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/JU.svg",
@@ -4064,6 +4062,8 @@
                   "name": "Air Serbia",
                   "id": "arl_00009VME7DCOaPRQvNhcNQ"
                 },
+                "operating_carrier_flight_number": "0333",
+                "marketing_carrier_flight_number": "0333",
                 "passengers": [
                   {
                     "baggages": [
@@ -4073,7 +4073,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -4139,7 +4139,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9pstygaBXG3y2bh0Z"
+                "id": "seg_0000B9pz91eyAnLrUIZSyY"
               },
               {
                 "origin_terminal": null,
@@ -4152,7 +4152,6 @@
                 "departing_at": "2026-10-13T06:40:00",
                 "arriving_at": "2026-10-13T08:30:00",
                 "stops": [],
-                "operating_carrier_flight_number": "0416",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JU.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/JU.svg",
@@ -4161,7 +4160,6 @@
                   "name": "Air Serbia",
                   "id": "arl_00009VME7DCOaPRQvNhcNQ"
                 },
-                "marketing_carrier_flight_number": "0416",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JU.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/JU.svg",
@@ -4170,6 +4168,8 @@
                   "name": "Air Serbia",
                   "id": "arl_00009VME7DCOaPRQvNhcNQ"
                 },
+                "operating_carrier_flight_number": "0416",
+                "marketing_carrier_flight_number": "0416",
                 "passengers": [
                   {
                     "baggages": [
@@ -4179,7 +4179,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -4257,7 +4257,7 @@
                   "name": "Belgrade Nikola Tesla Airport",
                   "id": "arp_beg_rs"
                 },
-                "id": "seg_0000B9pstygaBXG3y2bh0a"
+                "id": "seg_0000B9pz91eyAnLrUIZSyb"
               }
             ],
             "conditions": {
@@ -4307,12 +4307,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9pstygaBXG3y2bh0b"
+            "id": "sli_0000B9pz91eyAnLrUIZSyg"
           }
         ],
         "total_amount": "137.30",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:25.638756Z",
+        "created_at": "2026-08-28T16:57:22.613376Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -4321,15 +4321,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:25.638756Z",
-        "expires_at": "2026-08-28T16:47:25.633569Z",
+        "updated_at": "2026-08-28T16:57:22.613376Z",
+        "expires_at": "2026-08-28T17:57:22.596697Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JU.svg",
@@ -4339,7 +4339,7 @@
           "name": "Air Serbia",
           "id": "arl_00009VME7DCOaPRQvNhcNQ"
         },
-        "id": "off_0000B9pstygaBXG3y2bh0d"
+        "id": "off_0000B9pz91eyAnLrUIZSyo"
       },
       {
         "total_emissions_kg": "67",
@@ -4350,7 +4350,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:25.634505Z"
+          "payment_required_by": "2026-08-29T16:57:22.599984Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -4363,8 +4363,8 @@
         "supported_loyalty_programmes": [],
         "private_fares": [],
         "tax_amount": "85.3",
-        "base_amount": "333.00",
         "base_currency": "USD",
+        "base_amount": "333.00",
         "total_currency": "USD",
         "slices": [
           {
@@ -4385,7 +4385,6 @@
                 "departing_at": "2026-10-12T14:35:00",
                 "arriving_at": "2026-10-12T16:20:00",
                 "stops": [],
-                "operating_carrier_flight_number": "0333",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JU.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/JU.svg",
@@ -4394,7 +4393,6 @@
                   "name": "Air Serbia",
                   "id": "arl_00009VME7DCOaPRQvNhcNQ"
                 },
-                "marketing_carrier_flight_number": "0333",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JU.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/JU.svg",
@@ -4403,6 +4401,8 @@
                   "name": "Air Serbia",
                   "id": "arl_00009VME7DCOaPRQvNhcNQ"
                 },
+                "operating_carrier_flight_number": "0333",
+                "marketing_carrier_flight_number": "0333",
                 "passengers": [
                   {
                     "baggages": [
@@ -4416,7 +4416,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -4482,7 +4482,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9pstyhI8tpE0EwG72"
+                "id": "seg_0000B9pz91h62t3LatZAIQ"
               },
               {
                 "origin_terminal": null,
@@ -4495,7 +4495,6 @@
                 "departing_at": "2026-10-13T06:40:00",
                 "arriving_at": "2026-10-13T08:30:00",
                 "stops": [],
-                "operating_carrier_flight_number": "0416",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JU.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/JU.svg",
@@ -4504,7 +4503,6 @@
                   "name": "Air Serbia",
                   "id": "arl_00009VME7DCOaPRQvNhcNQ"
                 },
-                "marketing_carrier_flight_number": "0416",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JU.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/JU.svg",
@@ -4513,6 +4511,8 @@
                   "name": "Air Serbia",
                   "id": "arl_00009VME7DCOaPRQvNhcNQ"
                 },
+                "operating_carrier_flight_number": "0416",
+                "marketing_carrier_flight_number": "0416",
                 "passengers": [
                   {
                     "baggages": [
@@ -4526,7 +4526,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -4604,7 +4604,7 @@
                   "name": "Belgrade Nikola Tesla Airport",
                   "id": "arp_beg_rs"
                 },
-                "id": "seg_0000B9pstyhI8tpE0EwG73"
+                "id": "seg_0000B9pz91h62t3LatZAIW"
               }
             ],
             "conditions": {
@@ -4654,12 +4654,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9pstyhI8tpE0EwG74"
+            "id": "sli_0000B9pz91h62t3LatZAIZ"
           }
         ],
         "total_amount": "418.30",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:25.638756Z",
+        "created_at": "2026-08-28T16:57:22.613376Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -4668,15 +4668,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:25.638756Z",
-        "expires_at": "2026-08-28T16:47:25.634537Z",
+        "updated_at": "2026-08-28T16:57:22.613376Z",
+        "expires_at": "2026-08-28T17:57:22.600069Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JU.svg",
@@ -4686,18 +4686,18 @@
           "name": "Air Serbia",
           "id": "arl_00009VME7DCOaPRQvNhcNQ"
         },
-        "id": "off_0000B9pstyhI8tpE0EwG76"
+        "id": "off_0000B9pz91hS1ZKvbzjRpq"
       },
       {
         "total_emissions_kg": "47",
-        "intended_total_amount": "665.21",
+        "intended_total_amount": "665.51",
         "intended_services": null,
-        "intended_base_amount": "521.15",
+        "intended_base_amount": "521.38",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -4753,9 +4753,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "144.06",
-        "base_amount": "521.15",
+        "tax_amount": "144.13",
         "base_currency": "USD",
+        "base_amount": "521.38",
         "total_currency": "USD",
         "slices": [
           {
@@ -4776,7 +4776,6 @@
                 "departing_at": "2026-10-12T14:35:00",
                 "arriving_at": "2026-10-12T15:40:00",
                 "stops": [],
-                "operating_carrier_flight_number": "1191",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LH.svg",
@@ -4785,7 +4784,6 @@
                   "name": "Lufthansa",
                   "id": "arl_00009VME7DCkZ5j0wTrtvG"
                 },
-                "marketing_carrier_flight_number": "1191",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LH.svg",
@@ -4794,6 +4792,8 @@
                   "name": "Lufthansa",
                   "id": "arl_00009VME7DCkZ5j0wTrtvG"
                 },
+                "operating_carrier_flight_number": "1191",
+                "marketing_carrier_flight_number": "1191",
                 "passengers": [
                   {
                     "baggages": [
@@ -4807,7 +4807,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": null,
                       "marketing_name": "ECONOMY",
@@ -4860,7 +4860,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9pstvm90OvMwQBal7"
+                "id": "seg_0000B9pz935arIF5vA2F6W"
               },
               {
                 "origin_terminal": "1",
@@ -4873,7 +4873,6 @@
                 "departing_at": "2026-10-12T16:40:00",
                 "arriving_at": "2026-10-12T18:00:00",
                 "stops": [],
-                "operating_carrier_flight_number": "0254",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LH.svg",
@@ -4882,7 +4881,6 @@
                   "name": "Lufthansa",
                   "id": "arl_00009VME7DCkZ5j0wTrtvG"
                 },
-                "marketing_carrier_flight_number": "0254",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LH.svg",
@@ -4891,6 +4889,8 @@
                   "name": "Lufthansa",
                   "id": "arl_00009VME7DCkZ5j0wTrtvG"
                 },
+                "operating_carrier_flight_number": "0254",
+                "marketing_carrier_flight_number": "0254",
                 "passengers": [
                   {
                     "baggages": [
@@ -4904,7 +4904,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -4982,7 +4982,7 @@
                   "name": "Frankfurt am Main Airport",
                   "id": "arp_fra_de"
                 },
-                "id": "seg_0000B9pstvm90OvMwQBal8"
+                "id": "seg_0000B9pz935arIF5vA2F6X"
               }
             ],
             "conditions": {
@@ -5036,12 +5036,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9pstvm90OvMwQBal9"
+            "id": "sli_0000B9pz935arIF5vA2F6Y"
           }
         ],
-        "total_amount": "665.21",
+        "total_amount": "665.51",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:25.135398Z",
+        "created_at": "2026-08-28T16:57:22.874557Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -5050,7 +5050,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
@@ -5065,8 +5065,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:25.135398Z",
-        "expires_at": "2026-08-28T16:17:24.000000Z",
+        "updated_at": "2026-08-28T16:57:22.874557Z",
+        "expires_at": "2026-08-28T17:27:22.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -5076,7 +5076,7 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9pstvm90OvMwQBalB"
+        "id": "off_0000B9pz935arIF5vA2F6a"
       },
       {
         "total_emissions_kg": "56",
@@ -5087,7 +5087,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:25.631240Z"
+          "payment_required_by": "2026-08-29T16:57:22.587556Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -5120,8 +5120,8 @@
         ],
         "private_fares": [],
         "tax_amount": "135.3",
-        "base_amount": "192.00",
         "base_currency": "USD",
+        "base_amount": "192.00",
         "total_currency": "USD",
         "slices": [
           {
@@ -5142,7 +5142,6 @@
                 "departing_at": "2026-10-12T14:55:00",
                 "arriving_at": "2026-10-12T16:40:00",
                 "stops": [],
-                "operating_carrier_flight_number": "0604",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/SK.svg",
@@ -5151,7 +5150,6 @@
                   "name": "SAS",
                   "id": "arl_00009VME7DDSWSIAygCT1S"
                 },
-                "marketing_carrier_flight_number": "0604",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/SK.svg",
@@ -5160,6 +5158,8 @@
                   "name": "SAS",
                   "id": "arl_00009VME7DDSWSIAygCT1S"
                 },
+                "operating_carrier_flight_number": "0604",
+                "marketing_carrier_flight_number": "0604",
                 "passengers": [
                   {
                     "baggages": [
@@ -5173,7 +5173,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -5239,7 +5239,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9pstyeSJRYZrRbzgu"
+                "id": "seg_0000B9pz91b4PIETICkLtK"
               },
               {
                 "origin_terminal": null,
@@ -5252,7 +5252,6 @@
                 "departing_at": "2026-10-13T06:20:00",
                 "arriving_at": "2026-10-13T08:30:00",
                 "stops": [],
-                "operating_carrier_flight_number": "0683",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/SK.svg",
@@ -5261,7 +5260,6 @@
                   "name": "SAS",
                   "id": "arl_00009VME7DDSWSIAygCT1S"
                 },
-                "marketing_carrier_flight_number": "0683",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/SK.svg",
@@ -5270,6 +5268,8 @@
                   "name": "SAS",
                   "id": "arl_00009VME7DDSWSIAygCT1S"
                 },
+                "operating_carrier_flight_number": "0683",
+                "marketing_carrier_flight_number": "0683",
                 "passengers": [
                   {
                     "baggages": [
@@ -5283,7 +5283,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -5361,7 +5361,7 @@
                   "name": "Copenhagen Airport",
                   "id": "arp_cph_dk"
                 },
-                "id": "seg_0000B9pstyeSJRYZrRbzgv"
+                "id": "seg_0000B9pz91b4PIETICkLtM"
               }
             ],
             "conditions": {
@@ -5411,12 +5411,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9pstyeSJRYZrRbzgw"
+            "id": "sli_0000B9pz91b4PIETICkLtN"
           }
         ],
         "total_amount": "327.30",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:25.638756Z",
+        "created_at": "2026-08-28T16:57:22.613376Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -5425,15 +5425,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:25.638756Z",
-        "expires_at": "2026-08-28T16:47:25.631273Z",
+        "updated_at": "2026-08-28T16:57:22.613376Z",
+        "expires_at": "2026-08-28T17:57:22.587622Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
@@ -5443,18 +5443,18 @@
           "name": "SAS",
           "id": "arl_00009VME7DDSWSIAygCT1S"
         },
-        "id": "off_0000B9pstyeSJRYZrRbzgy"
+        "id": "off_0000B9pz91b4PIETICkLtQ"
       },
       {
         "total_emissions_kg": "63",
-        "intended_total_amount": "464.58",
+        "intended_total_amount": "464.79",
         "intended_services": null,
-        "intended_base_amount": "321.20",
+        "intended_base_amount": "321.34",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -5510,9 +5510,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "143.38",
-        "base_amount": "321.20",
+        "tax_amount": "143.45",
         "base_currency": "USD",
+        "base_amount": "321.34",
         "total_currency": "USD",
         "slices": [
           {
@@ -5533,7 +5533,6 @@
                 "departing_at": "2026-10-12T17:15:00",
                 "arriving_at": "2026-10-12T18:35:00",
                 "stops": [],
-                "operating_carrier_flight_number": "0788",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LX.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LX.svg",
@@ -5542,7 +5541,6 @@
                   "name": "SWISS",
                   "id": "arl_00009VME7DDSWSIAygCT1z"
                 },
-                "marketing_carrier_flight_number": "5114",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SN.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/SN.svg",
@@ -5551,6 +5549,8 @@
                   "name": "Brussels Airlines",
                   "id": "arl_00009VME7DBKeMags5Cliz"
                 },
+                "operating_carrier_flight_number": "0788",
+                "marketing_carrier_flight_number": "5114",
                 "passengers": [
                   {
                     "baggages": [
@@ -5560,7 +5560,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -5626,7 +5626,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9pstvln1idmvK1JDB"
+                "id": "seg_0000B9pz935EsbxVu3rxYN"
               },
               {
                 "origin_terminal": null,
@@ -5639,7 +5639,6 @@
                 "departing_at": "2026-10-12T19:25:00",
                 "arriving_at": "2026-10-12T21:00:00",
                 "stops": [],
-                "operating_carrier_flight_number": "3159",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SN.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/SN.svg",
@@ -5648,7 +5647,6 @@
                   "name": "Brussels Airlines",
                   "id": "arl_00009VME7DBKeMags5Cliz"
                 },
-                "marketing_carrier_flight_number": "3159",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SN.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/SN.svg",
@@ -5657,6 +5655,8 @@
                   "name": "Brussels Airlines",
                   "id": "arl_00009VME7DBKeMags5Cliz"
                 },
+                "operating_carrier_flight_number": "3159",
+                "marketing_carrier_flight_number": "3159",
                 "passengers": [
                   {
                     "baggages": [
@@ -5666,7 +5666,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -5744,7 +5744,7 @@
                   "name": "Brussels Airport",
                   "id": "arp_bru_be"
                 },
-                "id": "seg_0000B9pstvln1idmvK1JDD"
+                "id": "seg_0000B9pz935EsbxVu3rxYO"
               }
             ],
             "conditions": {
@@ -5798,12 +5798,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9pstvln1idmvK1JDE"
+            "id": "sli_0000B9pz935EsbxVu3rxYP"
           }
         ],
-        "total_amount": "464.58",
+        "total_amount": "464.79",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:25.135398Z",
+        "created_at": "2026-08-28T16:57:22.874557Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -5812,7 +5812,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
@@ -5827,8 +5827,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:25.135398Z",
-        "expires_at": "2026-08-28T16:17:24.000000Z",
+        "updated_at": "2026-08-28T16:57:22.874557Z",
+        "expires_at": "2026-08-28T17:27:22.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -5838,18 +5838,18 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9pstvln1idmvK1JDJ"
+        "id": "off_0000B9pz935EsbxVu3rxYR"
       },
       {
         "total_emissions_kg": "19",
-        "intended_total_amount": "706.80",
+        "intended_total_amount": "707.13",
         "intended_services": null,
-        "intended_base_amount": "604.07",
+        "intended_base_amount": "604.36",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -5905,9 +5905,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "102.73",
-        "base_amount": "604.07",
+        "tax_amount": "102.77",
         "base_currency": "USD",
+        "base_amount": "604.36",
         "total_currency": "USD",
         "slices": [
           {
@@ -5928,7 +5928,6 @@
                 "departing_at": "2026-10-12T17:40:00",
                 "arriving_at": "2026-10-12T18:35:00",
                 "stops": [],
-                "operating_carrier_flight_number": "1622",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LX.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LX.svg",
@@ -5937,7 +5936,6 @@
                   "name": "SWISS",
                   "id": "arl_00009VME7DDSWSIAygCT1z"
                 },
-                "marketing_carrier_flight_number": "1622",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LX.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LX.svg",
@@ -5946,6 +5944,8 @@
                   "name": "SWISS",
                   "id": "arl_00009VME7DDSWSIAygCT1z"
                 },
+                "operating_carrier_flight_number": "1622",
+                "marketing_carrier_flight_number": "1622",
                 "passengers": [
                   {
                     "baggages": [
@@ -5955,7 +5955,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -6021,7 +6021,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9pstvpKoXTb6Jg8ju"
+                "id": "seg_0000B9pz9384i4EA2rCDyM"
               }
             ],
             "conditions": {
@@ -6075,12 +6075,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9pstvpgnDlB7PqQHg"
+            "id": "sli_0000B9pz9384i4EA2rCDyN"
           }
         ],
-        "total_amount": "706.80",
+        "total_amount": "707.13",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:25.135398Z",
+        "created_at": "2026-08-28T16:57:22.874557Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -6089,7 +6089,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
@@ -6104,8 +6104,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:25.135398Z",
-        "expires_at": "2026-08-28T16:17:24.000000Z",
+        "updated_at": "2026-08-28T16:57:22.874557Z",
+        "expires_at": "2026-08-28T17:27:22.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -6115,18 +6115,18 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9pstvpgnDlB7PqQHl"
+        "id": "off_0000B9pz9384i4EA2rCDyP"
       },
       {
         "total_emissions_kg": "19",
-        "intended_total_amount": "868.97",
+        "intended_total_amount": "869.37",
         "intended_services": null,
-        "intended_base_amount": "766.24",
+        "intended_base_amount": "766.60",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -6182,9 +6182,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "102.73",
-        "base_amount": "766.24",
+        "tax_amount": "102.77",
         "base_currency": "USD",
+        "base_amount": "766.60",
         "total_currency": "USD",
         "slices": [
           {
@@ -6205,7 +6205,6 @@
                 "departing_at": "2026-10-12T17:40:00",
                 "arriving_at": "2026-10-12T18:35:00",
                 "stops": [],
-                "operating_carrier_flight_number": "1622",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LX.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LX.svg",
@@ -6214,7 +6213,6 @@
                   "name": "SWISS",
                   "id": "arl_00009VME7DDSWSIAygCT1z"
                 },
-                "marketing_carrier_flight_number": "1622",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LX.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LX.svg",
@@ -6223,6 +6221,8 @@
                   "name": "SWISS",
                   "id": "arl_00009VME7DDSWSIAygCT1z"
                 },
+                "operating_carrier_flight_number": "1622",
+                "marketing_carrier_flight_number": "1622",
                 "passengers": [
                   {
                     "baggages": [
@@ -6236,7 +6236,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -6302,7 +6302,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9pstvoyprC15DVrBY"
+                "id": "seg_0000B9pz937ijNwa1l1wQ7"
               }
             ],
             "conditions": {
@@ -6356,12 +6356,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9pstvoyprC15DVrBZ"
+            "id": "sli_0000B9pz937ijNwa1l1wQ8"
           }
         ],
-        "total_amount": "868.97",
+        "total_amount": "869.37",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:25.135398Z",
+        "created_at": "2026-08-28T16:57:22.874557Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -6370,7 +6370,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
@@ -6385,8 +6385,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:25.135398Z",
-        "expires_at": "2026-08-28T16:17:24.000000Z",
+        "updated_at": "2026-08-28T16:57:22.874557Z",
+        "expires_at": "2026-08-28T17:27:22.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -6396,7 +6396,7 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9pstvoyprC15DVrBb"
+        "id": "off_0000B9pz937ijNwa1l1wQA"
       },
       {
         "total_emissions_kg": "56",
@@ -6407,7 +6407,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:25.635803Z"
+          "payment_required_by": "2026-08-29T16:57:22.607787Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -6440,8 +6440,8 @@
         ],
         "private_fares": [],
         "tax_amount": "135.3",
-        "base_amount": "135.00",
         "base_currency": "USD",
+        "base_amount": "135.00",
         "total_currency": "USD",
         "slices": [
           {
@@ -6462,7 +6462,6 @@
                 "departing_at": "2026-10-12T20:25:00",
                 "arriving_at": "2026-10-12T22:10:00",
                 "stops": [],
-                "operating_carrier_flight_number": "0610",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/SK.svg",
@@ -6471,7 +6470,6 @@
                   "name": "SAS",
                   "id": "arl_00009VME7DDSWSIAygCT1S"
                 },
-                "marketing_carrier_flight_number": "0610",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/SK.svg",
@@ -6480,6 +6478,8 @@
                   "name": "SAS",
                   "id": "arl_00009VME7DDSWSIAygCT1S"
                 },
+                "operating_carrier_flight_number": "0610",
+                "marketing_carrier_flight_number": "0610",
                 "passengers": [
                   {
                     "baggages": [
@@ -6493,7 +6493,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -6559,7 +6559,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9pstyiM4wfy3XR6ly"
+                "id": "seg_0000B9pz91kHr1bZkn3iGg"
               },
               {
                 "origin_terminal": null,
@@ -6572,7 +6572,6 @@
                 "departing_at": "2026-10-13T17:00:00",
                 "arriving_at": "2026-10-13T19:10:00",
                 "stops": [],
-                "operating_carrier_flight_number": "0687",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/SK.svg",
@@ -6581,7 +6580,6 @@
                   "name": "SAS",
                   "id": "arl_00009VME7DDSWSIAygCT1S"
                 },
-                "marketing_carrier_flight_number": "0687",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/SK.svg",
@@ -6590,6 +6588,8 @@
                   "name": "SAS",
                   "id": "arl_00009VME7DDSWSIAygCT1S"
                 },
+                "operating_carrier_flight_number": "0687",
+                "marketing_carrier_flight_number": "0687",
                 "passengers": [
                   {
                     "baggages": [
@@ -6603,7 +6603,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -6681,7 +6681,7 @@
                   "name": "Copenhagen Airport",
                   "id": "arp_cph_dk"
                 },
-                "id": "seg_0000B9pstyiM4wfy3XR6lz"
+                "id": "seg_0000B9pz91kHr1bZkn3iGl"
               }
             ],
             "conditions": {
@@ -6731,12 +6731,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9pstyiM4wfy3XR6m0"
+            "id": "sli_0000B9pz91kHr1bZkn3iGq"
           }
         ],
         "total_amount": "270.30",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:25.638756Z",
+        "created_at": "2026-08-28T16:57:22.613376Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -6745,15 +6745,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:25.638756Z",
-        "expires_at": "2026-08-28T16:47:25.635834Z",
+        "updated_at": "2026-08-28T16:57:22.613376Z",
+        "expires_at": "2026-08-28T17:57:22.607869Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
@@ -6763,7 +6763,7 @@
           "name": "SAS",
           "id": "arl_00009VME7DDSWSIAygCT1S"
         },
-        "id": "off_0000B9pstyiM4wfy3XR6m2"
+        "id": "off_0000B9pz91kHr1bZkn3iGx"
       },
       {
         "total_emissions_kg": "56",
@@ -6774,7 +6774,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:25.632012Z"
+          "payment_required_by": "2026-08-29T16:57:22.588856Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -6807,8 +6807,8 @@
         ],
         "private_fares": [],
         "tax_amount": "135.3",
-        "base_amount": "192.00",
         "base_currency": "USD",
+        "base_amount": "192.00",
         "total_currency": "USD",
         "slices": [
           {
@@ -6829,7 +6829,6 @@
                 "departing_at": "2026-10-12T20:25:00",
                 "arriving_at": "2026-10-12T22:10:00",
                 "stops": [],
-                "operating_carrier_flight_number": "0610",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/SK.svg",
@@ -6838,7 +6837,6 @@
                   "name": "SAS",
                   "id": "arl_00009VME7DDSWSIAygCT1S"
                 },
-                "marketing_carrier_flight_number": "0610",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/SK.svg",
@@ -6847,6 +6845,8 @@
                   "name": "SAS",
                   "id": "arl_00009VME7DDSWSIAygCT1S"
                 },
+                "operating_carrier_flight_number": "0610",
+                "marketing_carrier_flight_number": "0610",
                 "passengers": [
                   {
                     "baggages": [
@@ -6860,7 +6860,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -6926,7 +6926,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9pstyeoI7q9sXmHFB"
+                "id": "seg_0000B9pz91bmMendKP4v0D"
               },
               {
                 "origin_terminal": null,
@@ -6939,7 +6939,6 @@
                 "departing_at": "2026-10-13T17:00:00",
                 "arriving_at": "2026-10-13T19:10:00",
                 "stops": [],
-                "operating_carrier_flight_number": "0687",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/SK.svg",
@@ -6948,7 +6947,6 @@
                   "name": "SAS",
                   "id": "arl_00009VME7DDSWSIAygCT1S"
                 },
-                "marketing_carrier_flight_number": "0687",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/SK.svg",
@@ -6957,6 +6955,8 @@
                   "name": "SAS",
                   "id": "arl_00009VME7DDSWSIAygCT1S"
                 },
+                "operating_carrier_flight_number": "0687",
+                "marketing_carrier_flight_number": "0687",
                 "passengers": [
                   {
                     "baggages": [
@@ -6970,7 +6970,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -7048,7 +7048,7 @@
                   "name": "Copenhagen Airport",
                   "id": "arp_cph_dk"
                 },
-                "id": "seg_0000B9pstyeoI7q9sXmHFC"
+                "id": "seg_0000B9pz91bmMendKP4v0L"
               }
             ],
             "conditions": {
@@ -7098,12 +7098,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9pstyeoI7q9sXmHFD"
+            "id": "sli_0000B9pz91bmMendKP4v0N"
           }
         ],
         "total_amount": "327.30",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:25.638756Z",
+        "created_at": "2026-08-28T16:57:22.613376Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -7112,15 +7112,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:25.638756Z",
-        "expires_at": "2026-08-28T16:47:25.632051Z",
+        "updated_at": "2026-08-28T16:57:22.613376Z",
+        "expires_at": "2026-08-28T17:57:22.588928Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
@@ -7130,7 +7130,7 @@
           "name": "SAS",
           "id": "arl_00009VME7DDSWSIAygCT1S"
         },
-        "id": "off_0000B9pstyeoI7q9sXmHFF"
+        "id": "off_0000B9pz91c8LL5DLVFCY0"
       },
       {
         "total_emissions_kg": "19",
@@ -7141,7 +7141,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:25.630764Z"
+          "payment_required_by": "2026-08-29T16:57:22.586450Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -7175,8 +7175,8 @@
         ],
         "private_fares": [],
         "tax_amount": "78.4",
-        "base_amount": "52.00",
         "base_currency": "USD",
+        "base_amount": "52.00",
         "total_currency": "USD",
         "slices": [
           {
@@ -7197,7 +7197,6 @@
                 "departing_at": "2026-10-12T21:00:00",
                 "arriving_at": "2026-10-12T22:10:00",
                 "stops": [],
-                "operating_carrier_flight_number": "0737",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/ET.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/ET.svg",
@@ -7206,7 +7205,6 @@
                   "name": "Ethiopian Airlines",
                   "id": "arl_00009VME7DC2bj9quHXKoX"
                 },
-                "marketing_carrier_flight_number": "0737",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/ET.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/ET.svg",
@@ -7215,6 +7213,8 @@
                   "name": "Ethiopian Airlines",
                   "id": "arl_00009VME7DC2bj9quHXKoX"
                 },
+                "operating_carrier_flight_number": "0737",
+                "marketing_carrier_flight_number": "0737",
                 "passengers": [
                   {
                     "baggages": [
@@ -7228,7 +7228,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -7294,7 +7294,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9pstydONOhpo97928"
+                "id": "seg_0000B9pz91a0TFNjEuFVEU"
               }
             ],
             "conditions": {
@@ -7344,12 +7344,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9pstydONOhpo97929"
+            "id": "sli_0000B9pz91a0TFNjEuFVEa"
           }
         ],
         "total_amount": "130.40",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:25.638756Z",
+        "created_at": "2026-08-28T16:57:22.613376Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -7358,15 +7358,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:25.638756Z",
-        "expires_at": "2026-08-28T16:47:25.630850Z",
+        "updated_at": "2026-08-28T16:57:22.613376Z",
+        "expires_at": "2026-08-28T17:57:22.586510Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/ET.svg",
@@ -7376,18 +7376,18 @@
           "name": "Ethiopian Airlines",
           "id": "arl_00009VME7DC2bj9quHXKoX"
         },
-        "id": "off_0000B9pstye6KlGzqLRi8e"
+        "id": "off_0000B9pz91aiQbwtH6a4Ku"
       },
       {
         "total_emissions_kg": "22",
-        "intended_total_amount": "596.63",
+        "intended_total_amount": "596.91",
         "intended_services": null,
-        "intended_base_amount": "521.14",
+        "intended_base_amount": "521.39",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -7443,9 +7443,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "75.49",
-        "base_amount": "521.14",
+        "tax_amount": "75.52",
         "base_currency": "USD",
+        "base_amount": "521.39",
         "total_currency": "USD",
         "slices": [
           {
@@ -7466,7 +7466,6 @@
                 "departing_at": "2026-10-12T22:45:00",
                 "arriving_at": "2026-10-12T23:40:00",
                 "stops": [],
-                "operating_carrier_flight_number": "1638",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LX.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LX.svg",
@@ -7475,7 +7474,6 @@
                   "name": "SWISS",
                   "id": "arl_00009VME7DDSWSIAygCT1z"
                 },
-                "marketing_carrier_flight_number": "7205",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/AZ.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/AZ.svg",
@@ -7484,6 +7482,8 @@
                   "name": "ITA",
                   "id": "arl_00009VME7DAyfgJ6qz2U9j"
                 },
+                "operating_carrier_flight_number": "1638",
+                "marketing_carrier_flight_number": "7205",
                 "passengers": [
                   {
                     "baggages": [
@@ -7497,7 +7497,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -7563,7 +7563,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9pstvnutoLH1v10Wf"
+                "id": "seg_0000B9pz9370m1NPzYhNJk"
               }
             ],
             "conditions": {
@@ -7617,12 +7617,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9pstvnutoLH1v10Wg"
+            "id": "sli_0000B9pz9370m1NPzYhNJl"
           }
         ],
-        "total_amount": "596.63",
+        "total_amount": "596.91",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:25.135398Z",
+        "created_at": "2026-08-28T16:57:22.874557Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -7631,7 +7631,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
@@ -7646,8 +7646,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:25.135398Z",
-        "expires_at": "2026-08-28T16:17:24.000000Z",
+        "updated_at": "2026-08-28T16:57:22.874557Z",
+        "expires_at": "2026-08-28T17:27:22.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -7657,18 +7657,18 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9pstvnutoLH1v10Wj"
+        "id": "off_0000B9pz9370m1NPzYhNJn"
       },
       {
         "total_emissions_kg": "22",
-        "intended_total_amount": "868.97",
+        "intended_total_amount": "869.37",
         "intended_services": null,
-        "intended_base_amount": "766.24",
+        "intended_base_amount": "766.60",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -7724,9 +7724,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "102.73",
-        "base_amount": "766.24",
+        "tax_amount": "102.77",
         "base_currency": "USD",
+        "base_amount": "766.60",
         "total_currency": "USD",
         "slices": [
           {
@@ -7747,7 +7747,6 @@
                 "departing_at": "2026-10-12T22:45:00",
                 "arriving_at": "2026-10-12T23:40:00",
                 "stops": [],
-                "operating_carrier_flight_number": "1638",
                 "operating_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LX.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LX.svg",
@@ -7756,7 +7755,6 @@
                   "name": "SWISS",
                   "id": "arl_00009VME7DDSWSIAygCT1z"
                 },
-                "marketing_carrier_flight_number": "1638",
                 "marketing_carrier": {
                   "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LX.svg",
                   "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/LX.svg",
@@ -7765,6 +7763,8 @@
                   "name": "SWISS",
                   "id": "arl_00009VME7DDSWSIAygCT1z"
                 },
+                "operating_carrier_flight_number": "1638",
+                "marketing_carrier_flight_number": "1638",
                 "passengers": [
                   {
                     "baggages": [
@@ -7778,7 +7778,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9pstqnNWNwNUnj0UM",
+                    "passenger_id": "pas_0000B9pz8wSjUranMto7hl",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -7844,7 +7844,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9pstvnutoLH1v10Wo"
+                "id": "seg_0000B9pz9370m1NPzYhNJq"
               }
             ],
             "conditions": {
@@ -7898,12 +7898,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9pstvnutoLH1v10Wp"
+            "id": "sli_0000B9pz9370m1NPzYhNJr"
           }
         ],
-        "total_amount": "868.97",
+        "total_amount": "869.37",
         "live_mode": false,
-        "created_at": "2026-08-28T15:47:25.135398Z",
+        "created_at": "2026-08-28T16:57:22.874557Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -7912,7 +7912,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9pstqnNWNwNUnj0UM"
+            "id": "pas_0000B9pz8wSjUranMto7hl"
           }
         ],
         "conditions": {
@@ -7927,8 +7927,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:25.135398Z",
-        "expires_at": "2026-08-28T16:17:24.000000Z",
+        "updated_at": "2026-08-28T16:57:22.874557Z",
+        "expires_at": "2026-08-28T17:27:22.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -7938,7 +7938,7 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9pstvnutoLH1v10Wr"
+        "id": "off_0000B9pz9370m1NPzYhNJt"
       }
     ],
     "cabin_class": "economy",
@@ -7990,7 +7990,7 @@
       }
     ],
     "live_mode": false,
-    "created_at": "2026-08-28T15:47:24.273523Z",
+    "created_at": "2026-08-28T16:57:21.726914Z",
     "passengers": [
       {
         "loyalty_programme_accounts": [],
@@ -8000,10 +8000,10 @@
         "user_id": null,
         "age": null,
         "type": "adult",
-        "id": "pas_0000B9pstqnNWNwNUnj0UM"
+        "id": "pas_0000B9pz8wSjUranMto7hl"
       }
     ],
-    "client_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODgwMTg0NDUsImxpdmVfbW9kZSI6ZmFsc2UsIm9yZ2FuaXNhdGlvbl9pZCI6Im9yZ18wMDAwQjlwcVljaEpuV1R0d3hKRFJvIiwicGxhdGZvcm1fdXNlcl9pZCI6bnVsbH0.d8kopRnIvi1DmXSzps7Rd7HqOhvi911y5gyS3_4tVKY",
-    "id": "orq_0000B9pstqn1XhenThYixA"
+    "client_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODgwMjI2NDIsImxpdmVfbW9kZSI6ZmFsc2UsIm9yZ2FuaXNhdGlvbl9pZCI6Im9yZ18wMDAwQjlwcVljaEpuV1R0d3hKRFJvIiwicGxhdGZvcm1fdXNlcl9pZCI6bnVsbH0.lvrILXsw6syHQeVqslI9MbPFBugm7ErITK4c-8GJ2zE",
+    "id": "orq_0000B9pz8wSjUranMto7hd"
   }
 }

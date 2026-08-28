@@ -8,6 +8,8 @@ the injected one. None of those show up in an engine test.
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
+
 import pytest
 
 fastapi = pytest.importorskip("fastapi")
@@ -24,9 +26,8 @@ def client():
     return TestClient(serve.app)
 
 
-@pytest.fixture(scope="module")
-def booked(client):
-    """A trip bought through the API, exactly as the page would buy it."""
+def book(client) -> dict:
+    """Buy a trip through the API, exactly as the page would buy it."""
     inbound = client.get("/api/search/flights", params={
         "origin": "SIN", "destination": "ZRH", "on": DAY}).json()["offers"]
     first = min(inbound, key=lambda o: o["arrive"]["iso"])
@@ -50,6 +51,11 @@ def booked(client):
         if not response.json()["problems"]:
             return response.json()
     pytest.fail("no feasible selection in the recorded offers")
+
+
+@pytest.fixture(scope="module")
+def booked(client):
+    return book(client)
 
 
 def test_a_search_quotes_fares_and_says_where_they_came_from(client):
@@ -146,3 +152,82 @@ def test_doing_nothing_is_always_on_the_table(client, booked):
     body = client.post("/api/cancel", json={
         "trip_id": booked["trip_id"], "booking_id": leg["id"]}).json()
     assert any(p["id"] == "noop" for p in body["plans"])
+
+
+# --------------------------------------------------------------------------
+# the watch
+# --------------------------------------------------------------------------
+
+
+def test_a_trip_with_no_disruption_has_no_clock(client):
+    """Its own trip on purpose. The shared one has been cancelled by an earlier
+    test, and a watch test that depends on file order is not a watch test."""
+    fresh = book(client)
+    body = client.get("/api/alerts", params={"trip": fresh["trip_id"]}).json()
+    assert body["watching"] is False
+    assert body["alerts"] == []
+
+
+def test_cancelling_starts_the_clock(client, booked):
+    """The disruption is written down, not held in the request that made it.
+    Without that the watch has nothing to watch a minute after the page that
+    started it was closed."""
+    leg = [b for b in booked["bookings"] if b["kind"] == "flight"][1]
+    client.post("/api/cancel", json={
+        "trip_id": booked["trip_id"], "booking_id": leg["id"]})
+
+    body = client.get("/api/alerts", params={"trip": booked["trip_id"]}).json()
+    assert body["watching"] is True
+    assert body["alerts"]
+    assert all(a["worth"] > 0 for a in body["alerts"])
+
+
+def test_the_page_is_told_which_channels_would_actually_reach_you(client, booked):
+    body = client.get("/api/alerts", params={"trip": booked["trip_id"]}).json()
+    assert "log" in body["channels"]
+    health = client.get("/health").json()
+    assert health["watch"]["durable"] is False
+    assert "sleeps" in health["watch"]["caveat"]
+
+
+def test_a_sweep_fires_each_alert_once(client, booked, monkeypatch):
+    """Rebuilt schedule, persisted watermark. Two sweeps in a row must not say
+    the same thing twice -- that is the whole difference between a notifier
+    somebody keeps and one they mute."""
+    import serve as app_module
+
+    leg = [b for b in booked["bookings"] if b["kind"] == "flight"][1]
+    client.post("/api/cancel", json={
+        "trip_id": booked["trip_id"], "booking_id": leg["id"]})
+
+    schedule = client.get("/api/alerts",
+                          params={"trip": booked["trip_id"]}).json()["alerts"]
+    # A moment just after the first thing this trip has to say. Injected rather
+    # than waited for: the trip is three weeks out, and a notifier whose only
+    # test is patience does not get tested.
+    tick = datetime.fromisoformat(schedule[0]["at"]["iso"]) + timedelta(minutes=1)
+
+    sent = []
+    monkeypatch.setattr(app_module.notify, "deliver",
+                        lambda alert, trip_id="", **kw: sent.append(alert.key) or ["log"])
+    first = app_module.sweep(now=tick)
+    second = app_module.sweep(now=tick)
+    assert first > 0
+    assert second == 0
+    assert len(sent) == len(set(sent))
+
+
+def test_an_unreadable_disruption_does_not_end_the_watch(client, booked):
+    """One bad payload cannot be allowed to stop the loop for every other trip
+    in the process."""
+    import serve as app_module
+    import store as store_module
+
+    saved = store_module.store().get(booked["trip_id"])
+    payload = dict(saved.payload)
+    payload["disruption"] = {"booking_id": "gone", "new_end": "not a date"}
+    store_module.store().update(booked["trip_id"], payload)
+
+    assert app_module.sweep(now=datetime.now(timezone.utc)) == 0
+    body = client.get("/api/alerts", params={"trip": booked["trip_id"]}).json()
+    assert body["watching"] is False

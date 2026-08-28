@@ -115,6 +115,41 @@ def cancel(trip: Trip, booking_id: str, at: datetime | None = None) -> Disruptio
     )
 
 
+def to_dict(disruption: Disruption) -> dict:
+    """A disruption that outlives the request that created it.
+
+    It has to be stored, not recomputed. Live status is a query and can be
+    asked again; a traveller pressing "cancelled" is an event, and an event
+    nobody wrote down did not happen. Without this the watch has nothing to
+    watch a minute after the page that started it was closed.
+    """
+    return {
+        "booking_id": disruption.booking_id,
+        "new_end": disruption.new_end.isoformat(),
+        "reason": disruption.reason,
+        "confidence": disruption.confidence,
+        "cancelled": disruption.cancelled,
+        "injected": True,
+    }
+
+
+def from_dict(raw: dict | None) -> Disruption | None:
+    if not raw:
+        return None
+    try:
+        return Disruption(
+            booking_id=str(raw["booking_id"]),
+            new_end=datetime.fromisoformat(str(raw["new_end"])),
+            reason=str(raw.get("reason") or ""),
+            confidence=float(raw.get("confidence") or 1.0),
+            cancelled=bool(raw.get("cancelled")),
+        )
+    except (KeyError, TypeError, ValueError):
+        # A payload we cannot read is a trip with no disruption, not a crash
+        # in a loop that runs every minute for the rest of the deployment.
+        return None
+
+
 def replacements(trip: Trip, disruption: Disruption, gap: Gap | None = None) -> list:
     """Live options for the hole this disruption left.
 

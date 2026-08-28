@@ -8,7 +8,7 @@ python serve.py                   # the web app, first free port from 8000
 python cli.py                     # the same numbers, in a terminal
 python cli.py --base written      # the October scenario, as the tests assert it
 python mcp_server.py              # the engine as MCP tools, over stdio
-python -m pytest tests/ -q        # 82 tests, no keys, no network
+python -m pytest tests/ -q        # 100 tests, no keys, no network
 ```
 
 Runs in **replay** by default: every API response is a committed fixture, so
@@ -89,6 +89,37 @@ literal trip had hidden:
 
 The old scripted demo — one late flight, eleven bookings, EUR 282 — still runs
 at `/`, from the same fixtures, asserting the same numbers.
+
+## The watch
+
+An engine you have to open is a report. `monitor.py` is the part that speaks
+first: `schedule(trip, disruption, now)` returns every moment somebody has to be
+told something, at T-60, T-15 and the deadline itself.
+
+An alert exists only where the clock running out takes something away — a fare
+window still worth more than it costs to use, or the last moment a replacement
+could still land in time. A deadline with nothing behind it is a fact, not an
+alert, and stays in the impact graph. Where two deadlines land on the same
+booking at the same minute (the museum's EUR 18 date change and the museum
+itself both close at 16:00) the larger loss wins, because one clock deserves one
+sentence.
+
+Nothing is queued. The schedule is a pure function of the trip and the clock, so
+the same call answers "what is coming" for the page and "what is due" for the
+ticker; firing once comes from a watermark stored on the trip, which is what
+makes *once* survive a restart or a second worker.
+
+```bash
+export DOWNSTREAM_WEBHOOK=https://hooks.slack.com/...   # or any JSON POST endpoint
+export DOWNSTREAM_WATCH=0                               # turn the loop off
+```
+
+`notify.deliver` returns the channels that actually took the message, and an
+empty list is a real answer the page is obliged to show. Email is deliberately
+absent: it needs a verified sending domain, and a mailer that lands in spam
+looks delivered on this end. The loop runs in-process, which is real while the
+service is awake and stops when a free instance sleeps — `/health` says so
+rather than leaving it to be discovered.
 
 ## Dates
 

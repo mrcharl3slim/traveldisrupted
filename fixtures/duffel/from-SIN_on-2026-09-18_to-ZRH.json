@@ -4,14 +4,14 @@
     "offers": [
       {
         "total_emissions_kg": "578",
-        "intended_total_amount": "1144.68",
+        "intended_total_amount": "1145.21",
         "intended_services": null,
-        "intended_base_amount": "835.14",
+        "intended_base_amount": "835.53",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -67,9 +67,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "309.54",
+        "tax_amount": "309.68",
         "base_currency": "USD",
-        "base_amount": "835.14",
+        "base_amount": "835.53",
         "total_currency": "USD",
         "slices": [
           {
@@ -117,7 +117,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -145,17 +145,17 @@
                 "duration": "PT12H40M",
                 "destination": {
                   "city_name": "Munich",
-                  "icao_code": "EDDM",
                   "iata_city_code": "MUC",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDM",
                   "iata_code": "MUC",
                   "latitude": 48.353732,
                   "longitude": 11.780563,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MUC",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "MUC",
                     "latitude": null,
                     "longitude": null,
@@ -171,17 +171,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -195,7 +195,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuJHkQav9oSSKUo"
+                "id": "seg_0000B9pz9MV6gewM7n7O13"
               },
               {
                 "origin_terminal": "2",
@@ -235,7 +235,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -263,9 +263,9 @@
                 "duration": "PT1H",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -277,17 +277,17 @@
                 },
                 "origin": {
                   "city_name": "Munich",
-                  "icao_code": "EDDM",
                   "iata_city_code": "MUC",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDM",
                   "iata_code": "MUC",
                   "latitude": 48.353732,
                   "longitude": 11.780563,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MUC",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "MUC",
                     "latitude": null,
                     "longitude": null,
@@ -301,7 +301,7 @@
                   "name": "Munich Airport",
                   "id": "arp_muc_de"
                 },
-                "id": "seg_0000B9psuJHkQav9oSSKUp"
+                "id": "seg_0000B9pz9MV6gewM7n7O14"
               }
             ],
             "conditions": {
@@ -317,9 +317,9 @@
             "duration": "PT22H5M",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -331,17 +331,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -355,12 +355,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuJHkQav9oSSKUr"
+            "id": "sli_0000B9pz9MVSfLDw8tHfYu"
           }
         ],
+        "total_amount": "1145.21",
         "live_mode": false,
-        "total_amount": "1144.68",
-        "created_at": "2026-08-28T15:47:29.243359Z",
+        "created_at": "2026-08-28T16:57:26.266244Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -369,7 +369,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
@@ -384,8 +384,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:29.243359Z",
-        "expires_at": "2026-08-28T16:17:28.000000Z",
+        "updated_at": "2026-08-28T16:57:26.266244Z",
+        "expires_at": "2026-08-28T17:27:25.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -395,13 +395,13 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9psuJI6PHCjpYcc2S"
+        "id": "off_0000B9pz9MVSfLDw8tHfYw"
       },
       {
         "total_emissions_kg": "578",
-        "intended_total_amount": "1341.17",
+        "intended_total_amount": "1339.26",
         "intended_services": null,
-        "intended_base_amount": "1266.23",
+        "intended_base_amount": "1264.43",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": true,
@@ -435,9 +435,9 @@
           "SA"
         ],
         "private_fares": [],
-        "tax_amount": "74.94",
+        "tax_amount": "74.83",
         "base_currency": "USD",
-        "base_amount": "1266.23",
+        "base_amount": "1264.43",
         "total_currency": "USD",
         "slices": [
           {
@@ -489,7 +489,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECO",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -517,17 +517,17 @@
                 "duration": "PT12H40M",
                 "destination": {
                   "city_name": "Munich",
-                  "icao_code": "EDDM",
                   "iata_city_code": "MUC",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDM",
                   "iata_code": "MUC",
                   "latitude": 48.353732,
                   "longitude": 11.780563,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MUC",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "MUC",
                     "latitude": null,
                     "longitude": null,
@@ -543,17 +543,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -567,7 +567,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuKv8Le1IsttIWm"
+                "id": "seg_0000B9pz9NBI9ogUEcr4ly"
               },
               {
                 "origin_terminal": "2",
@@ -611,7 +611,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECO",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -639,9 +639,9 @@
                 "duration": "PT1H",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -653,17 +653,17 @@
                 },
                 "origin": {
                   "city_name": "Munich",
-                  "icao_code": "EDDM",
                   "iata_city_code": "MUC",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDM",
                   "iata_code": "MUC",
                   "latitude": 48.353732,
                   "longitude": 11.780563,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MUC",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "MUC",
                     "latitude": null,
                     "longitude": null,
@@ -677,7 +677,7 @@
                   "name": "Munich Airport",
                   "id": "arp_muc_de"
                 },
-                "id": "seg_0000B9psuKv8Le1IsttIWo"
+                "id": "seg_0000B9pz9NBI9ogUEcr4lz"
               }
             ],
             "conditions": {
@@ -693,9 +693,9 @@
             "duration": "PT15H55M",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -707,17 +707,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -731,12 +731,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuKv8Le1IsttIWq"
+            "id": "sli_0000B9pz9NBI9ogUEcr4m0"
           }
         ],
+        "total_amount": "1339.26",
         "live_mode": false,
-        "total_amount": "1341.17",
-        "created_at": "2026-08-28T15:47:29.525836Z",
+        "created_at": "2026-08-28T16:57:26.380925Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -745,7 +745,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
@@ -760,8 +760,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:29.525836Z",
-        "expires_at": "2026-08-28T16:17:29.000000Z",
+        "updated_at": "2026-08-28T16:57:26.380925Z",
+        "expires_at": "2026-08-28T17:27:26.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SQ.svg",
@@ -771,13 +771,13 @@
           "name": "Singapore Airlines",
           "id": "arl_00009VME7DDSWSIAygCT1f"
         },
-        "id": "off_0000B9psuKv8Le1IsttIWy"
+        "id": "off_0000B9pz9NBI9ogUEcr4m3"
       },
       {
         "total_emissions_kg": "581",
-        "intended_total_amount": "4406.91",
+        "intended_total_amount": "4400.62",
         "intended_services": null,
-        "intended_base_amount": "4276.77",
+        "intended_base_amount": "4270.67",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": true,
@@ -811,9 +811,9 @@
           "SA"
         ],
         "private_fares": [],
-        "tax_amount": "130.14",
+        "tax_amount": "129.95",
         "base_currency": "USD",
-        "base_amount": "4276.77",
+        "base_amount": "4270.67",
         "total_currency": "USD",
         "slices": [
           {
@@ -865,7 +865,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECOPREMIUM",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -893,17 +893,17 @@
                 "duration": "PT13H5M",
                 "destination": {
                   "city_name": "Copenhagen",
-                  "icao_code": "EKCH",
                   "iata_city_code": "CPH",
                   "iata_country_code": "DK",
+                  "icao_code": "EKCH",
                   "iata_code": "CPH",
                   "latitude": 55.617962,
                   "longitude": 12.653382,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "CPH",
                     "iata_country_code": "DK",
+                    "icao_code": null,
                     "iata_code": "CPH",
                     "latitude": null,
                     "longitude": null,
@@ -919,17 +919,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -943,7 +943,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuKsIWBkek6Z25z"
+                "id": "seg_0000B9pz9N8SKMPq5pWoLX"
               },
               {
                 "origin_terminal": "2",
@@ -987,7 +987,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECO",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -1015,9 +1015,9 @@
                 "duration": "PT1H55M",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -1029,17 +1029,17 @@
                 },
                 "origin": {
                   "city_name": "Copenhagen",
-                  "icao_code": "EKCH",
                   "iata_city_code": "CPH",
                   "iata_country_code": "DK",
+                  "icao_code": "EKCH",
                   "iata_code": "CPH",
                   "latitude": 55.617962,
                   "longitude": 12.653382,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "CPH",
                     "iata_country_code": "DK",
+                    "icao_code": null,
                     "iata_code": "CPH",
                     "latitude": null,
                     "longitude": null,
@@ -1053,7 +1053,7 @@
                   "name": "Copenhagen Airport",
                   "id": "arp_cph_dk"
                 },
-                "id": "seg_0000B9psuKsIWBkek6Z261"
+                "id": "seg_0000B9pz9N8SKMPq5pWoLZ"
               }
             ],
             "conditions": {
@@ -1069,9 +1069,9 @@
             "duration": "PT17H30M",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -1083,17 +1083,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -1107,12 +1107,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuKsIWBkek6Z263"
+            "id": "sli_0000B9pz9N8SKMPq5pWoLc"
           }
         ],
+        "total_amount": "4400.62",
         "live_mode": false,
-        "total_amount": "4406.91",
-        "created_at": "2026-08-28T15:47:29.525836Z",
+        "created_at": "2026-08-28T16:57:26.380925Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -1121,7 +1121,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
@@ -1136,8 +1136,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:29.525836Z",
-        "expires_at": "2026-08-28T16:17:29.000000Z",
+        "updated_at": "2026-08-28T16:57:26.380925Z",
+        "expires_at": "2026-08-28T17:27:26.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SQ.svg",
@@ -1147,18 +1147,18 @@
           "name": "Singapore Airlines",
           "id": "arl_00009VME7DDSWSIAygCT1f"
         },
-        "id": "off_0000B9psuKsIWBkek6Z267"
+        "id": "off_0000B9pz9N8SKMPq5pWoLf"
       },
       {
         "total_emissions_kg": "573",
-        "intended_total_amount": "1121.10",
+        "intended_total_amount": "1121.61",
         "intended_services": null,
-        "intended_base_amount": "835.14",
+        "intended_base_amount": "835.52",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -1214,9 +1214,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "285.96",
+        "tax_amount": "286.09",
         "base_currency": "USD",
-        "base_amount": "835.14",
+        "base_amount": "835.52",
         "total_currency": "USD",
         "slices": [
           {
@@ -1264,7 +1264,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -1292,9 +1292,9 @@
                 "duration": "PT12H50M",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -1306,17 +1306,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -1330,7 +1330,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuJISNxUJqemtbD"
+                "id": "seg_0000B9pz9MVoe1VW9zRx7G"
               }
             ],
             "conditions": {
@@ -1346,9 +1346,9 @@
             "duration": "PT12H50M",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -1360,17 +1360,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -1384,12 +1384,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuJISNxUJqemtbF"
+            "id": "sli_0000B9pz9MVoe1VW9zRx7H"
           }
         ],
+        "total_amount": "1121.61",
         "live_mode": false,
-        "total_amount": "1121.10",
-        "created_at": "2026-08-28T15:47:29.243359Z",
+        "created_at": "2026-08-28T16:57:26.266244Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -1398,7 +1398,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
@@ -1413,8 +1413,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:29.243359Z",
-        "expires_at": "2026-08-28T16:17:28.000000Z",
+        "updated_at": "2026-08-28T16:57:26.266244Z",
+        "expires_at": "2026-08-28T17:27:25.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -1424,7 +1424,7 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9psuJISNxUJqemtbI"
+        "id": "off_0000B9pz9MVoe1VW9zRx7J"
       },
       {
         "total_emissions_kg": "609",
@@ -1435,7 +1435,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:29.906973Z"
+          "payment_required_by": "2026-08-29T16:57:26.646112Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -1516,7 +1516,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -1544,9 +1544,9 @@
                 "duration": "PT7H20M",
                 "destination": {
                   "city_name": "Doha",
-                  "icao_code": "OTHH",
                   "iata_city_code": "DOH",
                   "iata_country_code": "QA",
+                  "icao_code": "OTHH",
                   "iata_code": "DOH",
                   "latitude": 25.260642,
                   "longitude": 51.615118,
@@ -1558,17 +1558,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -1582,7 +1582,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuN7GBWuNh5a0i0"
+                "id": "seg_0000B9pz9Oj0PxFL1TdVxF"
               },
               {
                 "origin_terminal": null,
@@ -1626,7 +1626,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -1654,9 +1654,9 @@
                 "duration": "PT7H",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -1668,9 +1668,9 @@
                 },
                 "origin": {
                   "city_name": "Doha",
-                  "icao_code": "OTHH",
                   "iata_city_code": "DOH",
                   "iata_country_code": "QA",
+                  "icao_code": "OTHH",
                   "iata_code": "DOH",
                   "latitude": 25.260642,
                   "longitude": 51.615118,
@@ -1680,7 +1680,7 @@
                   "name": "Hamad International Airport",
                   "id": "arp_doh_qa"
                 },
-                "id": "seg_0000B9psuN7GBWuNh5a0i4"
+                "id": "seg_0000B9pz9Oj0PxFL1TdVxI"
               }
             ],
             "conditions": {
@@ -1692,9 +1692,9 @@
             "duration": "PT17H5M",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -1706,17 +1706,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -1730,12 +1730,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuN7GBWuNh5a0i7"
+            "id": "sli_0000B9pz9Oj0PxFL1TdVxK"
           }
         ],
-        "live_mode": false,
         "total_amount": "427.00",
-        "created_at": "2026-08-28T15:47:29.910367Z",
+        "live_mode": false,
+        "created_at": "2026-08-28T16:57:26.651041Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -1744,15 +1744,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:29.910367Z",
-        "expires_at": "2026-08-28T16:47:29.907026Z",
+        "updated_at": "2026-08-28T16:57:26.651041Z",
+        "expires_at": "2026-08-28T17:57:26.646199Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/QR.svg",
@@ -1762,13 +1762,13 @@
           "name": "Qatar Airways",
           "id": "arl_00009VME7DD6Xm0axa2BU9"
         },
-        "id": "off_0000B9psuN7GBWuNh5a0iD"
+        "id": "off_0000B9pz9Oj0PxFL1TdVxR"
       },
       {
         "total_emissions_kg": "631",
-        "intended_total_amount": "3271.82",
+        "intended_total_amount": "3267.15",
         "intended_services": null,
-        "intended_base_amount": "3131.85",
+        "intended_base_amount": "3127.37",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": true,
@@ -1802,9 +1802,9 @@
           "SA"
         ],
         "private_fares": [],
-        "tax_amount": "139.97",
+        "tax_amount": "139.78",
         "base_currency": "USD",
-        "base_amount": "3131.85",
+        "base_amount": "3127.37",
         "total_currency": "USD",
         "slices": [
           {
@@ -1856,7 +1856,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECO",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -1884,17 +1884,17 @@
                 "duration": "PT13H45M",
                 "destination": {
                   "city_name": "London",
-                  "icao_code": "EGLL",
                   "iata_city_code": "LON",
                   "iata_country_code": "GB",
+                  "icao_code": "EGLL",
                   "iata_code": "LHR",
                   "latitude": 51.470311,
                   "longitude": -0.458118,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "LON",
                     "iata_country_code": "GB",
+                    "icao_code": null,
                     "iata_code": "LON",
                     "latitude": null,
                     "longitude": null,
@@ -1910,17 +1910,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -1934,7 +1934,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuKt0TYJomItbCl"
+                "id": "seg_0000B9pz9N9WGPGa981f0D"
               },
               {
                 "origin_terminal": "N",
@@ -1978,7 +1978,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECO",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -2006,9 +2006,9 @@
                 "duration": "PT1H40M",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -2020,17 +2020,17 @@
                 },
                 "origin": {
                   "city_name": "London",
-                  "icao_code": "EGKK",
                   "iata_city_code": "LON",
                   "iata_country_code": "GB",
+                  "icao_code": "EGKK",
                   "iata_code": "LGW",
                   "latitude": 51.150882,
                   "longitude": -0.18617,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "LON",
                     "iata_country_code": "GB",
+                    "icao_code": null,
                     "iata_code": "LON",
                     "latitude": null,
                     "longitude": null,
@@ -2044,7 +2044,7 @@
                   "name": "Gatwick Airport",
                   "id": "arp_lgw_gb"
                 },
-                "id": "seg_0000B9psuKt0TYJomItbCn"
+                "id": "seg_0000B9pz9N9WGPGa981f0I"
               }
             ],
             "conditions": {
@@ -2060,9 +2060,9 @@
             "duration": "PT18H15M",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -2074,17 +2074,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -2098,12 +2098,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuKt0TYJomItbCp"
+            "id": "sli_0000B9pz9N9WGPGa981f0K"
           }
         ],
+        "total_amount": "3267.15",
         "live_mode": false,
-        "total_amount": "3271.82",
-        "created_at": "2026-08-28T15:47:29.525836Z",
+        "created_at": "2026-08-28T16:57:26.380925Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -2112,7 +2112,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
@@ -2127,8 +2127,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:29.525836Z",
-        "expires_at": "2026-08-28T16:17:29.000000Z",
+        "updated_at": "2026-08-28T16:57:26.380925Z",
+        "expires_at": "2026-08-28T17:27:26.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SQ.svg",
@@ -2138,7 +2138,7 @@
           "name": "Singapore Airlines",
           "id": "arl_00009VME7DDSWSIAygCT1f"
         },
-        "id": "off_0000B9psuKt0TYJomItbCt"
+        "id": "off_0000B9pz9N9WGPGa981f0O"
       },
       {
         "total_emissions_kg": "609",
@@ -2149,7 +2149,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:29.908114Z"
+          "payment_required_by": "2026-08-29T16:57:26.647820Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -2230,7 +2230,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -2258,9 +2258,9 @@
                 "duration": "PT7H20M",
                 "destination": {
                   "city_name": "Doha",
-                  "icao_code": "OTHH",
                   "iata_city_code": "DOH",
                   "iata_country_code": "QA",
+                  "icao_code": "OTHH",
                   "iata_code": "DOH",
                   "latitude": 25.260642,
                   "longitude": 51.615118,
@@ -2272,17 +2272,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -2296,7 +2296,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuN8K7Zl7kO4rM1"
+                "id": "seg_0000B9pz9Ok4M0654m8Mbq"
               },
               {
                 "origin_terminal": null,
@@ -2340,7 +2340,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -2368,9 +2368,9 @@
                 "duration": "PT7H",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -2382,9 +2382,9 @@
                 },
                 "origin": {
                   "city_name": "Doha",
-                  "icao_code": "OTHH",
                   "iata_city_code": "DOH",
                   "iata_country_code": "QA",
+                  "icao_code": "OTHH",
                   "iata_code": "DOH",
                   "latitude": 25.260642,
                   "longitude": 51.615118,
@@ -2394,7 +2394,7 @@
                   "name": "Hamad International Airport",
                   "id": "arp_doh_qa"
                 },
-                "id": "seg_0000B9psuN8K7Zl7kO4rM3"
+                "id": "seg_0000B9pz9Ok4M0654m8Mbu"
               }
             ],
             "conditions": {
@@ -2406,9 +2406,9 @@
             "duration": "P1DT10H",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -2420,17 +2420,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -2444,12 +2444,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuN8K7Zl7kO4rM6"
+            "id": "sli_0000B9pz9Ok4M0654m8Mbw"
           }
         ],
-        "live_mode": false,
         "total_amount": "429.60",
-        "created_at": "2026-08-28T15:47:29.910367Z",
+        "live_mode": false,
+        "created_at": "2026-08-28T16:57:26.651041Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -2458,15 +2458,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:29.910367Z",
-        "expires_at": "2026-08-28T16:47:29.908154Z",
+        "updated_at": "2026-08-28T16:57:26.651041Z",
+        "expires_at": "2026-08-28T17:57:26.647864Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/QR.svg",
@@ -2476,18 +2476,18 @@
           "name": "Qatar Airways",
           "id": "arl_00009VME7DD6Xm0axa2BU9"
         },
-        "id": "off_0000B9psuN8K7Zl7kO4rMC"
+        "id": "off_0000B9pz9Ok4M0654m8Mc1"
       },
       {
         "total_emissions_kg": "590",
-        "intended_total_amount": "912.62",
+        "intended_total_amount": "913.04",
         "intended_services": null,
-        "intended_base_amount": "571.91",
+        "intended_base_amount": "572.17",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -2543,9 +2543,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "340.71",
+        "tax_amount": "340.87",
         "base_currency": "USD",
-        "base_amount": "571.91",
+        "base_amount": "572.17",
         "total_currency": "USD",
         "slices": [
           {
@@ -2593,7 +2593,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -2621,17 +2621,17 @@
                 "duration": "PT13H5M",
                 "destination": {
                   "city_name": "Frankfurt",
-                  "icao_code": "EDDF",
                   "iata_city_code": "FRA",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDF",
                   "iata_code": "FRA",
                   "latitude": 50.034866,
                   "longitude": 8.567755,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "FRA",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "FRA",
                     "latitude": null,
                     "longitude": null,
@@ -2647,17 +2647,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -2671,7 +2671,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuJHkQav9oSSKUC"
+                "id": "seg_0000B9pz9MV6gewM7n7O0p"
               },
               {
                 "origin_terminal": "1",
@@ -2711,7 +2711,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -2739,9 +2739,9 @@
                 "duration": "PT55M",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -2753,17 +2753,17 @@
                 },
                 "origin": {
                   "city_name": "Frankfurt",
-                  "icao_code": "EDDF",
                   "iata_city_code": "FRA",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDF",
                   "iata_code": "FRA",
                   "latitude": 50.034866,
                   "longitude": 8.567755,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "FRA",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "FRA",
                     "latitude": null,
                     "longitude": null,
@@ -2777,7 +2777,7 @@
                   "name": "Frankfurt am Main Airport",
                   "id": "arp_fra_de"
                 },
-                "id": "seg_0000B9psuJHkQav9oSSKUD"
+                "id": "seg_0000B9pz9MV6gewM7n7O0q"
               }
             ],
             "conditions": {
@@ -2793,9 +2793,9 @@
             "duration": "P1DT55M",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -2807,17 +2807,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -2831,12 +2831,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuJHkQav9oSSKUF"
+            "id": "sli_0000B9pz9MV6gewM7n7O0r"
           }
         ],
+        "total_amount": "913.04",
         "live_mode": false,
-        "total_amount": "912.62",
-        "created_at": "2026-08-28T15:47:29.243359Z",
+        "created_at": "2026-08-28T16:57:26.266244Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -2845,7 +2845,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
@@ -2860,8 +2860,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:29.243359Z",
-        "expires_at": "2026-08-28T16:17:28.000000Z",
+        "updated_at": "2026-08-28T16:57:26.266244Z",
+        "expires_at": "2026-08-28T17:27:25.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -2871,18 +2871,18 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9psuJHkQav9oSSKUJ"
+        "id": "off_0000B9pz9MV6gewM7n7O0t"
       },
       {
-        "total_emissions_kg": "386",
-        "intended_total_amount": "401.94",
+        "total_emissions_kg": "539",
+        "intended_total_amount": "389.10",
         "intended_services": null,
-        "intended_base_amount": "340.63",
+        "intended_base_amount": "329.75",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
-          "price_guarantee_expires_at": "2026-08-30T15:47:28Z",
-          "payment_required_by": "2026-08-31T15:47:28Z"
+          "price_guarantee_expires_at": "2026-08-30T16:57:25Z",
+          "payment_required_by": "2026-08-31T16:57:25Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -2894,13 +2894,13 @@
         "available_services": null,
         "supported_loyalty_programmes": [],
         "private_fares": [],
-        "tax_amount": "61.31",
+        "tax_amount": "59.35",
         "base_currency": "USD",
-        "base_amount": "340.63",
+        "base_amount": "329.75",
         "total_currency": "USD",
         "slices": [
           {
-            "comparison_key": "B02rsw==",
+            "comparison_key": "A4ntXQ==",
             "ngs_shelf": 1,
             "destination_type": "airport",
             "origin_type": "airport",
@@ -2914,23 +2914,23 @@
                 "arriving_at": "2026-09-18T21:28:00",
                 "stops": [],
                 "operating_carrier": {
-                  "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/ZZ.svg",
-                  "logo_lockup_url": null,
-                  "conditions_of_carriage_url": "https://duffelairways.com/dummy-url/conditions-of-carriage",
-                  "iata_code": "ZZ",
-                  "name": "Duffel Airways",
-                  "id": "arl_00009VME7D6ivUu8dn35WK"
+                  "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/IB.svg",
+                  "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/IB.svg",
+                  "conditions_of_carriage_url": "https://www.iberia.com/gb/bills/conditions/",
+                  "iata_code": "IB",
+                  "name": "Iberia",
+                  "id": "arl_00009VME7DCOaPRQvNhcMu"
                 },
                 "marketing_carrier": {
-                  "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/ZZ.svg",
-                  "logo_lockup_url": null,
-                  "conditions_of_carriage_url": "https://duffelairways.com/dummy-url/conditions-of-carriage",
-                  "iata_code": "ZZ",
-                  "name": "Duffel Airways",
-                  "id": "arl_00009VME7D6ivUu8dn35WK"
+                  "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/IB.svg",
+                  "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/IB.svg",
+                  "conditions_of_carriage_url": "https://www.iberia.com/gb/bills/conditions/",
+                  "iata_code": "IB",
+                  "name": "Iberia",
+                  "id": "arl_00009VME7DCOaPRQvNhcMu"
                 },
-                "operating_carrier_flight_number": "3864",
-                "marketing_carrier_flight_number": "3864",
+                "operating_carrier_flight_number": "3177",
+                "marketing_carrier_flight_number": "3177",
                 "passengers": [
                   {
                     "baggages": [
@@ -2944,7 +2944,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -2972,9 +2972,9 @@
                 "duration": "PT14H19M",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -2986,17 +2986,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -3010,7 +3010,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuCSToILWdiQIk6"
+                "id": "seg_0000B9pz9Fv59gYhiKDX1q"
               }
             ],
             "conditions": {
@@ -3026,9 +3026,9 @@
             "duration": "PT14H19M",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -3040,17 +3040,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -3064,12 +3064,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuCSToILWdiQIk7"
+            "id": "sli_0000B9pz9Fv59gYhiKDX1s"
           }
         ],
+        "total_amount": "389.10",
         "live_mode": false,
-        "total_amount": "401.94",
-        "created_at": "2026-08-28T15:47:28.058648Z",
+        "created_at": "2026-08-28T16:57:25.124708Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -3078,14 +3078,14 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
           "refund_before_departure": {
-            "penalty_currency": null,
-            "penalty_amount": null,
-            "allowed": false
+            "penalty_currency": "USD",
+            "penalty_amount": "70.00",
+            "allowed": true
           },
           "change_before_departure": {
             "penalty_currency": null,
@@ -3093,29 +3093,29 @@
             "allowed": false
           }
         },
-        "updated_at": "2026-08-28T15:47:28.058648Z",
-        "expires_at": "2026-08-28T16:17:28.058649Z",
+        "updated_at": "2026-08-28T16:57:25.124708Z",
+        "expires_at": "2026-08-28T17:27:25.124714Z",
         "partial": false,
         "owner": {
-          "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/ZZ.svg",
-          "logo_lockup_url": null,
-          "conditions_of_carriage_url": "https://duffelairways.com/dummy-url/conditions-of-carriage",
-          "iata_code": "ZZ",
-          "name": "Duffel Airways",
-          "id": "arl_00009VME7D6ivUu8dn35WK"
+          "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/IB.svg",
+          "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/IB.svg",
+          "conditions_of_carriage_url": "https://www.iberia.com/gb/bills/conditions/",
+          "iata_code": "IB",
+          "name": "Iberia",
+          "id": "arl_00009VME7DCOaPRQvNhcMu"
         },
-        "id": "off_0000B9psuCSToILWdiQIk8"
+        "id": "off_0000B9pz9Fv59gYhiKDX1u"
       },
       {
         "total_emissions_kg": "576",
-        "intended_total_amount": "897.85",
+        "intended_total_amount": "898.26",
         "intended_services": null,
-        "intended_base_amount": "571.91",
+        "intended_base_amount": "572.17",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -3171,9 +3171,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "325.94",
+        "tax_amount": "326.09",
         "base_currency": "USD",
-        "base_amount": "571.91",
+        "base_amount": "572.17",
         "total_currency": "USD",
         "slices": [
           {
@@ -3221,7 +3221,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -3249,17 +3249,17 @@
                 "duration": "PT2H30M",
                 "destination": {
                   "city_name": "Bangkok",
-                  "icao_code": "VTBS",
                   "iata_city_code": "BKK",
                   "iata_country_code": "TH",
+                  "icao_code": "VTBS",
                   "iata_code": "BKK",
                   "latitude": 13.691187,
                   "longitude": 100.748128,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "BKK",
                     "iata_country_code": "TH",
+                    "icao_code": null,
                     "iata_code": "BKK",
                     "latitude": null,
                     "longitude": null,
@@ -3275,17 +3275,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -3299,7 +3299,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuJH2TELzmG7lO9"
+                "id": "seg_0000B9pz9MUkhyem6gx6SV"
               },
               {
                 "origin_terminal": null,
@@ -3339,7 +3339,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -3367,9 +3367,9 @@
                 "duration": "PT12H",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -3381,17 +3381,17 @@
                 },
                 "origin": {
                   "city_name": "Bangkok",
-                  "icao_code": "VTBS",
                   "iata_city_code": "BKK",
                   "iata_country_code": "TH",
+                  "icao_code": "VTBS",
                   "iata_code": "BKK",
                   "latitude": 13.691187,
                   "longitude": 100.748128,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "BKK",
                     "iata_country_code": "TH",
+                    "icao_code": null,
                     "iata_code": "BKK",
                     "latitude": null,
                     "longitude": null,
@@ -3405,7 +3405,7 @@
                   "name": "Suvarnabhumi Airport",
                   "id": "arp_bkk_th"
                 },
-                "id": "seg_0000B9psuJH2TELzmG7lOC"
+                "id": "seg_0000B9pz9MUkhyem6gx6SW"
               }
             ],
             "conditions": {
@@ -3421,9 +3421,9 @@
             "duration": "P1DT7H5M",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -3435,17 +3435,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -3459,12 +3459,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuJH2TELzmG7lOE"
+            "id": "sli_0000B9pz9MUkhyem6gx6SX"
           }
         ],
+        "total_amount": "898.26",
         "live_mode": false,
-        "total_amount": "897.85",
-        "created_at": "2026-08-28T15:47:29.243359Z",
+        "created_at": "2026-08-28T16:57:26.266244Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -3473,7 +3473,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
@@ -3488,8 +3488,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:29.243359Z",
-        "expires_at": "2026-08-28T16:17:28.000000Z",
+        "updated_at": "2026-08-28T16:57:26.266244Z",
+        "expires_at": "2026-08-28T17:27:25.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -3499,7 +3499,7 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9psuJH2TELzmG7lOG"
+        "id": "off_0000B9pz9MUkhyem6gx6SZ"
       },
       {
         "total_emissions_kg": "609",
@@ -3510,7 +3510,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:29.907951Z"
+          "payment_required_by": "2026-08-29T16:57:26.647660Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -3591,7 +3591,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -3619,9 +3619,9 @@
                 "duration": "PT7H20M",
                 "destination": {
                   "city_name": "Doha",
-                  "icao_code": "OTHH",
                   "iata_city_code": "DOH",
                   "iata_country_code": "QA",
+                  "icao_code": "OTHH",
                   "iata_code": "DOH",
                   "latitude": 25.260642,
                   "longitude": 51.615118,
@@ -3633,17 +3633,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -3657,7 +3657,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuN7y8tTXjHuZoN"
+                "id": "seg_0000B9pz9OjiNJoV3fy548"
               },
               {
                 "origin_terminal": null,
@@ -3701,7 +3701,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -3729,9 +3729,9 @@
                 "duration": "PT7H",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -3743,9 +3743,9 @@
                 },
                 "origin": {
                   "city_name": "Doha",
-                  "icao_code": "OTHH",
                   "iata_city_code": "DOH",
                   "iata_country_code": "QA",
+                  "icao_code": "OTHH",
                   "iata_code": "DOH",
                   "latitude": 25.260642,
                   "longitude": 51.615118,
@@ -3755,7 +3755,7 @@
                   "name": "Hamad International Airport",
                   "id": "arp_doh_qa"
                 },
-                "id": "seg_0000B9psuN7y8tTXjHuZoR"
+                "id": "seg_0000B9pz9OjiNJoV3fy54B"
               }
             ],
             "conditions": {
@@ -3767,9 +3767,9 @@
             "duration": "P1DT40M",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -3781,17 +3781,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -3805,12 +3805,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuN7y8tTXjHuZoU"
+            "id": "sli_0000B9pz9OjiNJoV3fy54D"
           }
         ],
-        "live_mode": false,
         "total_amount": "1218.00",
-        "created_at": "2026-08-28T15:47:29.910367Z",
+        "live_mode": false,
+        "created_at": "2026-08-28T16:57:26.651041Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -3819,15 +3819,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:29.910367Z",
-        "expires_at": "2026-08-28T16:47:29.908006Z",
+        "updated_at": "2026-08-28T16:57:26.651041Z",
+        "expires_at": "2026-08-28T17:57:26.647730Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/QR.svg",
@@ -3837,7 +3837,7 @@
           "name": "Qatar Airways",
           "id": "arl_00009VME7DD6Xm0axa2BU9"
         },
-        "id": "off_0000B9psuN7y8tTXjHuZoa"
+        "id": "off_0000B9pz9OjiNJoV3fy54F"
       },
       {
         "total_emissions_kg": "725",
@@ -3848,7 +3848,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:29.906401Z"
+          "payment_required_by": "2026-08-29T16:57:26.645546Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -3916,7 +3916,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -3944,17 +3944,17 @@
                 "duration": "PT7H20M",
                 "destination": {
                   "city_name": "Abu Dhabi",
-                  "icao_code": "OMAA",
                   "iata_city_code": "AUH",
                   "iata_country_code": "AE",
+                  "icao_code": "OMAA",
                   "iata_code": "AUH",
                   "latitude": 24.437469,
                   "longitude": 54.650586,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "AUH",
                     "iata_country_code": "AE",
+                    "icao_code": null,
                     "iata_code": "AUH",
                     "latitude": null,
                     "longitude": null,
@@ -3970,17 +3970,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -3994,7 +3994,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuN7GBWuNh5a0hB"
+                "id": "seg_0000B9pz9OieRGxl0NTEP4"
               },
               {
                 "origin_terminal": null,
@@ -4038,7 +4038,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -4066,9 +4066,9 @@
                 "duration": "PT6H55M",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -4080,17 +4080,17 @@
                 },
                 "origin": {
                   "city_name": "Abu Dhabi",
-                  "icao_code": "OMAA",
                   "iata_city_code": "AUH",
                   "iata_country_code": "AE",
+                  "icao_code": "OMAA",
                   "iata_code": "AUH",
                   "latitude": 24.437469,
                   "longitude": 54.650586,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "AUH",
                     "iata_country_code": "AE",
+                    "icao_code": null,
                     "iata_code": "AUH",
                     "latitude": null,
                     "longitude": null,
@@ -4104,7 +4104,7 @@
                   "name": "Abu Dhabi International Airport",
                   "id": "arp_auh_ae"
                 },
-                "id": "seg_0000B9psuN7GBWuNh5a0hD"
+                "id": "seg_0000B9pz9OieRGxl0NTEP8"
               }
             ],
             "conditions": {
@@ -4116,9 +4116,9 @@
             "duration": "PT22H20M",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -4130,17 +4130,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -4154,12 +4154,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuN7GBWuNh5a0hH"
+            "id": "sli_0000B9pz9OieRGxl0NTEPC"
           }
         ],
-        "live_mode": false,
         "total_amount": "458.80",
-        "created_at": "2026-08-28T15:47:29.910367Z",
+        "live_mode": false,
+        "created_at": "2026-08-28T16:57:26.651041Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -4168,15 +4168,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:29.910367Z",
-        "expires_at": "2026-08-28T16:47:29.906464Z",
+        "updated_at": "2026-08-28T16:57:26.651041Z",
+        "expires_at": "2026-08-28T17:57:26.645630Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/EY.svg",
@@ -4186,7 +4186,7 @@
           "name": "Etihad Airways",
           "id": "arl_00009VME7DC2bj9quHXKoY"
         },
-        "id": "off_0000B9psuN7GBWuNh5a0hN"
+        "id": "off_0000B9pz9OieRGxl0NTEPH"
       },
       {
         "total_emissions_kg": "725",
@@ -4197,7 +4197,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:29.903761Z"
+          "payment_required_by": "2026-08-29T16:57:26.642409Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -4265,7 +4265,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -4293,17 +4293,17 @@
                 "duration": "PT7H20M",
                 "destination": {
                   "city_name": "Abu Dhabi",
-                  "icao_code": "OMAA",
                   "iata_city_code": "AUH",
                   "iata_country_code": "AE",
+                  "icao_code": "OMAA",
                   "iata_code": "AUH",
                   "latitude": 24.437469,
                   "longitude": 54.650586,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "AUH",
                     "iata_country_code": "AE",
+                    "icao_code": null,
                     "iata_code": "AUH",
                     "latitude": null,
                     "longitude": null,
@@ -4319,17 +4319,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -4343,7 +4343,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuN5qGnm3cgusUF"
+                "id": "seg_0000B9pz9OgsXrXqusdods"
               },
               {
                 "origin_terminal": null,
@@ -4387,7 +4387,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -4415,9 +4415,9 @@
                 "duration": "PT6H55M",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -4429,17 +4429,17 @@
                 },
                 "origin": {
                   "city_name": "Abu Dhabi",
-                  "icao_code": "OMAA",
                   "iata_city_code": "AUH",
                   "iata_country_code": "AE",
+                  "icao_code": "OMAA",
                   "iata_code": "AUH",
                   "latitude": 24.437469,
                   "longitude": 54.650586,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "AUH",
                     "iata_country_code": "AE",
+                    "icao_code": null,
                     "iata_code": "AUH",
                     "latitude": null,
                     "longitude": null,
@@ -4453,7 +4453,7 @@
                   "name": "Abu Dhabi International Airport",
                   "id": "arp_auh_ae"
                 },
-                "id": "seg_0000B9psuN5qGnm3cgusUH"
+                "id": "seg_0000B9pz9OgsXrXqusdodt"
               }
             ],
             "conditions": {
@@ -4465,9 +4465,9 @@
             "duration": "P1DT4H",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -4479,17 +4479,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -4503,12 +4503,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuN5qGnm3cgusUJ"
+            "id": "sli_0000B9pz9OgsXrXqusdodu"
           }
         ],
-        "live_mode": false,
         "total_amount": "711.80",
-        "created_at": "2026-08-28T15:47:29.910367Z",
+        "live_mode": false,
+        "created_at": "2026-08-28T16:57:26.651041Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -4517,15 +4517,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:29.910367Z",
-        "expires_at": "2026-08-28T16:47:29.903806Z",
+        "updated_at": "2026-08-28T16:57:26.651041Z",
+        "expires_at": "2026-08-28T17:57:26.642479Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/EY.svg",
@@ -4535,7 +4535,7 @@
           "name": "Etihad Airways",
           "id": "arl_00009VME7DC2bj9quHXKoY"
         },
-        "id": "off_0000B9psuN5qGnm3cgusUQ"
+        "id": "off_0000B9pz9OgsXrXqusdoeD"
       },
       {
         "total_emissions_kg": "725",
@@ -4546,7 +4546,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:29.904581Z"
+          "payment_required_by": "2026-08-29T16:57:26.643423Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -4614,7 +4614,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -4642,17 +4642,17 @@
                 "duration": "PT7H20M",
                 "destination": {
                   "city_name": "Abu Dhabi",
-                  "icao_code": "OMAA",
                   "iata_city_code": "AUH",
                   "iata_country_code": "AE",
+                  "icao_code": "OMAA",
                   "iata_code": "AUH",
                   "latitude": 24.437469,
                   "longitude": 54.650586,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "AUH",
                     "iata_country_code": "AE",
+                    "icao_code": null,
                     "iata_code": "AUH",
                     "latitude": null,
                     "longitude": null,
@@ -4668,17 +4668,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -4692,7 +4692,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuN6CFU3ddn5A2s"
+                "id": "seg_0000B9pz9OhaVE70x4yNkK"
               },
               {
                 "origin_terminal": null,
@@ -4736,7 +4736,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -4764,9 +4764,9 @@
                 "duration": "PT6H55M",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -4778,17 +4778,17 @@
                 },
                 "origin": {
                   "city_name": "Abu Dhabi",
-                  "icao_code": "OMAA",
                   "iata_city_code": "AUH",
                   "iata_country_code": "AE",
+                  "icao_code": "OMAA",
                   "iata_code": "AUH",
                   "latitude": 24.437469,
                   "longitude": 54.650586,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "AUH",
                     "iata_country_code": "AE",
+                    "icao_code": null,
                     "iata_code": "AUH",
                     "latitude": null,
                     "longitude": null,
@@ -4802,7 +4802,7 @@
                   "name": "Abu Dhabi International Airport",
                   "id": "arp_auh_ae"
                 },
-                "id": "seg_0000B9psuN6CFU3ddn5A2v"
+                "id": "seg_0000B9pz9OhaVE70x4yNkN"
               }
             ],
             "conditions": {
@@ -4814,9 +4814,9 @@
             "duration": "P1DT4H",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -4828,17 +4828,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -4852,12 +4852,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuN6CFU3ddn5A2x"
+            "id": "sli_0000B9pz9OhaVE70x4yNkP"
           }
         ],
-        "live_mode": false,
         "total_amount": "1030.80",
-        "created_at": "2026-08-28T15:47:29.910367Z",
+        "live_mode": false,
+        "created_at": "2026-08-28T16:57:26.651041Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -4866,15 +4866,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:29.910367Z",
-        "expires_at": "2026-08-28T16:47:29.904639Z",
+        "updated_at": "2026-08-28T16:57:26.651041Z",
+        "expires_at": "2026-08-28T17:57:26.643488Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/EY.svg",
@@ -4884,7 +4884,7 @@
           "name": "Etihad Airways",
           "id": "arl_00009VME7DC2bj9quHXKoY"
         },
-        "id": "off_0000B9psuN6CFU3ddn5A32"
+        "id": "off_0000B9pz9OhaVE70x4yNkV"
       },
       {
         "total_emissions_kg": "599",
@@ -4895,7 +4895,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:29.905727Z"
+          "payment_required_by": "2026-08-29T16:57:26.644762Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -4976,7 +4976,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -5004,17 +5004,17 @@
                 "duration": "PT13H25M",
                 "destination": {
                   "city_name": "Helsinki",
-                  "icao_code": "EFHK",
                   "iata_city_code": "HEL",
                   "iata_country_code": "FI",
+                  "icao_code": "EFHK",
                   "iata_code": "HEL",
                   "latitude": 60.31912,
                   "longitude": 24.95808,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "HEL",
                     "iata_country_code": "FI",
+                    "icao_code": null,
                     "iata_code": "HEL",
                     "latitude": null,
                     "longitude": null,
@@ -5030,17 +5030,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -5054,7 +5054,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuN6uCqcnfzPj92"
+                "id": "seg_0000B9pz9OiISagAzHIwqf"
               },
               {
                 "origin_terminal": null,
@@ -5098,7 +5098,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -5126,9 +5126,9 @@
                 "duration": "PT2H45M",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -5140,17 +5140,17 @@
                 },
                 "origin": {
                   "city_name": "Helsinki",
-                  "icao_code": "EFHK",
                   "iata_city_code": "HEL",
                   "iata_country_code": "FI",
+                  "icao_code": "EFHK",
                   "iata_code": "HEL",
                   "latitude": 60.31912,
                   "longitude": 24.95808,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "HEL",
                     "iata_country_code": "FI",
+                    "icao_code": null,
                     "iata_code": "HEL",
                     "latitude": null,
                     "longitude": null,
@@ -5164,7 +5164,7 @@
                   "name": "Helsinki Airport",
                   "id": "arp_hel_fi"
                 },
-                "id": "seg_0000B9psuN6uCqcnfzPj96"
+                "id": "seg_0000B9pz9OiISagAzHIwqj"
               }
             ],
             "conditions": {
@@ -5176,9 +5176,9 @@
             "duration": "P1DT2H40M",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -5190,17 +5190,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -5214,12 +5214,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuN6uCqcnfzPj9A"
+            "id": "sli_0000B9pz9OiISagAzHIwqk"
           }
         ],
-        "live_mode": false,
         "total_amount": "969.40",
-        "created_at": "2026-08-28T15:47:29.910367Z",
+        "live_mode": false,
+        "created_at": "2026-08-28T16:57:26.651041Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -5228,15 +5228,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:29.910367Z",
-        "expires_at": "2026-08-28T16:47:29.905794Z",
+        "updated_at": "2026-08-28T16:57:26.651041Z",
+        "expires_at": "2026-08-28T17:57:26.644808Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/AY.svg",
@@ -5246,13 +5246,13 @@
           "name": "Finnair",
           "id": "arl_00009VME7DC2bj9quHXKow"
         },
-        "id": "off_0000B9psuN6uCqcnfzPj9F"
+        "id": "off_0000B9pz9OiISagAzHIwqm"
       },
       {
         "total_emissions_kg": "573",
-        "intended_total_amount": "1125.18",
+        "intended_total_amount": "1123.58",
         "intended_services": null,
-        "intended_base_amount": "1073.86",
+        "intended_base_amount": "1072.33",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": true,
@@ -5286,9 +5286,9 @@
           "SA"
         ],
         "private_fares": [],
-        "tax_amount": "51.32",
+        "tax_amount": "51.25",
         "base_currency": "USD",
-        "base_amount": "1073.86",
+        "base_amount": "1072.33",
         "total_currency": "USD",
         "slices": [
           {
@@ -5340,7 +5340,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECO",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -5368,9 +5368,9 @@
                 "duration": "PT13H10M",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -5382,17 +5382,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -5406,7 +5406,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuKvUKKIsu03a4d"
+                "id": "seg_0000B9pz9NBe8Uy4Fj1MJg"
               }
             ],
             "conditions": {
@@ -5422,9 +5422,9 @@
             "duration": "PT13H10M",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -5436,17 +5436,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -5460,12 +5460,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuKvUKKIsu03a4g"
+            "id": "sli_0000B9pz9NBe8Uy4Fj1MJi"
           }
         ],
+        "total_amount": "1123.58",
         "live_mode": false,
-        "total_amount": "1125.18",
-        "created_at": "2026-08-28T15:47:29.525836Z",
+        "created_at": "2026-08-28T16:57:26.380925Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -5474,7 +5474,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
@@ -5489,8 +5489,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:29.525836Z",
-        "expires_at": "2026-08-28T16:17:29.000000Z",
+        "updated_at": "2026-08-28T16:57:26.380925Z",
+        "expires_at": "2026-08-28T17:27:26.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SQ.svg",
@@ -5500,7 +5500,7 @@
           "name": "Singapore Airlines",
           "id": "arl_00009VME7DDSWSIAygCT1f"
         },
-        "id": "off_0000B9psuKvUKKIsu03a4l"
+        "id": "off_0000B9pz9NBe8Uy4Fj1MJl"
       },
       {
         "total_emissions_kg": "783",
@@ -5511,7 +5511,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:29.901723Z"
+          "payment_required_by": "2026-08-29T16:57:26.639783Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -5597,7 +5597,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -5625,17 +5625,17 @@
                 "duration": "PT5H30M",
                 "destination": {
                   "city_name": "Shanghai",
-                  "icao_code": "ZSPD",
                   "iata_city_code": "SHA",
                   "iata_country_code": "CN",
+                  "icao_code": "ZSPD",
                   "iata_code": "PVG",
                   "latitude": 31.143872,
                   "longitude": 121.806636,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SHA",
                     "iata_country_code": "CN",
+                    "icao_code": null,
                     "iata_code": "SHA",
                     "latitude": null,
                     "longitude": null,
@@ -5651,17 +5651,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -5675,7 +5675,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuN4mKkvJZOQ1pN"
+                "id": "seg_0000B9pz9OgAaUygsgJFX1"
               },
               {
                 "origin_terminal": null,
@@ -5719,7 +5719,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -5747,9 +5747,9 @@
                 "duration": "PT12H",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -5761,17 +5761,17 @@
                 },
                 "origin": {
                   "city_name": "Shanghai",
-                  "icao_code": "ZSPD",
                   "iata_city_code": "SHA",
                   "iata_country_code": "CN",
+                  "icao_code": "ZSPD",
                   "iata_code": "PVG",
                   "latitude": 31.143872,
                   "longitude": 121.806636,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SHA",
                     "iata_country_code": "CN",
+                    "icao_code": null,
                     "iata_code": "SHA",
                     "latitude": null,
                     "longitude": null,
@@ -5785,7 +5785,7 @@
                   "name": "Shanghai Pudong International Airport",
                   "id": "arp_pvg_cn"
                 },
-                "id": "seg_0000B9psuN4mKkvJZOQ1pS"
+                "id": "seg_0000B9pz9OgAaUygsgJFX2"
               }
             ],
             "conditions": {
@@ -5797,9 +5797,9 @@
             "duration": "P1DT14H45M",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -5811,17 +5811,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -5835,12 +5835,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuN4mKkvJZOQ1pV"
+            "id": "sli_0000B9pz9OgAaUygsgJFX3"
           }
         ],
-        "live_mode": false,
         "total_amount": "536.10",
-        "created_at": "2026-08-28T15:47:29.910367Z",
+        "live_mode": false,
+        "created_at": "2026-08-28T16:57:26.651041Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -5849,15 +5849,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:29.910367Z",
-        "expires_at": "2026-08-28T16:47:29.901778Z",
+        "updated_at": "2026-08-28T16:57:26.651041Z",
+        "expires_at": "2026-08-28T17:57:26.639839Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/MU.svg",
@@ -5867,18 +5867,18 @@
           "name": "China Eastern Airlines",
           "id": "arl_00009VME7DBgd2sGtBN3GR"
         },
-        "id": "off_0000B9psuN4mKkvJZOQ1pb"
+        "id": "off_0000B9pz9OgAaUygsgJFX6"
       },
       {
         "total_emissions_kg": "594",
-        "intended_total_amount": "903.27",
+        "intended_total_amount": "903.69",
         "intended_services": null,
-        "intended_base_amount": "571.91",
+        "intended_base_amount": "572.18",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -5934,9 +5934,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "331.36",
+        "tax_amount": "331.51",
         "base_currency": "USD",
-        "base_amount": "571.91",
+        "base_amount": "572.18",
         "total_currency": "USD",
         "slices": [
           {
@@ -5984,7 +5984,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -6012,17 +6012,17 @@
                 "duration": "PT13H",
                 "destination": {
                   "city_name": "Frankfurt",
-                  "icao_code": "EDDF",
                   "iata_city_code": "FRA",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDF",
                   "iata_code": "FRA",
                   "latitude": 50.034866,
                   "longitude": 8.567755,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "FRA",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "FRA",
                     "latitude": null,
                     "longitude": null,
@@ -6038,17 +6038,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -6062,7 +6062,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuJGKVrmpk3nCHd"
+                "id": "seg_0000B9pz9MU2kc5c4UcXMB"
               },
               {
                 "origin_terminal": "1",
@@ -6102,7 +6102,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -6130,9 +6130,9 @@
                 "duration": "PT55M",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -6144,17 +6144,17 @@
                 },
                 "origin": {
                   "city_name": "Frankfurt",
-                  "icao_code": "EDDF",
                   "iata_city_code": "FRA",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDF",
                   "iata_code": "FRA",
                   "latitude": 50.034866,
                   "longitude": 8.567755,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "FRA",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "FRA",
                     "latitude": null,
                     "longitude": null,
@@ -6168,7 +6168,7 @@
                   "name": "Frankfurt am Main Airport",
                   "id": "arp_fra_de"
                 },
-                "id": "seg_0000B9psuJGKVrmpk3nCHe"
+                "id": "seg_0000B9pz9MU2kc5c4UcXMC"
               }
             ],
             "conditions": {
@@ -6184,9 +6184,9 @@
             "duration": "PT18H40M",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -6198,17 +6198,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -6222,12 +6222,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuJGKVrmpk3nCHf"
+            "id": "sli_0000B9pz9MU2kc5c4UcXMD"
           }
         ],
+        "total_amount": "903.69",
         "live_mode": false,
-        "total_amount": "903.27",
-        "created_at": "2026-08-28T15:47:29.243359Z",
+        "created_at": "2026-08-28T16:57:26.266244Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -6236,7 +6236,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
@@ -6251,8 +6251,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:29.243359Z",
-        "expires_at": "2026-08-28T16:17:28.000000Z",
+        "updated_at": "2026-08-28T16:57:26.266244Z",
+        "expires_at": "2026-08-28T17:27:25.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -6262,13 +6262,13 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9psuJGKVrmpk3nCHh"
+        "id": "off_0000B9pz9MU2kc5c4UcXMF"
       },
       {
         "total_emissions_kg": "595",
-        "intended_total_amount": "1824.59",
+        "intended_total_amount": "1825.43",
         "intended_services": null,
-        "intended_base_amount": "1493.23",
+        "intended_base_amount": "1493.92",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
@@ -6329,9 +6329,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "331.36",
+        "tax_amount": "331.51",
         "base_currency": "USD",
-        "base_amount": "1493.23",
+        "base_amount": "1493.92",
         "total_currency": "USD",
         "slices": [
           {
@@ -6379,7 +6379,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -6407,17 +6407,17 @@
                 "duration": "PT13H",
                 "destination": {
                   "city_name": "Frankfurt",
-                  "icao_code": "EDDF",
                   "iata_city_code": "FRA",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDF",
                   "iata_code": "FRA",
                   "latitude": 50.034866,
                   "longitude": 8.567755,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "FRA",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "FRA",
                     "latitude": null,
                     "longitude": null,
@@ -6433,17 +6433,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -6457,7 +6457,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuJGKVrmpk3nCHo"
+                "id": "seg_0000B9pz9MUOjINC5amou8"
               },
               {
                 "origin_terminal": "1",
@@ -6497,7 +6497,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -6525,9 +6525,9 @@
                 "duration": "PT55M",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -6539,17 +6539,17 @@
                 },
                 "origin": {
                   "city_name": "Frankfurt",
-                  "icao_code": "EDDF",
                   "iata_city_code": "FRA",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDF",
                   "iata_code": "FRA",
                   "latitude": 50.034866,
                   "longitude": 8.567755,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "FRA",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "FRA",
                     "latitude": null,
                     "longitude": null,
@@ -6563,7 +6563,7 @@
                   "name": "Frankfurt am Main Airport",
                   "id": "arp_fra_de"
                 },
-                "id": "seg_0000B9psuJGKVrmpk3nCHp"
+                "id": "seg_0000B9pz9MUOjINC5amou9"
               }
             ],
             "conditions": {
@@ -6579,9 +6579,9 @@
             "duration": "PT17H",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -6593,17 +6593,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -6617,12 +6617,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuJGgUY4Pl9xTpR"
+            "id": "sli_0000B9pz9MUOjINC5amouA"
           }
         ],
+        "total_amount": "1825.43",
         "live_mode": false,
-        "total_amount": "1824.59",
-        "created_at": "2026-08-28T15:47:29.243359Z",
+        "created_at": "2026-08-28T16:57:26.266244Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -6631,7 +6631,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
@@ -6646,8 +6646,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:29.243359Z",
-        "expires_at": "2026-08-28T16:17:28.000000Z",
+        "updated_at": "2026-08-28T16:57:26.266244Z",
+        "expires_at": "2026-08-28T17:27:25.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -6657,18 +6657,18 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9psuJGgUY4Pl9xTpV"
+        "id": "off_0000B9pz9MUOjINC5amouC"
       },
       {
         "total_emissions_kg": "608",
-        "intended_total_amount": "1148.20",
+        "intended_total_amount": "1148.73",
         "intended_services": null,
-        "intended_base_amount": "835.14",
+        "intended_base_amount": "835.52",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -6724,9 +6724,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "313.06",
+        "tax_amount": "313.21",
         "base_currency": "USD",
-        "base_amount": "835.14",
+        "base_amount": "835.52",
         "total_currency": "USD",
         "slices": [
           {
@@ -6774,7 +6774,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -6802,17 +6802,17 @@
                 "duration": "PT13H30M",
                 "destination": {
                   "city_name": "Brussels",
-                  "icao_code": "EBBR",
                   "iata_city_code": "BRU",
                   "iata_country_code": "BE",
+                  "icao_code": "EBBR",
                   "iata_code": "BRU",
                   "latitude": 50.90042,
                   "longitude": 4.484052,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "BRU",
                     "iata_country_code": "BE",
+                    "icao_code": null,
                     "iata_code": "BRU",
                     "latitude": null,
                     "longitude": null,
@@ -6828,17 +6828,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -6852,7 +6852,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuJFyXBVFixcuj6"
+                "id": "seg_0000B9pz9MTglvo23OSFnc"
               },
               {
                 "origin_terminal": null,
@@ -6892,7 +6892,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -6920,9 +6920,9 @@
                 "duration": "PT1H20M",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -6934,17 +6934,17 @@
                 },
                 "origin": {
                   "city_name": "Brussels",
-                  "icao_code": "EBBR",
                   "iata_city_code": "BRU",
                   "iata_country_code": "BE",
+                  "icao_code": "EBBR",
                   "iata_code": "BRU",
                   "latitude": 50.90042,
                   "longitude": 4.484052,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "BRU",
                     "iata_country_code": "BE",
+                    "icao_code": null,
                     "iata_code": "BRU",
                     "latitude": null,
                     "longitude": null,
@@ -6958,7 +6958,7 @@
                   "name": "Brussels Airport",
                   "id": "arp_bru_be"
                 },
-                "id": "seg_0000B9psuJFyXBVFixcuj8"
+                "id": "seg_0000B9pz9MTglvo23OSFne"
               }
             ],
             "conditions": {
@@ -6974,9 +6974,9 @@
             "duration": "PT17H5M",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -6988,17 +6988,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -7012,12 +7012,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuJFyXBVFixcujA"
+            "id": "sli_0000B9pz9MTglvo23OSFnf"
           }
         ],
+        "total_amount": "1148.73",
         "live_mode": false,
-        "total_amount": "1148.20",
-        "created_at": "2026-08-28T15:47:29.243359Z",
+        "created_at": "2026-08-28T16:57:26.266244Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -7026,7 +7026,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
@@ -7041,8 +7041,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:29.243359Z",
-        "expires_at": "2026-08-28T16:17:28.000000Z",
+        "updated_at": "2026-08-28T16:57:26.266244Z",
+        "expires_at": "2026-08-28T17:27:25.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -7052,13 +7052,13 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9psuJFyXBVFixcujF"
+        "id": "off_0000B9pz9MTglvo23OSFnj"
       },
       {
         "total_emissions_kg": "595",
-        "intended_total_amount": "1802.44",
+        "intended_total_amount": "1799.87",
         "intended_services": null,
-        "intended_base_amount": "1705.53",
+        "intended_base_amount": "1703.10",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": true,
@@ -7092,9 +7092,9 @@
           "SA"
         ],
         "private_fares": [],
-        "tax_amount": "96.91",
+        "tax_amount": "96.77",
         "base_currency": "USD",
-        "base_amount": "1705.53",
+        "base_amount": "1703.10",
         "total_currency": "USD",
         "slices": [
           {
@@ -7146,7 +7146,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECO",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -7174,17 +7174,17 @@
                 "duration": "PT13H10M",
                 "destination": {
                   "city_name": "Frankfurt",
-                  "icao_code": "EDDF",
                   "iata_city_code": "FRA",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDF",
                   "iata_code": "FRA",
                   "latitude": 50.034866,
                   "longitude": 8.567755,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "FRA",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "FRA",
                     "latitude": null,
                     "longitude": null,
@@ -7200,17 +7200,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -7224,7 +7224,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuKu4PbAYpbORrW"
+                "id": "seg_0000B9pz9NAaCS7KCQWVfX"
               },
               {
                 "origin_terminal": "1",
@@ -7268,7 +7268,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECO",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -7296,9 +7296,9 @@
                 "duration": "PT55M",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -7310,17 +7310,17 @@
                 },
                 "origin": {
                   "city_name": "Frankfurt",
-                  "icao_code": "EDDF",
                   "iata_city_code": "FRA",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDF",
                   "iata_code": "FRA",
                   "latitude": 50.034866,
                   "longitude": 8.567755,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "FRA",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "FRA",
                     "latitude": null,
                     "longitude": null,
@@ -7334,7 +7334,7 @@
                   "name": "Frankfurt am Main Airport",
                   "id": "arp_fra_de"
                 },
-                "id": "seg_0000B9psuKu4PbAYpbORrX"
+                "id": "seg_0000B9pz9NAaCS7KCQWVfa"
               }
             ],
             "conditions": {
@@ -7350,9 +7350,9 @@
             "duration": "PT16H45M",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -7364,17 +7364,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -7388,12 +7388,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuKu4PbAYpbORrY"
+            "id": "sli_0000B9pz9NAaCS7KCQWVfc"
           }
         ],
+        "total_amount": "1799.87",
         "live_mode": false,
-        "total_amount": "1802.44",
-        "created_at": "2026-08-28T15:47:29.525836Z",
+        "created_at": "2026-08-28T16:57:26.380925Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -7402,7 +7402,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
@@ -7417,8 +7417,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:29.525836Z",
-        "expires_at": "2026-08-28T16:17:29.000000Z",
+        "updated_at": "2026-08-28T16:57:26.380925Z",
+        "expires_at": "2026-08-28T17:27:26.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SQ.svg",
@@ -7428,13 +7428,13 @@
           "name": "Singapore Airlines",
           "id": "arl_00009VME7DDSWSIAygCT1f"
         },
-        "id": "off_0000B9psuKu4PbAYpbORrd"
+        "id": "off_0000B9pz9NAaCS7KCQWVfk"
       },
       {
         "total_emissions_kg": "595",
-        "intended_total_amount": "2159.92",
+        "intended_total_amount": "2156.84",
         "intended_services": null,
-        "intended_base_amount": "2063.01",
+        "intended_base_amount": "2060.07",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": true,
@@ -7468,9 +7468,9 @@
           "SA"
         ],
         "private_fares": [],
-        "tax_amount": "96.91",
+        "tax_amount": "96.77",
         "base_currency": "USD",
-        "base_amount": "2063.01",
+        "base_amount": "2060.07",
         "total_currency": "USD",
         "slices": [
           {
@@ -7522,7 +7522,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECOPREMIUM",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -7550,17 +7550,17 @@
                 "duration": "PT13H10M",
                 "destination": {
                   "city_name": "Frankfurt",
-                  "icao_code": "EDDF",
                   "iata_city_code": "FRA",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDF",
                   "iata_code": "FRA",
                   "latitude": 50.034866,
                   "longitude": 8.567755,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "FRA",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "FRA",
                     "latitude": null,
                     "longitude": null,
@@ -7576,17 +7576,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -7600,7 +7600,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuKseUs2ElCjJeK"
+                "id": "seg_0000B9pz9N8oJ2hQ6vh5tn"
               },
               {
                 "origin_terminal": "1",
@@ -7644,7 +7644,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECO",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -7672,9 +7672,9 @@
                 "duration": "PT55M",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -7686,17 +7686,17 @@
                 },
                 "origin": {
                   "city_name": "Frankfurt",
-                  "icao_code": "EDDF",
                   "iata_city_code": "FRA",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDF",
                   "iata_code": "FRA",
                   "latitude": 50.034866,
                   "longitude": 8.567755,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "FRA",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "FRA",
                     "latitude": null,
                     "longitude": null,
@@ -7710,7 +7710,7 @@
                   "name": "Frankfurt am Main Airport",
                   "id": "arp_fra_de"
                 },
-                "id": "seg_0000B9psuKseUs2ElCjJeL"
+                "id": "seg_0000B9pz9N8oJ2hQ6vh5tp"
               }
             ],
             "conditions": {
@@ -7726,9 +7726,9 @@
             "duration": "PT16H45M",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -7740,17 +7740,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -7764,12 +7764,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuKseUs2ElCjJeM"
+            "id": "sli_0000B9pz9N8oJ2hQ6vh5tr"
           }
         ],
+        "total_amount": "2156.84",
         "live_mode": false,
-        "total_amount": "2159.92",
-        "created_at": "2026-08-28T15:47:29.525836Z",
+        "created_at": "2026-08-28T16:57:26.380925Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -7778,7 +7778,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
@@ -7793,8 +7793,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:29.525836Z",
-        "expires_at": "2026-08-28T16:17:29.000000Z",
+        "updated_at": "2026-08-28T16:57:26.380925Z",
+        "expires_at": "2026-08-28T17:27:26.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SQ.svg",
@@ -7804,13 +7804,13 @@
           "name": "Singapore Airlines",
           "id": "arl_00009VME7DDSWSIAygCT1f"
         },
-        "id": "off_0000B9psuKseUs2ElCjJeO"
+        "id": "off_0000B9pz9N8oJ2hQ6vh5tv"
       },
       {
         "total_emissions_kg": "608",
-        "intended_total_amount": "3290.12",
+        "intended_total_amount": "3285.43",
         "intended_services": null,
-        "intended_base_amount": "3131.84",
+        "intended_base_amount": "3127.38",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": true,
@@ -7844,9 +7844,9 @@
           "SA"
         ],
         "private_fares": [],
-        "tax_amount": "158.28",
+        "tax_amount": "158.05",
         "base_currency": "USD",
-        "base_amount": "3131.84",
+        "base_amount": "3127.38",
         "total_currency": "USD",
         "slices": [
           {
@@ -7898,7 +7898,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECO",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -7926,9 +7926,9 @@
                 "duration": "PT13H20M",
                 "destination": {
                   "city_name": "Amsterdam",
-                  "icao_code": "EHAM",
                   "iata_city_code": "AMS",
                   "iata_country_code": "NL",
+                  "icao_code": "EHAM",
                   "iata_code": "AMS",
                   "latitude": 52.308856,
                   "longitude": 4.765869,
@@ -7940,17 +7940,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -7964,7 +7964,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuKt0TYJomItbCT"
+                "id": "seg_0000B9pz9N9AHiz081rNSI"
               },
               {
                 "origin_terminal": null,
@@ -8008,7 +8008,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECO",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -8036,9 +8036,9 @@
                 "duration": "PT1H30M",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -8050,9 +8050,9 @@
                 },
                 "origin": {
                   "city_name": "Amsterdam",
-                  "icao_code": "EHAM",
                   "iata_city_code": "AMS",
                   "iata_country_code": "NL",
+                  "icao_code": "EHAM",
                   "iata_code": "AMS",
                   "latitude": 52.308856,
                   "longitude": 4.765869,
@@ -8062,7 +8062,7 @@
                   "name": "Amsterdam Airport Schiphol",
                   "id": "arp_ams_nl"
                 },
-                "id": "seg_0000B9psuKt0TYJomItbCV"
+                "id": "seg_0000B9pz9N9AHiz081rNSJ"
               }
             ],
             "conditions": {
@@ -8078,9 +8078,9 @@
             "duration": "PT17H10M",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -8092,17 +8092,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -8116,12 +8116,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuKt0TYJomItbCX"
+            "id": "sli_0000B9pz9N9AHiz081rNSK"
           }
         ],
+        "total_amount": "3285.43",
         "live_mode": false,
-        "total_amount": "3290.12",
-        "created_at": "2026-08-28T15:47:29.525836Z",
+        "created_at": "2026-08-28T16:57:26.380925Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -8130,7 +8130,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
@@ -8145,8 +8145,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:29.525836Z",
-        "expires_at": "2026-08-28T16:17:29.000000Z",
+        "updated_at": "2026-08-28T16:57:26.380925Z",
+        "expires_at": "2026-08-28T17:27:26.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SQ.svg",
@@ -8156,7 +8156,7 @@
           "name": "Singapore Airlines",
           "id": "arl_00009VME7DDSWSIAygCT1f"
         },
-        "id": "off_0000B9psuKt0TYJomItbCb"
+        "id": "off_0000B9pz9N9AHiz081rNSP"
       },
       {
         "total_emissions_kg": "837",
@@ -8167,7 +8167,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:29.906176Z"
+          "payment_required_by": "2026-08-29T16:57:26.645253Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -8254,7 +8254,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -8282,17 +8282,17 @@
                 "duration": "PT7H5M",
                 "destination": {
                   "city_name": "Tokyo",
-                  "icao_code": "RJAA",
                   "iata_city_code": "TYO",
                   "iata_country_code": "JP",
+                  "icao_code": "RJAA",
                   "iata_code": "NRT",
                   "latitude": 35.773554,
                   "longitude": 140.39285,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "TYO",
                     "iata_country_code": "JP",
+                    "icao_code": null,
                     "iata_code": "TYO",
                     "latitude": null,
                     "longitude": null,
@@ -8308,17 +8308,17 @@
                 },
                 "origin": {
                   "city_name": "Singapore",
-                  "icao_code": "WSSS",
                   "iata_city_code": "SIN",
                   "iata_country_code": "SG",
+                  "icao_code": "WSSS",
                   "iata_code": "SIN",
                   "latitude": 1.356115,
                   "longitude": 103.985127,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "SIN",
                     "iata_country_code": "SG",
+                    "icao_code": null,
                     "iata_code": "SIN",
                     "latitude": null,
                     "longitude": null,
@@ -8332,7 +8332,7 @@
                   "name": "Singapore Changi Airport",
                   "id": "arp_sin_sg"
                 },
-                "id": "seg_0000B9psuN6uCqcnfzPj9u"
+                "id": "seg_0000B9pz9OiISagAzHIwrG"
               },
               {
                 "origin_terminal": null,
@@ -8376,7 +8376,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuCG4YQQC1EcOPc",
+                    "passenger_id": "pas_0000B9pz9Ff86znYuqknA6",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -8404,9 +8404,9 @@
                 "duration": "PT14H25M",
                 "destination": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -8418,17 +8418,17 @@
                 },
                 "origin": {
                   "city_name": "Tokyo",
-                  "icao_code": "RJAA",
                   "iata_city_code": "TYO",
                   "iata_country_code": "JP",
+                  "icao_code": "RJAA",
                   "iata_code": "NRT",
                   "latitude": 35.773554,
                   "longitude": 140.39285,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "TYO",
                     "iata_country_code": "JP",
+                    "icao_code": null,
                     "iata_code": "TYO",
                     "latitude": null,
                     "longitude": null,
@@ -8442,7 +8442,7 @@
                   "name": "Narita International Airport",
                   "id": "arp_nrt_jp"
                 },
-                "id": "seg_0000B9psuN6uCqcnfzPj9z"
+                "id": "seg_0000B9pz9OiISagAzHIwrK"
               }
             ],
             "conditions": {
@@ -8454,9 +8454,9 @@
             "duration": "P1DT30M",
             "destination": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -8468,17 +8468,17 @@
             },
             "origin": {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "SIN",
                 "iata_country_code": "SG",
+                "icao_code": null,
                 "iata_code": "SIN",
                 "latitude": null,
                 "longitude": null,
@@ -8492,12 +8492,12 @@
               "name": "Singapore Changi Airport",
               "id": "arp_sin_sg"
             },
-            "id": "sli_0000B9psuN6uCqcnfzPjA3"
+            "id": "sli_0000B9pz9OiISagAzHIwrN"
           }
         ],
-        "live_mode": false,
         "total_amount": "6389.30",
-        "created_at": "2026-08-28T15:47:29.910367Z",
+        "live_mode": false,
+        "created_at": "2026-08-28T16:57:26.651041Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -8506,15 +8506,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuCG4YQQC1EcOPc"
+            "id": "pas_0000B9pz9Ff86znYuqknA6"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:29.910367Z",
-        "expires_at": "2026-08-28T16:47:29.906243Z",
+        "updated_at": "2026-08-28T16:57:26.651041Z",
+        "expires_at": "2026-08-28T17:57:26.645349Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/NH.svg",
@@ -8524,7 +8524,7 @@
           "name": "ANA",
           "id": "arl_00009VME7DAch01WpssCc0"
         },
-        "id": "off_0000B9psuN6uCqcnfzPjAB"
+        "id": "off_0000B9pz9OieRGxl0NTEOu"
       }
     ],
     "cabin_class": "economy",
@@ -8535,9 +8535,9 @@
         "departure_date": "2026-09-18",
         "destination": {
           "city_name": "Zürich",
-          "icao_code": "LSZH",
           "iata_city_code": "ZRH",
           "iata_country_code": "CH",
+          "icao_code": "LSZH",
           "iata_code": "ZRH",
           "latitude": 47.461458,
           "longitude": 8.552323,
@@ -8549,14 +8549,14 @@
         },
         "origin": {
           "city_name": null,
-          "icao_code": null,
           "iata_city_code": "SIN",
+          "iata_country_code": "SG",
           "airports": [
             {
               "city_name": "Singapore",
-              "icao_code": "WSAP",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSAP",
               "iata_code": "QPG",
               "latitude": 1.359288,
               "longitude": 103.910629,
@@ -8567,9 +8567,9 @@
             },
             {
               "city_name": "Singapore",
-              "icao_code": "WSSS",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSS",
               "iata_code": "SIN",
               "latitude": 1.356115,
               "longitude": 103.985127,
@@ -8580,9 +8580,9 @@
             },
             {
               "city_name": "Singapore",
-              "icao_code": "WSAT",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSAT",
               "iata_code": "TGA",
               "latitude": 1.385789,
               "longitude": 103.708617,
@@ -8593,9 +8593,9 @@
             },
             {
               "city_name": "Singapore",
-              "icao_code": "WSSL",
               "iata_city_code": "SIN",
               "iata_country_code": "SG",
+              "icao_code": "WSSL",
               "iata_code": "XSP",
               "latitude": 1.416952,
               "longitude": 103.86819,
@@ -8605,7 +8605,7 @@
               "id": "arp_xsp_sg"
             }
           ],
-          "iata_country_code": "SG",
+          "icao_code": null,
           "iata_code": "SIN",
           "latitude": null,
           "longitude": null,
@@ -8617,7 +8617,7 @@
       }
     ],
     "live_mode": false,
-    "created_at": "2026-08-28T15:47:28.027967Z",
+    "created_at": "2026-08-28T16:57:25.084901Z",
     "passengers": [
       {
         "loyalty_programme_accounts": [],
@@ -8627,10 +8627,10 @@
         "user_id": null,
         "age": null,
         "type": "adult",
-        "id": "pas_0000B9psuCG4YQQC1EcOPc"
+        "id": "pas_0000B9pz9Ff86znYuqknA6"
       }
     ],
-    "client_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODgwMTg0NDksImxpdmVfbW9kZSI6ZmFsc2UsIm9yZ2FuaXNhdGlvbl9pZCI6Im9yZ18wMDAwQjlwcVljaEpuV1R0d3hKRFJvIiwicGxhdGZvcm1fdXNlcl9pZCI6bnVsbH0.GJJ3G80ql5SqNbotyGNAsJi0q1OdN7KX0TF3LwSraGk",
-    "id": "orq_0000B9psuCG4YQQC1EcOPW"
+    "client_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODgwMjI2NDYsImxpdmVfbW9kZSI6ZmFsc2UsIm9yZ2FuaXNhdGlvbl9pZCI6Im9yZ18wMDAwQjlwcVljaEpuV1R0d3hKRFJvIiwicGxhdGZvcm1fdXNlcl9pZCI6bnVsbH0.MiD0Uwn72QMt2z4G2hVKaus7445HpTwc3i2zUcyLLYY",
+    "id": "orq_0000B9pz9Ff86znYuqknA1"
   }
 }

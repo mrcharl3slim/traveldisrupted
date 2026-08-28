@@ -4,14 +4,14 @@
     "offers": [
       {
         "total_emissions_kg": "52",
-        "intended_total_amount": "587.09",
+        "intended_total_amount": "587.36",
         "intended_services": null,
-        "intended_base_amount": "426.90",
+        "intended_base_amount": "427.10",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -67,9 +67,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "160.19",
+        "tax_amount": "160.26",
         "base_currency": "USD",
-        "base_amount": "426.90",
+        "base_amount": "427.10",
         "total_currency": "USD",
         "slices": [
           {
@@ -117,7 +117,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -145,17 +145,17 @@
                 "duration": "PT1H10M",
                 "destination": {
                   "city_name": "Frankfurt",
-                  "icao_code": "EDDF",
                   "iata_city_code": "FRA",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDF",
                   "iata_code": "FRA",
                   "latitude": 50.034866,
                   "longitude": 8.567755,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "FRA",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "FRA",
                     "latitude": null,
                     "longitude": null,
@@ -171,9 +171,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -183,7 +183,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuVODQNDzLzZfF8"
+                "id": "seg_0000B9pz9Zau0QIgjWvhLh"
               },
               {
                 "origin_terminal": "1",
@@ -223,7 +223,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -251,17 +251,17 @@
                 "duration": "PT1H20M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -277,17 +277,17 @@
                 },
                 "origin": {
                   "city_name": "Frankfurt",
-                  "icao_code": "EDDF",
                   "iata_city_code": "FRA",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDF",
                   "iata_code": "FRA",
                   "latitude": 50.034866,
                   "longitude": 8.567755,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "FRA",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "FRA",
                     "latitude": null,
                     "longitude": null,
@@ -301,7 +301,7 @@
                   "name": "Frankfurt am Main Airport",
                   "id": "arp_fra_de"
                 },
-                "id": "seg_0000B9psuVODQNDzLzZfF9"
+                "id": "seg_0000B9pz9Zau0QIgjWvhLj"
               }
             ],
             "conditions": {
@@ -317,17 +317,17 @@
             "duration": "PT3H40M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -343,9 +343,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -355,12 +355,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuVODQNDzLzZfFB"
+            "id": "sli_0000B9pz9Zau0QIgjWvhLk"
           }
         ],
+        "total_amount": "587.36",
         "live_mode": false,
-        "total_amount": "587.09",
-        "created_at": "2026-08-28T15:47:31.354203Z",
+        "created_at": "2026-08-28T16:57:28.543193Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -369,7 +369,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
@@ -384,8 +384,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:31.354203Z",
-        "expires_at": "2026-08-28T16:17:30.000000Z",
+        "updated_at": "2026-08-28T16:57:28.543193Z",
+        "expires_at": "2026-08-28T17:27:27.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -395,7 +395,7 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9psuVOZP3VZN5jwmo"
+        "id": "off_0000B9pz9Zau0QIgjWvhLt"
       },
       {
         "total_emissions_kg": "47",
@@ -406,7 +406,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:00Z"
+          "payment_required_by": "2026-08-29T16:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -472,7 +472,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -500,17 +500,17 @@
                 "duration": "PT1H",
                 "destination": {
                   "city_name": "Frankfurt",
-                  "icao_code": "EDDF",
                   "iata_city_code": "FRA",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDF",
                   "iata_code": "FRA",
                   "latitude": 50.034866,
                   "longitude": 8.567755,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "FRA",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "FRA",
                     "latitude": null,
                     "longitude": null,
@@ -526,9 +526,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -538,7 +538,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuXOzwR2TazxJjg"
+                "id": "seg_0000B9pz9YWG0CzTOpkTTG"
               },
               {
                 "origin_terminal": null,
@@ -582,7 +582,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -610,17 +610,17 @@
                 "duration": "PT1H10M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -636,17 +636,17 @@
                 },
                 "origin": {
                   "city_name": "Frankfurt",
-                  "icao_code": "EDDF",
                   "iata_city_code": "FRA",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDF",
                   "iata_code": "FRA",
                   "latitude": 50.034866,
                   "longitude": 8.567755,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "FRA",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "FRA",
                     "latitude": null,
                     "longitude": null,
@@ -660,7 +660,7 @@
                   "name": "Frankfurt am Main Airport",
                   "id": "arp_fra_de"
                 },
-                "id": "seg_0000B9psuXOzwR2TazxJjj"
+                "id": "seg_0000B9pz9YWG0CzTOpkTTI"
               }
             ],
             "conditions": {
@@ -672,17 +672,17 @@
             "duration": "PT7H50M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -698,9 +698,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -710,12 +710,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuXOzwR2TazxJjl"
+            "id": "sli_0000B9pz9YWG0CzTOpkTTK"
           }
         ],
-        "live_mode": false,
         "total_amount": "177.90",
-        "created_at": "2026-08-28T15:47:31.701558Z",
+        "live_mode": false,
+        "created_at": "2026-08-28T16:57:28.350882Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -724,15 +724,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:31.701558Z",
-        "expires_at": "2026-08-28T16:47:31.699406Z",
+        "updated_at": "2026-08-28T16:57:28.350882Z",
+        "expires_at": "2026-08-28T17:57:28.347158Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/DE.svg",
@@ -742,18 +742,18 @@
           "name": "Condor Flugdienst",
           "id": "arl_0000Aiejdnd3GRJ3kD0vS5"
         },
-        "id": "off_0000B9psuXOzwR2TazxJjs"
+        "id": "off_0000B9pz9YWG0CzTOpkTTQ"
       },
       {
         "total_emissions_kg": "25",
-        "intended_total_amount": "781.96",
+        "intended_total_amount": "782.32",
         "intended_services": null,
-        "intended_base_amount": "679.23",
+        "intended_base_amount": "679.55",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -809,9 +809,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "102.73",
+        "tax_amount": "102.77",
         "base_currency": "USD",
-        "base_amount": "679.23",
+        "base_amount": "679.55",
         "total_currency": "USD",
         "slices": [
           {
@@ -863,7 +863,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -891,17 +891,17 @@
                 "duration": "PT55M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -917,9 +917,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -929,7 +929,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuVPdL6MJQOEnRe"
+                "id": "seg_0000B9pz9ZdjpsZKsKFxlv"
               }
             ],
             "conditions": {
@@ -945,17 +945,17 @@
             "duration": "PT55M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -971,9 +971,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -983,12 +983,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuVPdL6MJQOEnRf"
+            "id": "sli_0000B9pz9ZdjpsZKsKFxlz"
           }
         ],
+        "total_amount": "782.32",
         "live_mode": false,
-        "total_amount": "781.96",
-        "created_at": "2026-08-28T15:47:31.354203Z",
+        "created_at": "2026-08-28T16:57:28.543193Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -997,7 +997,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
@@ -1012,8 +1012,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:31.354203Z",
-        "expires_at": "2026-08-28T16:17:30.000000Z",
+        "updated_at": "2026-08-28T16:57:28.543193Z",
+        "expires_at": "2026-08-28T17:27:27.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -1023,13 +1023,13 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9psuVPdL6MJQOEnRh"
+        "id": "off_0000B9pz9ZdjpsZKsKFxm5"
       },
       {
         "total_emissions_kg": "50",
-        "intended_total_amount": "81.48",
+        "intended_total_amount": "81.40",
         "intended_services": null,
-        "intended_base_amount": "11.35",
+        "intended_base_amount": "11.34",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": true,
@@ -1042,9 +1042,9 @@
         "available_services": null,
         "supported_loyalty_programmes": [],
         "private_fares": [],
-        "tax_amount": "70.13",
+        "tax_amount": "70.06",
         "base_currency": "USD",
-        "base_amount": "11.35",
+        "base_amount": "11.34",
         "total_currency": "USD",
         "slices": [
           {
@@ -1083,7 +1083,7 @@
                   {
                     "baggages": [],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": null,
                       "marketing_name": "Economy",
@@ -1098,9 +1098,9 @@
                 "duration": "PT1H50M",
                 "destination": {
                   "city_name": "Barcelona",
-                  "icao_code": "LEBL",
                   "iata_city_code": "BCN",
                   "iata_country_code": "ES",
+                  "icao_code": "LEBL",
                   "iata_code": "BCN",
                   "latitude": 41.297273,
                   "longitude": 2.080877,
@@ -1112,9 +1112,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -1124,7 +1124,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuSpOwqBjPRGphE"
+                "id": "seg_0000B9pz9U8MJ7UtnYXKfW"
               },
               {
                 "origin_terminal": null,
@@ -1155,7 +1155,7 @@
                   {
                     "baggages": [],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": null,
                       "marketing_name": "Economy",
@@ -1170,17 +1170,17 @@
                 "duration": "PT1H40M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -1196,9 +1196,9 @@
                 },
                 "origin": {
                   "city_name": "Barcelona",
-                  "icao_code": "LEBL",
                   "iata_city_code": "BCN",
                   "iata_country_code": "ES",
+                  "icao_code": "LEBL",
                   "iata_code": "BCN",
                   "latitude": 41.297273,
                   "longitude": 2.080877,
@@ -1208,7 +1208,7 @@
                   "name": "Barcelona–El Prat Josep Tarradellas Airport",
                   "id": "arp_bcn_es"
                 },
-                "id": "seg_0000B9psuSpOwqBjPRGphF"
+                "id": "seg_0000B9pz9U8MJ7UtnYXKfY"
               }
             ],
             "conditions": {
@@ -1220,17 +1220,17 @@
             "duration": "PT8H5M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -1246,9 +1246,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -1258,12 +1258,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuSpOwqBjPRGphG"
+            "id": "sli_0000B9pz9U8MJ7UtnYXKfa"
           }
         ],
+        "total_amount": "81.40",
         "live_mode": false,
-        "total_amount": "81.48",
-        "created_at": "2026-08-28T15:47:30.918158Z",
+        "created_at": "2026-08-28T16:57:27.606348Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -1272,15 +1272,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:30.918158Z",
-        "expires_at": "2026-08-28T16:02:30.865103Z",
+        "updated_at": "2026-08-28T16:57:27.606348Z",
+        "expires_at": "2026-08-28T17:12:27.548072Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VY.svg",
@@ -1290,7 +1290,7 @@
           "name": "Vueling",
           "id": "arl_00009VME7DDoV8ZkzmMkak"
         },
-        "id": "off_0000B9psuSpkvWTJQXR7FA"
+        "id": "off_0000B9pz9U8MJ7UtnYXKff"
       },
       {
         "total_emissions_kg": "76",
@@ -1301,7 +1301,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:31.698488Z"
+          "payment_required_by": "2026-08-29T16:57:28.345278Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -1367,7 +1367,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -1395,17 +1395,17 @@
                 "duration": "PT1H45M",
                 "destination": {
                   "city_name": "Belgrade",
-                  "icao_code": "LYBE",
                   "iata_city_code": "BEG",
                   "iata_country_code": "RS",
+                  "icao_code": "LYBE",
                   "iata_code": "BEG",
                   "latitude": 44.820559,
                   "longitude": 20.292378,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "BEG",
                     "iata_country_code": "RS",
+                    "icao_code": null,
                     "iata_code": "BEG",
                     "latitude": null,
                     "longitude": null,
@@ -1421,9 +1421,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -1433,7 +1433,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuXNw0OBjXhST4l"
+                "id": "seg_0000B9pz9YVC4A8jLXFcoS"
               },
               {
                 "origin_terminal": null,
@@ -1477,7 +1477,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -1505,17 +1505,17 @@
                 "duration": "PT1H50M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -1531,17 +1531,17 @@
                 },
                 "origin": {
                   "city_name": "Belgrade",
-                  "icao_code": "LYBE",
                   "iata_city_code": "BEG",
                   "iata_country_code": "RS",
+                  "icao_code": "LYBE",
                   "iata_code": "BEG",
                   "latitude": 44.820559,
                   "longitude": 20.292378,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "BEG",
                     "iata_country_code": "RS",
+                    "icao_code": null,
                     "iata_code": "BEG",
                     "latitude": null,
                     "longitude": null,
@@ -1555,7 +1555,7 @@
                   "name": "Belgrade Nikola Tesla Airport",
                   "id": "arp_beg_rs"
                 },
-                "id": "seg_0000B9psuXNw0OBjXhST4n"
+                "id": "seg_0000B9pz9YVC4A8jLXFcoV"
               }
             ],
             "conditions": {
@@ -1567,17 +1567,17 @@
             "duration": "PT10H35M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -1593,9 +1593,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -1605,12 +1605,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuXNw0OBjXhST4p"
+            "id": "sli_0000B9pz9YVC4A8jLXFcoY"
           }
         ],
-        "live_mode": false,
         "total_amount": "209.30",
-        "created_at": "2026-08-28T15:47:31.701558Z",
+        "live_mode": false,
+        "created_at": "2026-08-28T16:57:28.350882Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -1619,15 +1619,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:31.701558Z",
-        "expires_at": "2026-08-28T16:47:31.698539Z",
+        "updated_at": "2026-08-28T16:57:28.350882Z",
+        "expires_at": "2026-08-28T17:57:28.345396Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JU.svg",
@@ -1637,7 +1637,7 @@
           "name": "Air Serbia",
           "id": "arl_00009VME7DCOaPRQvNhcNQ"
         },
-        "id": "off_0000B9psuXNw0OBjXhST4t"
+        "id": "off_0000B9pz9YVC4A8jLXFcoc"
       },
       {
         "total_emissions_kg": "56",
@@ -1648,7 +1648,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:31.694635Z"
+          "payment_required_by": "2026-08-29T16:57:28.339943Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -1734,7 +1734,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -1762,17 +1762,17 @@
                 "duration": "PT1H45M",
                 "destination": {
                   "city_name": "Copenhagen",
-                  "icao_code": "EKCH",
                   "iata_city_code": "CPH",
                   "iata_country_code": "DK",
+                  "icao_code": "EKCH",
                   "iata_code": "CPH",
                   "latitude": 55.617962,
                   "longitude": 12.653382,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "CPH",
                     "iata_country_code": "DK",
+                    "icao_code": null,
                     "iata_code": "CPH",
                     "latitude": null,
                     "longitude": null,
@@ -1788,9 +1788,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -1800,7 +1800,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuXK2Et4LLbdM03"
+                "id": "seg_0000B9pz9YQaLISB7F5wdV"
               },
               {
                 "origin_terminal": null,
@@ -1844,7 +1844,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -1872,17 +1872,17 @@
                 "duration": "PT2H10M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -1898,17 +1898,17 @@
                 },
                 "origin": {
                   "city_name": "Copenhagen",
-                  "icao_code": "EKCH",
                   "iata_city_code": "CPH",
                   "iata_country_code": "DK",
+                  "icao_code": "EKCH",
                   "iata_code": "CPH",
                   "latitude": 55.617962,
                   "longitude": 12.653382,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "CPH",
                     "iata_country_code": "DK",
+                    "icao_code": null,
                     "iata_code": "CPH",
                     "latitude": null,
                     "longitude": null,
@@ -1922,7 +1922,7 @@
                   "name": "Copenhagen Airport",
                   "id": "arp_cph_dk"
                 },
-                "id": "seg_0000B9psuXK2Et4LLbdM04"
+                "id": "seg_0000B9pz9YQwJyjl8LGEBF"
               }
             ],
             "conditions": {
@@ -1934,17 +1934,17 @@
             "duration": "PT22H5M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -1960,9 +1960,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -1972,12 +1972,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuXK2Et4LLbdM05"
+            "id": "sli_0000B9pz9YQwJyjl8LGEBH"
           }
         ],
-        "live_mode": false,
         "total_amount": "270.30",
-        "created_at": "2026-08-28T15:47:31.701558Z",
+        "live_mode": false,
+        "created_at": "2026-08-28T16:57:28.350882Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -1986,15 +1986,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:31.701558Z",
-        "expires_at": "2026-08-28T16:47:31.694667Z",
+        "updated_at": "2026-08-28T16:57:28.350882Z",
+        "expires_at": "2026-08-28T17:57:28.340025Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
@@ -2004,7 +2004,7 @@
           "name": "SAS",
           "id": "arl_00009VME7DDSWSIAygCT1S"
         },
-        "id": "off_0000B9psuXK2Et4LLbdM07"
+        "id": "off_0000B9pz9YQwJyjl8LGEBL"
       },
       {
         "total_emissions_kg": "57",
@@ -2015,7 +2015,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:31.696620Z"
+          "payment_required_by": "2026-08-29T16:57:28.343497Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -2077,7 +2077,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -2105,9 +2105,9 @@
                 "duration": "PT2H",
                 "destination": {
                   "city_name": "Warsaw",
-                  "icao_code": "EPWA",
                   "iata_city_code": "WAW",
                   "iata_country_code": "PL",
+                  "icao_code": "EPWA",
                   "iata_code": "WAW",
                   "latitude": 52.166211,
                   "longitude": 20.967363,
@@ -2119,9 +2119,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -2131,7 +2131,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuXMs4LKzUOxcQ2"
+                "id": "seg_0000B9pz9YTQAkipG2QD3R"
               },
               {
                 "origin_terminal": null,
@@ -2171,7 +2171,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -2199,17 +2199,17 @@
                 "duration": "PT2H15M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -2225,9 +2225,9 @@
                 },
                 "origin": {
                   "city_name": "Warsaw",
-                  "icao_code": "EPWA",
                   "iata_city_code": "WAW",
                   "iata_country_code": "PL",
+                  "icao_code": "EPWA",
                   "iata_code": "WAW",
                   "latitude": 52.166211,
                   "longitude": 20.967363,
@@ -2237,7 +2237,7 @@
                   "name": "Warsaw Chopin Airport",
                   "id": "arp_waw_pl"
                 },
-                "id": "seg_0000B9psuXMs4LKzUOxcQ3"
+                "id": "seg_0000B9pz9YTQAkipG2QD3S"
               }
             ],
             "conditions": {
@@ -2249,17 +2249,17 @@
             "duration": "PT8H25M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -2275,9 +2275,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -2287,12 +2287,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuXMs4LKzUOxcQ4"
+            "id": "sli_0000B9pz9YTQAkipG2QD3T"
           }
         ],
-        "live_mode": false,
         "total_amount": "764.80",
-        "created_at": "2026-08-28T15:47:31.701558Z",
+        "live_mode": false,
+        "created_at": "2026-08-28T16:57:28.350882Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -2301,15 +2301,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:31.701558Z",
-        "expires_at": "2026-08-28T16:47:31.696657Z",
+        "updated_at": "2026-08-28T16:57:28.350882Z",
+        "expires_at": "2026-08-28T17:57:28.343571Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LO.svg",
@@ -2319,7 +2319,7 @@
           "name": "LOT Polish Airlines",
           "id": "arl_00009VME7DCkZ5j0wTrtuw"
         },
-        "id": "off_0000B9psuXMs4LKzUOxcQ6"
+        "id": "off_0000B9pz9YTQAkipG2QD3W"
       },
       {
         "total_emissions_kg": "59",
@@ -2330,7 +2330,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:31.696111Z"
+          "payment_required_by": "2026-08-29T16:57:28.342647Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -2398,7 +2398,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -2426,9 +2426,9 @@
                 "duration": "PT2H10M",
                 "destination": {
                   "city_name": "Sofia",
-                  "icao_code": "LBSF",
                   "iata_city_code": "SOF",
                   "iata_country_code": "BG",
+                  "icao_code": "LBSF",
                   "iata_code": "SOF",
                   "latitude": 42.693719,
                   "longitude": 23.411529,
@@ -2440,9 +2440,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -2452,7 +2452,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuXMW5f3PTInKrg"
+                "id": "seg_0000B9pz9YSiDO9fDq5dwi"
               },
               {
                 "origin_terminal": null,
@@ -2496,7 +2496,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -2524,17 +2524,17 @@
                 "duration": "PT2H15M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -2550,9 +2550,9 @@
                 },
                 "origin": {
                   "city_name": "Sofia",
-                  "icao_code": "LBSF",
                   "iata_city_code": "SOF",
                   "iata_country_code": "BG",
+                  "icao_code": "LBSF",
                   "iata_code": "SOF",
                   "latitude": 42.693719,
                   "longitude": 23.411529,
@@ -2562,7 +2562,7 @@
                   "name": "Sofia Airport",
                   "id": "arp_sof_bg"
                 },
-                "id": "seg_0000B9psuXMW5f3PTInKrh"
+                "id": "seg_0000B9pz9YSiDO9fDq5dwj"
               }
             ],
             "conditions": {
@@ -2574,17 +2574,17 @@
             "duration": "PT5H35M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -2600,9 +2600,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -2612,12 +2612,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuXMW5f3PTInKri"
+            "id": "sli_0000B9pz9YSiDO9fDq5dwl"
           }
         ],
-        "live_mode": false,
         "total_amount": "416.80",
-        "created_at": "2026-08-28T15:47:31.701558Z",
+        "live_mode": false,
+        "created_at": "2026-08-28T16:57:28.350882Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -2626,15 +2626,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:31.701558Z",
-        "expires_at": "2026-08-28T16:47:31.696147Z",
+        "updated_at": "2026-08-28T16:57:28.350882Z",
+        "expires_at": "2026-08-28T17:57:28.342710Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/FB.svg",
@@ -2644,7 +2644,7 @@
           "name": "Bulgaria Air",
           "id": "arl_00009VME7DBKeMags5Clj2"
         },
-        "id": "off_0000B9psuXMW5f3PTInKrk"
+        "id": "off_0000B9pz9YSiDO9fDq5dwq"
       },
       {
         "total_emissions_kg": "67",
@@ -2655,7 +2655,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:31.694184Z"
+          "payment_required_by": "2026-08-29T16:57:28.339496Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -2741,7 +2741,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -2769,17 +2769,17 @@
                 "duration": "PT2H25M",
                 "destination": {
                   "city_name": "Madrid",
-                  "icao_code": "LEMD",
                   "iata_city_code": "MAD",
                   "iata_country_code": "ES",
+                  "icao_code": "LEMD",
                   "iata_code": "MAD",
                   "latitude": 40.49923,
                   "longitude": -3.567169,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MAD",
                     "iata_country_code": "ES",
+                    "icao_code": null,
                     "iata_code": "MAD",
                     "latitude": null,
                     "longitude": null,
@@ -2795,9 +2795,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -2807,7 +2807,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuXJgGCmlKVT4Rx"
+                "id": "seg_0000B9pz9YQEMcAb68vf4u"
               },
               {
                 "origin_terminal": null,
@@ -2851,7 +2851,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -2879,17 +2879,17 @@
                 "duration": "PT2H5M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -2905,17 +2905,17 @@
                 },
                 "origin": {
                   "city_name": "Madrid",
-                  "icao_code": "LEMD",
                   "iata_city_code": "MAD",
                   "iata_country_code": "ES",
+                  "icao_code": "LEMD",
                   "iata_code": "MAD",
                   "latitude": 40.49923,
                   "longitude": -3.567169,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MAD",
                     "iata_country_code": "ES",
+                    "icao_code": null,
                     "iata_code": "MAD",
                     "latitude": null,
                     "longitude": null,
@@ -2929,7 +2929,7 @@
                   "name": "Adolfo Suárez Madrid-Barajas Airport",
                   "id": "arp_mad_es"
                 },
-                "id": "seg_0000B9psuXJgGCmlKVT4Ry"
+                "id": "seg_0000B9pz9YQEMcAb68vf4x"
               }
             ],
             "conditions": {
@@ -2941,17 +2941,17 @@
             "duration": "PT6H15M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -2967,9 +2967,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -2979,12 +2979,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuXK2Et4LLbdLzk"
+            "id": "sli_0000B9pz9YQEMcAb68vf4y"
           }
         ],
-        "live_mode": false,
         "total_amount": "407.20",
-        "created_at": "2026-08-28T15:47:31.701558Z",
+        "live_mode": false,
+        "created_at": "2026-08-28T16:57:28.350882Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -2993,15 +2993,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:31.701558Z",
-        "expires_at": "2026-08-28T16:47:31.694219Z",
+        "updated_at": "2026-08-28T16:57:28.350882Z",
+        "expires_at": "2026-08-28T17:57:28.339542Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/UX.svg",
@@ -3011,18 +3011,18 @@
           "name": "Air Europa",
           "id": "arl_00009VME7DAGiJjwomhv3I"
         },
-        "id": "off_0000B9psuXK2Et4LLbdLzm"
+        "id": "off_0000B9pz9YQEMcAb68vf51"
       },
       {
         "total_emissions_kg": "19",
-        "intended_total_amount": "767.46",
+        "intended_total_amount": "767.81",
         "intended_services": null,
-        "intended_base_amount": "664.73",
+        "intended_base_amount": "665.04",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -3078,9 +3078,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "102.73",
+        "tax_amount": "102.77",
         "base_currency": "USD",
-        "base_amount": "664.73",
+        "base_amount": "665.04",
         "total_currency": "USD",
         "slices": [
           {
@@ -3132,7 +3132,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -3160,17 +3160,17 @@
                 "duration": "PT55M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -3186,9 +3186,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -3198,7 +3198,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuVPHMQ4jPI4Vtd"
+                "id": "seg_0000B9pz9Zd1sW0Aq7vOfR"
               }
             ],
             "conditions": {
@@ -3214,17 +3214,17 @@
             "duration": "PT55M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -3240,9 +3240,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -3252,12 +3252,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuVPHMQ4jPI4Vte"
+            "id": "sli_0000B9pz9Zd1sW0Aq7vOfU"
           }
         ],
+        "total_amount": "767.81",
         "live_mode": false,
-        "total_amount": "767.46",
-        "created_at": "2026-08-28T15:47:31.354203Z",
+        "created_at": "2026-08-28T16:57:28.543193Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -3266,7 +3266,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
@@ -3281,8 +3281,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:31.354203Z",
-        "expires_at": "2026-08-28T16:17:30.000000Z",
+        "updated_at": "2026-08-28T16:57:28.543193Z",
+        "expires_at": "2026-08-28T17:27:27.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -3292,18 +3292,18 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9psuVPHMQ4jPI4Vtg"
+        "id": "off_0000B9pz9Zd1sW0Aq7vOfa"
       },
       {
         "total_emissions_kg": "40",
-        "intended_total_amount": "764.76",
+        "intended_total_amount": "765.12",
         "intended_services": null,
-        "intended_base_amount": "582.75",
+        "intended_base_amount": "583.03",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -3359,9 +3359,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "182.01",
+        "tax_amount": "182.09",
         "base_currency": "USD",
-        "base_amount": "582.75",
+        "base_amount": "583.03",
         "total_currency": "USD",
         "slices": [
           {
@@ -3409,7 +3409,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -3437,17 +3437,17 @@
                 "duration": "PT1H5M",
                 "destination": {
                   "city_name": "Munich",
-                  "icao_code": "EDDM",
                   "iata_city_code": "MUC",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDM",
                   "iata_code": "MUC",
                   "latitude": 48.353732,
                   "longitude": 11.780563,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MUC",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "MUC",
                     "latitude": null,
                     "longitude": null,
@@ -3463,9 +3463,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -3475,7 +3475,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuVNrRgwPKtPNgN"
+                "id": "seg_0000B9pz9ZZq4NRwgEQqgx"
               },
               {
                 "origin_terminal": "2",
@@ -3515,7 +3515,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -3543,17 +3543,17 @@
                 "duration": "PT1H10M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -3569,17 +3569,17 @@
                 },
                 "origin": {
                   "city_name": "Munich",
-                  "icao_code": "EDDM",
                   "iata_city_code": "MUC",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDM",
                   "iata_code": "MUC",
                   "latitude": 48.353732,
                   "longitude": 11.780563,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MUC",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "MUC",
                     "latitude": null,
                     "longitude": null,
@@ -3593,7 +3593,7 @@
                   "name": "Munich Airport",
                   "id": "arp_muc_de"
                 },
-                "id": "seg_0000B9psuVNrRgwPKtPNgO"
+                "id": "seg_0000B9pz9ZZq4NRwgEQqh1"
               }
             ],
             "conditions": {
@@ -3609,17 +3609,17 @@
             "duration": "PT3H25M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -3635,9 +3635,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -3647,12 +3647,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuVNrRgwPKtPNgP"
+            "id": "sli_0000B9pz9ZZq4NRwgEQqh4"
           }
         ],
+        "total_amount": "765.12",
         "live_mode": false,
-        "total_amount": "764.76",
-        "created_at": "2026-08-28T15:47:31.354203Z",
+        "created_at": "2026-08-28T16:57:28.543193Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -3661,7 +3661,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
@@ -3676,8 +3676,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:31.354203Z",
-        "expires_at": "2026-08-28T16:17:30.000000Z",
+        "updated_at": "2026-08-28T16:57:28.543193Z",
+        "expires_at": "2026-08-28T17:27:27.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -3687,18 +3687,18 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9psuVNrRgwPKtPNgS"
+        "id": "off_0000B9pz9ZZq4NRwgEQqh9"
       },
       {
         "total_emissions_kg": "47",
-        "intended_total_amount": "587.09",
+        "intended_total_amount": "587.36",
         "intended_services": null,
-        "intended_base_amount": "426.90",
+        "intended_base_amount": "427.10",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -3754,9 +3754,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "160.19",
+        "tax_amount": "160.26",
         "base_currency": "USD",
-        "base_amount": "426.90",
+        "base_amount": "427.10",
         "total_currency": "USD",
         "slices": [
           {
@@ -3804,7 +3804,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": null,
                       "marketing_name": "ECONOMY",
@@ -3819,17 +3819,17 @@
                 "duration": "PT1H5M",
                 "destination": {
                   "city_name": "Frankfurt",
-                  "icao_code": "EDDF",
                   "iata_city_code": "FRA",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDF",
                   "iata_code": "FRA",
                   "latitude": 50.034866,
                   "longitude": 8.567755,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "FRA",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "FRA",
                     "latitude": null,
                     "longitude": null,
@@ -3845,9 +3845,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -3857,7 +3857,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuVN9UKNFIh4oaK"
+                "id": "seg_0000B9pz9ZYm8KbCcvw02B"
               },
               {
                 "origin_terminal": "1",
@@ -3897,7 +3897,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -3925,17 +3925,17 @@
                 "duration": "PT1H20M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -3951,17 +3951,17 @@
                 },
                 "origin": {
                   "city_name": "Frankfurt",
-                  "icao_code": "EDDF",
                   "iata_city_code": "FRA",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDF",
                   "iata_code": "FRA",
                   "latitude": 50.034866,
                   "longitude": 8.567755,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "FRA",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "FRA",
                     "latitude": null,
                     "longitude": null,
@@ -3975,7 +3975,7 @@
                   "name": "Frankfurt am Main Airport",
                   "id": "arp_fra_de"
                 },
-                "id": "seg_0000B9psuVN9UKNFIh4oaM"
+                "id": "seg_0000B9pz9ZYm8KbCcvw02F"
               }
             ],
             "conditions": {
@@ -3991,17 +3991,17 @@
             "duration": "PT3H25M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -4017,9 +4017,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -4029,12 +4029,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuVN9UKNFIh4oaO"
+            "id": "sli_0000B9pz9ZYm8KbCcvw02J"
           }
         ],
+        "total_amount": "587.36",
         "live_mode": false,
-        "total_amount": "587.09",
-        "created_at": "2026-08-28T15:47:31.354203Z",
+        "created_at": "2026-08-28T16:57:28.543193Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -4043,7 +4043,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
@@ -4058,8 +4058,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:31.354203Z",
-        "expires_at": "2026-08-28T16:17:30.000000Z",
+        "updated_at": "2026-08-28T16:57:28.543193Z",
+        "expires_at": "2026-08-28T17:27:27.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -4069,7 +4069,7 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9psuVN9UKNFIh4oaS"
+        "id": "off_0000B9pz9ZYm8KbCcvw02v"
       },
       {
         "total_emissions_kg": "56",
@@ -4080,7 +4080,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:31.694532Z"
+          "payment_required_by": "2026-08-29T16:57:28.339818Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -4166,7 +4166,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -4194,17 +4194,17 @@
                 "duration": "PT1H45M",
                 "destination": {
                   "city_name": "Copenhagen",
-                  "icao_code": "EKCH",
                   "iata_city_code": "CPH",
                   "iata_country_code": "DK",
+                  "icao_code": "EKCH",
                   "iata_code": "CPH",
                   "latitude": 55.617962,
                   "longitude": 12.653382,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "CPH",
                     "iata_country_code": "DK",
+                    "icao_code": null,
                     "iata_code": "CPH",
                     "latitude": null,
                     "longitude": null,
@@ -4220,9 +4220,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -4232,7 +4232,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuXK2Et4LLbdLzw"
+                "id": "seg_0000B9pz9YQaLISB7F5wdC"
               },
               {
                 "origin_terminal": null,
@@ -4276,7 +4276,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -4304,17 +4304,17 @@
                 "duration": "PT2H10M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -4330,17 +4330,17 @@
                 },
                 "origin": {
                   "city_name": "Copenhagen",
-                  "icao_code": "EKCH",
                   "iata_city_code": "CPH",
                   "iata_country_code": "DK",
+                  "icao_code": "EKCH",
                   "iata_code": "CPH",
                   "latitude": 55.617962,
                   "longitude": 12.653382,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "CPH",
                     "iata_country_code": "DK",
+                    "icao_code": null,
                     "iata_code": "CPH",
                     "latitude": null,
                     "longitude": null,
@@ -4354,7 +4354,7 @@
                   "name": "Copenhagen Airport",
                   "id": "arp_cph_dk"
                 },
-                "id": "seg_0000B9psuXK2Et4LLbdLzx"
+                "id": "seg_0000B9pz9YQaLISB7F5wdE"
               }
             ],
             "conditions": {
@@ -4366,17 +4366,17 @@
             "duration": "PT17H35M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -4392,9 +4392,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -4404,12 +4404,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuXK2Et4LLbdLzy"
+            "id": "sli_0000B9pz9YQaLISB7F5wdG"
           }
         ],
-        "live_mode": false,
         "total_amount": "270.30",
-        "created_at": "2026-08-28T15:47:31.701558Z",
+        "live_mode": false,
+        "created_at": "2026-08-28T16:57:28.350882Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -4418,15 +4418,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:31.701558Z",
-        "expires_at": "2026-08-28T16:47:31.694581Z",
+        "updated_at": "2026-08-28T16:57:28.350882Z",
+        "expires_at": "2026-08-28T17:57:28.339870Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
@@ -4436,7 +4436,7 @@
           "name": "SAS",
           "id": "arl_00009VME7DDSWSIAygCT1S"
         },
-        "id": "off_0000B9psuXK2Et4LLbdM00"
+        "id": "off_0000B9pz9YQaLISB7F5wdL"
       },
       {
         "total_emissions_kg": "63",
@@ -4447,7 +4447,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:31.699476Z"
+          "payment_required_by": "2026-08-29T16:57:28.347605Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -4509,7 +4509,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -4537,17 +4537,17 @@
                 "duration": "PT1H45M",
                 "destination": {
                   "city_name": "Belgrade",
-                  "icao_code": "LYBE",
                   "iata_city_code": "BEG",
                   "iata_country_code": "RS",
+                  "icao_code": "LYBE",
                   "iata_code": "BEG",
                   "latitude": 44.820559,
                   "longitude": 20.292378,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "BEG",
                     "iata_country_code": "RS",
+                    "icao_code": null,
                     "iata_code": "BEG",
                     "latitude": null,
                     "longitude": null,
@@ -4563,9 +4563,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -4575,7 +4575,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuXOzwR2TazxJjx"
+                "id": "seg_0000B9pz9YWbytH3Pvul1M"
               },
               {
                 "origin_terminal": null,
@@ -4615,7 +4615,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -4643,17 +4643,17 @@
                 "duration": "PT1H50M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -4669,17 +4669,17 @@
                 },
                 "origin": {
                   "city_name": "Belgrade",
-                  "icao_code": "LYBE",
                   "iata_city_code": "BEG",
                   "iata_country_code": "RS",
+                  "icao_code": "LYBE",
                   "iata_code": "BEG",
                   "latitude": 44.820559,
                   "longitude": 20.292378,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "BEG",
                     "iata_country_code": "RS",
+                    "icao_code": null,
                     "iata_code": "BEG",
                     "latitude": null,
                     "longitude": null,
@@ -4693,7 +4693,7 @@
                   "name": "Belgrade Nikola Tesla Airport",
                   "id": "arp_beg_rs"
                 },
-                "id": "seg_0000B9psuXOzwR2TazxJk0"
+                "id": "seg_0000B9pz9YWbytH3Pvul1R"
               }
             ],
             "conditions": {
@@ -4705,17 +4705,17 @@
             "duration": "PT4H55M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -4731,9 +4731,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -4743,12 +4743,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuXOzwR2TazxJk3"
+            "id": "sli_0000B9pz9YWbytH3Pvul1T"
           }
         ],
-        "live_mode": false,
         "total_amount": "184.30",
-        "created_at": "2026-08-28T15:47:31.701558Z",
+        "live_mode": false,
+        "created_at": "2026-08-28T16:57:28.350882Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -4757,15 +4757,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:31.701558Z",
-        "expires_at": "2026-08-28T16:47:31.699510Z",
+        "updated_at": "2026-08-28T16:57:28.350882Z",
+        "expires_at": "2026-08-28T17:57:28.347736Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JU.svg",
@@ -4775,7 +4775,7 @@
           "name": "Air Serbia",
           "id": "arl_00009VME7DCOaPRQvNhcNQ"
         },
-        "id": "off_0000B9psuXOzwR2TazxJk9"
+        "id": "off_0000B9pz9YWbytH3Pvul1V"
       },
       {
         "total_emissions_kg": "63",
@@ -4786,7 +4786,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:31.693424Z"
+          "payment_required_by": "2026-08-29T16:57:28.338573Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -4852,7 +4852,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -4880,17 +4880,17 @@
                 "duration": "PT1H45M",
                 "destination": {
                   "city_name": "Belgrade",
-                  "icao_code": "LYBE",
                   "iata_city_code": "BEG",
                   "iata_country_code": "RS",
+                  "icao_code": "LYBE",
                   "iata_code": "BEG",
                   "latitude": 44.820559,
                   "longitude": 20.292378,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "BEG",
                     "iata_country_code": "RS",
+                    "icao_code": null,
                     "iata_code": "BEG",
                     "latitude": null,
                     "longitude": null,
@@ -4906,9 +4906,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -4918,7 +4918,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuXJgGCmlKVT4RV"
+                "id": "seg_0000B9pz9YPAQZJr2qQoQ4"
               },
               {
                 "origin_terminal": null,
@@ -4962,7 +4962,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -4990,17 +4990,17 @@
                 "duration": "PT1H50M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -5016,17 +5016,17 @@
                 },
                 "origin": {
                   "city_name": "Belgrade",
-                  "icao_code": "LYBE",
                   "iata_city_code": "BEG",
                   "iata_country_code": "RS",
+                  "icao_code": "LYBE",
                   "iata_code": "BEG",
                   "latitude": 44.820559,
                   "longitude": 20.292378,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "BEG",
                     "iata_country_code": "RS",
+                    "icao_code": null,
                     "iata_code": "BEG",
                     "latitude": null,
                     "longitude": null,
@@ -5040,7 +5040,7 @@
                   "name": "Belgrade Nikola Tesla Airport",
                   "id": "arp_beg_rs"
                 },
-                "id": "seg_0000B9psuXJgGCmlKVT4RW"
+                "id": "seg_0000B9pz9YPAQZJr2qQoQ5"
               }
             ],
             "conditions": {
@@ -5052,17 +5052,17 @@
             "duration": "PT4H55M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -5078,9 +5078,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -5090,12 +5090,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuXJgGCmlKVT4RX"
+            "id": "sli_0000B9pz9YPAQZJr2qQoQ8"
           }
         ],
-        "live_mode": false,
         "total_amount": "277.30",
-        "created_at": "2026-08-28T15:47:31.701558Z",
+        "live_mode": false,
+        "created_at": "2026-08-28T16:57:28.350882Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -5104,15 +5104,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:31.701558Z",
-        "expires_at": "2026-08-28T16:47:31.693477Z",
+        "updated_at": "2026-08-28T16:57:28.350882Z",
+        "expires_at": "2026-08-28T17:57:28.338660Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JU.svg",
@@ -5122,7 +5122,7 @@
           "name": "Air Serbia",
           "id": "arl_00009VME7DCOaPRQvNhcNQ"
         },
-        "id": "off_0000B9psuXJgGCmlKVT4RZ"
+        "id": "off_0000B9pz9YPAQZJr2qQoQB"
       },
       {
         "total_emissions_kg": "45",
@@ -5133,7 +5133,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:31.697117Z"
+          "payment_required_by": "2026-08-29T16:57:28.344320Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -5220,7 +5220,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -5248,9 +5248,9 @@
                 "duration": "PT1H5M",
                 "destination": {
                   "city_name": "Cologne",
-                  "icao_code": "EDDK",
                   "iata_city_code": "CGN",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDK",
                   "iata_code": "CGN",
                   "latitude": 50.868307,
                   "longitude": 7.141736,
@@ -5262,9 +5262,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -5274,7 +5274,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuXNE31cZVV7tyg"
+                "id": "seg_0000B9pz9YU887HzIEkmA2"
               },
               {
                 "origin_terminal": null,
@@ -5318,7 +5318,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -5346,17 +5346,17 @@
                 "duration": "PT1H20M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -5372,9 +5372,9 @@
                 },
                 "origin": {
                   "city_name": "Cologne",
-                  "icao_code": "EDDK",
                   "iata_city_code": "CGN",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDK",
                   "iata_code": "CGN",
                   "latitude": 50.868307,
                   "longitude": 7.141736,
@@ -5384,7 +5384,7 @@
                   "name": "Cologne Bonn Airport",
                   "id": "arp_cgn_de"
                 },
-                "id": "seg_0000B9psuXNE31cZVV7tyk"
+                "id": "seg_0000B9pz9YU887HzIEkmA5"
               }
             ],
             "conditions": {
@@ -5396,17 +5396,17 @@
             "duration": "PT3H10M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -5422,9 +5422,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -5434,12 +5434,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuXNE31cZVV7tyl"
+            "id": "sli_0000B9pz9YUU6nZZJKv3ho"
           }
         ],
-        "live_mode": false,
         "total_amount": "841.40",
-        "created_at": "2026-08-28T15:47:31.701558Z",
+        "live_mode": false,
+        "created_at": "2026-08-28T16:57:28.350882Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -5448,15 +5448,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:31.701558Z",
-        "expires_at": "2026-08-28T16:47:31.697167Z",
+        "updated_at": "2026-08-28T16:57:28.350882Z",
+        "expires_at": "2026-08-28T17:57:28.344363Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -5466,18 +5466,18 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9psuXNa1hu9WbIBWP"
+        "id": "off_0000B9pz9YUU6nZZJKv3hr"
       },
       {
         "total_emissions_kg": "61",
-        "intended_total_amount": "602.81",
+        "intended_total_amount": "603.09",
         "intended_services": null,
-        "intended_base_amount": "459.43",
+        "intended_base_amount": "459.64",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -5533,9 +5533,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "143.38",
+        "tax_amount": "143.45",
         "base_currency": "USD",
-        "base_amount": "459.43",
+        "base_amount": "459.64",
         "total_currency": "USD",
         "slices": [
           {
@@ -5587,7 +5587,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -5615,17 +5615,17 @@
                 "duration": "PT1H20M",
                 "destination": {
                   "city_name": "Brussels",
-                  "icao_code": "EBBR",
                   "iata_city_code": "BRU",
                   "iata_country_code": "BE",
+                  "icao_code": "EBBR",
                   "iata_code": "BRU",
                   "latitude": 50.90042,
                   "longitude": 4.484052,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "BRU",
                     "iata_country_code": "BE",
+                    "icao_code": null,
                     "iata_code": "BRU",
                     "latitude": null,
                     "longitude": null,
@@ -5641,9 +5641,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -5653,7 +5653,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuVM5YHWVFOZxvI"
+                "id": "seg_0000B9pz9ZWeGEtiWKwIjA"
               },
               {
                 "origin_terminal": null,
@@ -5697,7 +5697,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -5725,17 +5725,17 @@
                 "duration": "PT1H35M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -5751,17 +5751,17 @@
                 },
                 "origin": {
                   "city_name": "Brussels",
-                  "icao_code": "EBBR",
                   "iata_city_code": "BRU",
                   "iata_country_code": "BE",
+                  "icao_code": "EBBR",
                   "iata_code": "BRU",
                   "latitude": 50.90042,
                   "longitude": 4.484052,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "BRU",
                     "iata_country_code": "BE",
+                    "icao_code": null,
                     "iata_code": "BRU",
                     "latitude": null,
                     "longitude": null,
@@ -5775,7 +5775,7 @@
                   "name": "Brussels Airport",
                   "id": "arp_bru_be"
                 },
-                "id": "seg_0000B9psuVM5YHWVFOZxvJ"
+                "id": "seg_0000B9pz9ZWeGEtiWKwIjE"
               }
             ],
             "conditions": {
@@ -5791,17 +5791,17 @@
             "duration": "PT3H45M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -5817,9 +5817,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -5829,12 +5829,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuVM5YHWVFOZxvL"
+            "id": "sli_0000B9pz9ZWeGEtiWKwIjI"
           }
         ],
+        "total_amount": "603.09",
         "live_mode": false,
-        "total_amount": "602.81",
-        "created_at": "2026-08-28T15:47:31.354203Z",
+        "created_at": "2026-08-28T16:57:28.543193Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -5843,7 +5843,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
@@ -5858,8 +5858,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:31.354203Z",
-        "expires_at": "2026-08-28T16:17:30.000000Z",
+        "updated_at": "2026-08-28T16:57:28.543193Z",
+        "expires_at": "2026-08-28T17:27:27.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -5869,18 +5869,18 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9psuVM5YHWVFOZxvP"
+        "id": "off_0000B9pz9ZWeGEtiWKwIjO"
       },
       {
         "total_emissions_kg": "19",
-        "intended_total_amount": "781.96",
+        "intended_total_amount": "782.32",
         "intended_services": null,
-        "intended_base_amount": "679.23",
+        "intended_base_amount": "679.55",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -5936,9 +5936,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "102.73",
+        "tax_amount": "102.77",
         "base_currency": "USD",
-        "base_amount": "679.23",
+        "base_amount": "679.55",
         "total_currency": "USD",
         "slices": [
           {
@@ -5990,7 +5990,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -6018,17 +6018,17 @@
                 "duration": "PT55M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -6044,9 +6044,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -6056,7 +6056,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuVOvNjn9OBuELP"
+                "id": "seg_0000B9pz9ZbxwT9QmpQY1H"
               }
             ],
             "conditions": {
@@ -6072,17 +6072,17 @@
             "duration": "PT55M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -6098,9 +6098,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -6110,12 +6110,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuVOvNjn9OBuELS"
+            "id": "sli_0000B9pz9ZbxwT9QmpQY1N"
           }
         ],
+        "total_amount": "782.32",
         "live_mode": false,
-        "total_amount": "781.96",
-        "created_at": "2026-08-28T15:47:31.354203Z",
+        "created_at": "2026-08-28T16:57:28.543193Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -6124,7 +6124,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
@@ -6139,8 +6139,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:31.354203Z",
-        "expires_at": "2026-08-28T16:17:30.000000Z",
+        "updated_at": "2026-08-28T16:57:28.543193Z",
+        "expires_at": "2026-08-28T17:27:27.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -6150,18 +6150,18 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9psuVOvNjn9OBuELV"
+        "id": "off_0000B9pz9ZbxwT9QmpQY1W"
       },
       {
         "total_emissions_kg": "44",
-        "intended_total_amount": "861.24",
+        "intended_total_amount": "861.64",
         "intended_services": null,
-        "intended_base_amount": "679.23",
+        "intended_base_amount": "679.55",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -6217,9 +6217,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "182.01",
+        "tax_amount": "182.09",
         "base_currency": "USD",
-        "base_amount": "679.23",
+        "base_amount": "679.55",
         "total_currency": "USD",
         "slices": [
           {
@@ -6271,7 +6271,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -6299,17 +6299,17 @@
                 "duration": "PT55M",
                 "destination": {
                   "city_name": "Munich",
-                  "icao_code": "EDDM",
                   "iata_city_code": "MUC",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDM",
                   "iata_code": "MUC",
                   "latitude": 48.353732,
                   "longitude": 11.780563,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MUC",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "MUC",
                     "latitude": null,
                     "longitude": null,
@@ -6325,9 +6325,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -6337,7 +6337,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuVLNauxLDCFOoq"
+                "id": "seg_0000B9pz9ZVaKC2yT2RS4f"
               },
               {
                 "origin_terminal": "2",
@@ -6381,7 +6381,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -6409,17 +6409,17 @@
                 "duration": "PT1H10M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -6435,17 +6435,17 @@
                 },
                 "origin": {
                   "city_name": "Munich",
-                  "icao_code": "EDDM",
                   "iata_city_code": "MUC",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDM",
                   "iata_code": "MUC",
                   "latitude": 48.353732,
                   "longitude": 11.780563,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MUC",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "MUC",
                     "latitude": null,
                     "longitude": null,
@@ -6459,7 +6459,7 @@
                   "name": "Munich Airport",
                   "id": "arp_muc_de"
                 },
-                "id": "seg_0000B9psuVLNauxLDCFOos"
+                "id": "seg_0000B9pz9ZVaKC2yT2RS4m"
               }
             ],
             "conditions": {
@@ -6475,17 +6475,17 @@
             "duration": "PT3H55M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -6501,9 +6501,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -6513,12 +6513,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuVLNauxLDCFOov"
+            "id": "sli_0000B9pz9ZVwIsKYU8bjc1"
           }
         ],
+        "total_amount": "861.64",
         "live_mode": false,
-        "total_amount": "861.24",
-        "created_at": "2026-08-28T15:47:31.354203Z",
+        "created_at": "2026-08-28T16:57:28.543193Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -6527,7 +6527,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
@@ -6542,8 +6542,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:31.354203Z",
-        "expires_at": "2026-08-28T16:17:30.000000Z",
+        "updated_at": "2026-08-28T16:57:28.543193Z",
+        "expires_at": "2026-08-28T17:27:27.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -6553,18 +6553,18 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9psuVLNauxLDCFOp1"
+        "id": "off_0000B9pz9ZVwIsKYU8bjc7"
       },
       {
         "total_emissions_kg": "45",
-        "intended_total_amount": "658.80",
+        "intended_total_amount": "659.10",
         "intended_services": null,
-        "intended_base_amount": "504.71",
+        "intended_base_amount": "504.94",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -6620,9 +6620,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "154.09",
+        "tax_amount": "154.16",
         "base_currency": "USD",
-        "base_amount": "504.71",
+        "base_amount": "504.94",
         "total_currency": "USD",
         "slices": [
           {
@@ -6674,7 +6674,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -6702,17 +6702,17 @@
                 "duration": "PT1H5M",
                 "destination": {
                   "city_name": "Frankfurt",
-                  "icao_code": "EDDF",
                   "iata_city_code": "FRA",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDF",
                   "iata_code": "FRA",
                   "latitude": 50.034866,
                   "longitude": 8.567755,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "FRA",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "FRA",
                     "latitude": null,
                     "longitude": null,
@@ -6728,9 +6728,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -6740,7 +6740,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuVKfdYOBAzupiW"
+                "id": "seg_0000B9pz9ZUsMpToQq6sxc"
               },
               {
                 "origin_terminal": "1",
@@ -6784,7 +6784,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -6812,17 +6812,17 @@
                 "duration": "PT1H20M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -6838,17 +6838,17 @@
                 },
                 "origin": {
                   "city_name": "Frankfurt",
-                  "icao_code": "EDDF",
                   "iata_city_code": "FRA",
                   "iata_country_code": "DE",
+                  "icao_code": "EDDF",
                   "iata_code": "FRA",
                   "latitude": 50.034866,
                   "longitude": 8.567755,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "FRA",
                     "iata_country_code": "DE",
+                    "icao_code": null,
                     "iata_code": "FRA",
                     "latitude": null,
                     "longitude": null,
@@ -6862,7 +6862,7 @@
                   "name": "Frankfurt am Main Airport",
                   "id": "arp_fra_de"
                 },
-                "id": "seg_0000B9psuVL1cEflC657GI"
+                "id": "seg_0000B9pz9ZUsMpToQq6sxf"
               }
             ],
             "conditions": {
@@ -6878,17 +6878,17 @@
             "duration": "PT3H25M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -6904,9 +6904,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -6916,12 +6916,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuVL1cEflC657GK"
+            "id": "sli_0000B9pz9ZUsMpToQq6sxj"
           }
         ],
+        "total_amount": "659.10",
         "live_mode": false,
-        "total_amount": "658.80",
-        "created_at": "2026-08-28T15:47:31.354203Z",
+        "created_at": "2026-08-28T16:57:28.543193Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -6930,7 +6930,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
@@ -6945,8 +6945,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:31.354203Z",
-        "expires_at": "2026-08-28T16:17:30.000000Z",
+        "updated_at": "2026-08-28T16:57:28.543193Z",
+        "expires_at": "2026-08-28T17:27:27.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -6956,7 +6956,7 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9psuVL1cEflC657GP"
+        "id": "off_0000B9pz9ZUsMpToQq6sxt"
       },
       {
         "total_emissions_kg": "56",
@@ -6967,7 +6967,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:31.694747Z"
+          "payment_required_by": "2026-08-29T16:57:28.340099Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -7053,7 +7053,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -7081,17 +7081,17 @@
                 "duration": "PT1H45M",
                 "destination": {
                   "city_name": "Copenhagen",
-                  "icao_code": "EKCH",
                   "iata_city_code": "CPH",
                   "iata_country_code": "DK",
+                  "icao_code": "EKCH",
                   "iata_code": "CPH",
                   "latitude": 55.617962,
                   "longitude": 12.653382,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "CPH",
                     "iata_country_code": "DK",
+                    "icao_code": null,
                     "iata_code": "CPH",
                     "latitude": null,
                     "longitude": null,
@@ -7107,9 +7107,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -7119,7 +7119,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuXK2Et4LLbdM0A"
+                "id": "seg_0000B9pz9YQwJyjl8LGEBS"
               },
               {
                 "origin_terminal": null,
@@ -7163,7 +7163,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -7191,17 +7191,17 @@
                 "duration": "PT2H10M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -7217,17 +7217,17 @@
                 },
                 "origin": {
                   "city_name": "Copenhagen",
-                  "icao_code": "EKCH",
                   "iata_city_code": "CPH",
                   "iata_country_code": "DK",
+                  "icao_code": "EKCH",
                   "iata_code": "CPH",
                   "latitude": 55.617962,
                   "longitude": 12.653382,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "CPH",
                     "iata_country_code": "DK",
+                    "icao_code": null,
                     "iata_code": "CPH",
                     "latitude": null,
                     "longitude": null,
@@ -7241,7 +7241,7 @@
                   "name": "Copenhagen Airport",
                   "id": "arp_cph_dk"
                 },
-                "id": "seg_0000B9psuXK2Et4LLbdM0B"
+                "id": "seg_0000B9pz9YQwJyjl8LGEBU"
               }
             ],
             "conditions": {
@@ -7253,17 +7253,17 @@
             "duration": "PT12H5M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -7279,9 +7279,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -7291,12 +7291,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuXK2Et4LLbdM0C"
+            "id": "sli_0000B9pz9YQwJyjl8LGEBW"
           }
         ],
-        "live_mode": false,
         "total_amount": "327.30",
-        "created_at": "2026-08-28T15:47:31.701558Z",
+        "live_mode": false,
+        "created_at": "2026-08-28T16:57:28.350882Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -7305,15 +7305,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:31.701558Z",
-        "expires_at": "2026-08-28T16:47:31.694813Z",
+        "updated_at": "2026-08-28T16:57:28.350882Z",
+        "expires_at": "2026-08-28T17:57:28.340176Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg",
@@ -7323,7 +7323,7 @@
           "name": "SAS",
           "id": "arl_00009VME7DDSWSIAygCT1S"
         },
-        "id": "off_0000B9psuXK2Et4LLbdM0E"
+        "id": "off_0000B9pz9YRIIf1L9RQVjU"
       },
       {
         "total_emissions_kg": "63",
@@ -7334,7 +7334,7 @@
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-29T15:47:31.697748Z"
+          "payment_required_by": "2026-08-29T16:57:28.344703Z"
         },
         "supported_passenger_identity_document_types": [
           "known_traveler_number",
@@ -7400,7 +7400,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -7428,17 +7428,17 @@
                 "duration": "PT1H45M",
                 "destination": {
                   "city_name": "Belgrade",
-                  "icao_code": "LYBE",
                   "iata_city_code": "BEG",
                   "iata_country_code": "RS",
+                  "icao_code": "LYBE",
                   "iata_code": "BEG",
                   "latitude": 44.820559,
                   "longitude": 20.292378,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "BEG",
                     "iata_country_code": "RS",
+                    "icao_code": null,
                     "iata_code": "BEG",
                     "latitude": null,
                     "longitude": null,
@@ -7454,9 +7454,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -7466,7 +7466,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuXNa1hu9WbIBWn"
+                "id": "seg_0000B9pz9YUU6nZZJKv3iH"
               },
               {
                 "origin_terminal": null,
@@ -7510,7 +7510,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -7538,17 +7538,17 @@
                 "duration": "PT1H50M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -7564,17 +7564,17 @@
                 },
                 "origin": {
                   "city_name": "Belgrade",
-                  "icao_code": "LYBE",
                   "iata_city_code": "BEG",
                   "iata_country_code": "RS",
+                  "icao_code": "LYBE",
                   "iata_code": "BEG",
                   "latitude": 44.820559,
                   "longitude": 20.292378,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "BEG",
                     "iata_country_code": "RS",
+                    "icao_code": null,
                     "iata_code": "BEG",
                     "latitude": null,
                     "longitude": null,
@@ -7588,7 +7588,7 @@
                   "name": "Belgrade Nikola Tesla Airport",
                   "id": "arp_beg_rs"
                 },
-                "id": "seg_0000B9psuXNa1hu9WbIBWo"
+                "id": "seg_0000B9pz9YUU6nZZJKv3iJ"
               }
             ],
             "conditions": {
@@ -7600,17 +7600,17 @@
             "duration": "PT11H50M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -7626,9 +7626,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -7638,12 +7638,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuXNa1hu9WbIBWp"
+            "id": "sli_0000B9pz9YUU6nZZJKv3iK"
           }
         ],
-        "live_mode": false,
         "total_amount": "277.30",
-        "created_at": "2026-08-28T15:47:31.701558Z",
+        "live_mode": false,
+        "created_at": "2026-08-28T16:57:28.350882Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -7652,15 +7652,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:31.701558Z",
-        "expires_at": "2026-08-28T16:47:31.697784Z",
+        "updated_at": "2026-08-28T16:57:28.350882Z",
+        "expires_at": "2026-08-28T17:57:28.344792Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JU.svg",
@@ -7670,13 +7670,13 @@
           "name": "Air Serbia",
           "id": "arl_00009VME7DCOaPRQvNhcNQ"
         },
-        "id": "off_0000B9psuXNa1hu9WbIBWr"
+        "id": "off_0000B9pz9YUU6nZZJKv3iP"
       },
       {
         "total_emissions_kg": "50",
-        "intended_total_amount": "81.48",
+        "intended_total_amount": "81.40",
         "intended_services": null,
-        "intended_base_amount": "11.35",
+        "intended_base_amount": "11.34",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": true,
@@ -7689,9 +7689,9 @@
         "available_services": null,
         "supported_loyalty_programmes": [],
         "private_fares": [],
-        "tax_amount": "70.13",
+        "tax_amount": "70.06",
         "base_currency": "USD",
-        "base_amount": "11.35",
+        "base_amount": "11.34",
         "total_currency": "USD",
         "slices": [
           {
@@ -7730,7 +7730,7 @@
                   {
                     "baggages": [],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": null,
                       "marketing_name": "Economy",
@@ -7745,9 +7745,9 @@
                 "duration": "PT1H55M",
                 "destination": {
                   "city_name": "Barcelona",
-                  "icao_code": "LEBL",
                   "iata_city_code": "BCN",
                   "iata_country_code": "ES",
+                  "icao_code": "LEBL",
                   "iata_code": "BCN",
                   "latitude": 41.297273,
                   "longitude": 2.080877,
@@ -7759,9 +7759,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -7771,7 +7771,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuSp2y9u9OL6Y8w"
+                "id": "seg_0000B9pz9U80KRDJmSN37E"
               },
               {
                 "origin_terminal": null,
@@ -7802,7 +7802,7 @@
                   {
                     "baggages": [],
                     "cabin_class_marketing_name": "Economy",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": null,
                       "marketing_name": "Economy",
@@ -7817,17 +7817,17 @@
                 "duration": "PT1H40M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -7843,9 +7843,9 @@
                 },
                 "origin": {
                   "city_name": "Barcelona",
-                  "icao_code": "LEBL",
                   "iata_city_code": "BCN",
                   "iata_country_code": "ES",
+                  "icao_code": "LEBL",
                   "iata_code": "BCN",
                   "latitude": 41.297273,
                   "longitude": 2.080877,
@@ -7855,7 +7855,7 @@
                   "name": "Barcelona–El Prat Josep Tarradellas Airport",
                   "id": "arp_bcn_es"
                 },
-                "id": "seg_0000B9psuSpOwqBjPRGpgu"
+                "id": "seg_0000B9pz9U80KRDJmSN37G"
               }
             ],
             "conditions": {
@@ -7867,17 +7867,17 @@
             "duration": "PT11H30M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -7893,9 +7893,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -7905,12 +7905,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuSpOwqBjPRGpgv"
+            "id": "sli_0000B9pz9U80KRDJmSN37I"
           }
         ],
+        "total_amount": "81.40",
         "live_mode": false,
-        "total_amount": "81.48",
-        "created_at": "2026-08-28T15:47:30.918158Z",
+        "created_at": "2026-08-28T16:57:27.606348Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -7919,15 +7919,15 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
           "refund_before_departure": null,
           "change_before_departure": null
         },
-        "updated_at": "2026-08-28T15:47:30.918158Z",
-        "expires_at": "2026-08-28T16:02:30.865194Z",
+        "updated_at": "2026-08-28T16:57:27.606348Z",
+        "expires_at": "2026-08-28T17:12:27.548162Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VY.svg",
@@ -7937,18 +7937,18 @@
           "name": "Vueling",
           "id": "arl_00009VME7DDoV8ZkzmMkak"
         },
-        "id": "off_0000B9psuSpOwqBjPRGpgx"
+        "id": "off_0000B9pz9U80KRDJmSN37N"
       },
       {
         "total_emissions_kg": "22",
-        "intended_total_amount": "868.97",
+        "intended_total_amount": "869.37",
         "intended_services": null,
-        "intended_base_amount": "766.24",
+        "intended_base_amount": "766.60",
         "available_airline_credit_ids": [],
         "payment_requirements": {
           "requires_instant_payment": false,
           "price_guarantee_expires_at": null,
-          "payment_required_by": "2026-08-31T20:47:00Z"
+          "payment_required_by": "2026-08-31T21:57:00Z"
         },
         "supported_passenger_identity_document_types": [
           "passport",
@@ -8004,9 +8004,9 @@
           "4Y"
         ],
         "private_fares": [],
-        "tax_amount": "102.73",
+        "tax_amount": "102.77",
         "base_currency": "USD",
-        "base_amount": "766.24",
+        "base_amount": "766.60",
         "total_currency": "USD",
         "slices": [
           {
@@ -8058,7 +8058,7 @@
                       }
                     ],
                     "cabin_class_marketing_name": "ECONOMY",
-                    "passenger_id": "pas_0000B9psuQDOfAbFIzTSBk",
+                    "passenger_id": "pas_0000B9pz9RjpDMgUMt2i9K",
                     "cabin": {
                       "amenities": {
                         "seat": {
@@ -8086,17 +8086,17 @@
                 "duration": "PT55M",
                 "destination": {
                   "city_name": "Milan",
-                  "icao_code": "LIMC",
                   "iata_city_code": "MIL",
                   "iata_country_code": "IT",
+                  "icao_code": "LIMC",
                   "iata_code": "MXP",
                   "latitude": 45.630331,
                   "longitude": 8.72682,
                   "city": {
                     "city_name": null,
-                    "icao_code": null,
                     "iata_city_code": "MIL",
                     "iata_country_code": "IT",
+                    "icao_code": null,
                     "iata_code": "MIL",
                     "latitude": null,
                     "longitude": null,
@@ -8112,9 +8112,9 @@
                 },
                 "origin": {
                   "city_name": "Zürich",
-                  "icao_code": "LSZH",
                   "iata_city_code": "ZRH",
                   "iata_country_code": "CH",
+                  "icao_code": "LSZH",
                   "iata_code": "ZRH",
                   "latitude": 47.461458,
                   "longitude": 8.552323,
@@ -8124,7 +8124,7 @@
                   "name": "Zürich Airport",
                   "id": "arp_zrh_ch"
                 },
-                "id": "seg_0000B9psuVOZP3VZN5jwn1"
+                "id": "seg_0000B9pz9Zau0QIgjWvhMA"
               }
             ],
             "conditions": {
@@ -8140,17 +8140,17 @@
             "duration": "PT55M",
             "destination": {
               "city_name": "Milan",
-              "icao_code": "LIMC",
               "iata_city_code": "MIL",
               "iata_country_code": "IT",
+              "icao_code": "LIMC",
               "iata_code": "MXP",
               "latitude": 45.630331,
               "longitude": 8.72682,
               "city": {
                 "city_name": null,
-                "icao_code": null,
                 "iata_city_code": "MIL",
                 "iata_country_code": "IT",
+                "icao_code": null,
                 "iata_code": "MIL",
                 "latitude": null,
                 "longitude": null,
@@ -8166,9 +8166,9 @@
             },
             "origin": {
               "city_name": "Zürich",
-              "icao_code": "LSZH",
               "iata_city_code": "ZRH",
               "iata_country_code": "CH",
+              "icao_code": "LSZH",
               "iata_code": "ZRH",
               "latitude": 47.461458,
               "longitude": 8.552323,
@@ -8178,12 +8178,12 @@
               "name": "Zürich Airport",
               "id": "arp_zrh_ch"
             },
-            "id": "sli_0000B9psuVOZP3VZN5jwn2"
+            "id": "sli_0000B9pz9Zau0QIgjWvhMD"
           }
         ],
+        "total_amount": "869.37",
         "live_mode": false,
-        "total_amount": "868.97",
-        "created_at": "2026-08-28T15:47:31.354203Z",
+        "created_at": "2026-08-28T16:57:28.543193Z",
         "passengers": [
           {
             "loyalty_programme_accounts": [],
@@ -8192,7 +8192,7 @@
             "given_name": null,
             "age": null,
             "type": "adult",
-            "id": "pas_0000B9psuQDOfAbFIzTSBk"
+            "id": "pas_0000B9pz9RjpDMgUMt2i9K"
           }
         ],
         "conditions": {
@@ -8207,8 +8207,8 @@
             "allowed": true
           }
         },
-        "updated_at": "2026-08-28T15:47:31.354203Z",
-        "expires_at": "2026-08-28T16:17:30.000000Z",
+        "updated_at": "2026-08-28T16:57:28.543193Z",
+        "expires_at": "2026-08-28T17:27:27.000000Z",
         "partial": false,
         "owner": {
           "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg",
@@ -8218,7 +8218,7 @@
           "name": "Lufthansa",
           "id": "arl_00009VME7DCkZ5j0wTrtvG"
         },
-        "id": "off_0000B9psuVOZP3VZN5jwn4"
+        "id": "off_0000B9pz9Zau0QIgjWvhML"
       }
     ],
     "cabin_class": "economy",
@@ -8229,17 +8229,17 @@
         "departure_date": "2026-09-18",
         "destination": {
           "city_name": "Milan",
-          "icao_code": "LIMC",
           "iata_city_code": "MIL",
           "iata_country_code": "IT",
+          "icao_code": "LIMC",
           "iata_code": "MXP",
           "latitude": 45.630331,
           "longitude": 8.72682,
           "city": {
             "city_name": null,
-            "icao_code": null,
             "iata_city_code": "MIL",
             "iata_country_code": "IT",
+            "icao_code": null,
             "iata_code": "MIL",
             "latitude": null,
             "longitude": null,
@@ -8255,9 +8255,9 @@
         },
         "origin": {
           "city_name": "Zürich",
-          "icao_code": "LSZH",
           "iata_city_code": "ZRH",
           "iata_country_code": "CH",
+          "icao_code": "LSZH",
           "iata_code": "ZRH",
           "latitude": 47.461458,
           "longitude": 8.552323,
@@ -8270,7 +8270,7 @@
       }
     ],
     "live_mode": false,
-    "created_at": "2026-08-28T15:47:30.468977Z",
+    "created_at": "2026-08-28T16:57:27.195911Z",
     "passengers": [
       {
         "loyalty_programme_accounts": [],
@@ -8280,10 +8280,10 @@
         "user_id": null,
         "age": null,
         "type": "adult",
-        "id": "pas_0000B9psuQDOfAbFIzTSBk"
+        "id": "pas_0000B9pz9RjpDMgUMt2i9K"
       }
     ],
-    "client_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODgwMTg0NTEsImxpdmVfbW9kZSI6ZmFsc2UsIm9yZ2FuaXNhdGlvbl9pZCI6Im9yZ18wMDAwQjlwcVljaEpuV1R0d3hKRFJvIiwicGxhdGZvcm1fdXNlcl9pZCI6bnVsbH0.jOXgh_GWEaFdLneBRl5YX_JSFN1UxAKOiynPfSTr9-E",
-    "id": "orq_0000B9psuQDOfAbFIzTSBg"
+    "client_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODgwMjI2NDgsImxpdmVfbW9kZSI6ZmFsc2UsIm9yZ2FuaXNhdGlvbl9pZCI6Im9yZ18wMDAwQjlwcVljaEpuV1R0d3hKRFJvIiwicGxhdGZvcm1fdXNlcl9pZCI6bnVsbH0.-umlapbqe5Gm-JVhVzqhSs2-ZZHzeMl4KUEPA4Nn4YM",
+    "id": "orq_0000B9pz9RjpDMgUMt2i9F"
   }
 }

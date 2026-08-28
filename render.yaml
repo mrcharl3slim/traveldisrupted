@@ -26,6 +26,19 @@ services:
       - key: DOWNSTREAM_PORTS
         value: replay
 
+      # The deadline watch, in-process. Real while the service is awake, and a
+      # free instance sleeps when idle — so on this plan it is a demonstration
+      # of the mechanism rather than a promise to a traveller. Production swaps
+      # the loop for a cron hitting the same pure schedule. Set to 0 to disable.
+      - key: DOWNSTREAM_WATCH
+        value: "1"
+
+      # Where alerts go. Any endpoint that accepts a JSON POST — a Slack or
+      # Discord incoming webhook is what this was built against. Unset means
+      # the log only, and the page says so instead of implying delivery.
+      - key: DOWNSTREAM_WEBHOOK
+        sync: false
+
       # Optional. The engine is arithmetic and runs without a model; the model
       # reads fare prose into deadlines and writes the plan's rationale. Both
       # have deterministic fallbacks, so "none" is a supported mode rather than

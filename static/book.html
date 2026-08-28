@@ -80,6 +80,13 @@
   .banner{font:12px var(--mono);color:var(--key);background:#101a27;border:1px solid #1d3350;
           border-radius:8px;padding:11px 14px;margin-top:14px;line-height:1.7}
   .banner.bad{color:#ffb4ae;background:#1b1113;border-color:#4d2326}
+  .alert{display:flex;gap:14px;align-items:baseline;border:1px solid var(--edge);
+         border-left:3px solid var(--warn);border-radius:8px;padding:11px 14px;
+         margin-bottom:7px;background:#101821}
+  .alert.final{border-left-color:var(--bad)}
+  .alert.past{opacity:.45}
+  .alert .at{font:12px var(--mono);color:var(--faint);white-space:nowrap;min-width:104px}
+  .alert .msg{font-size:13.5px}
   .note{font-size:12.5px;color:var(--dim);margin-top:14px;line-height:1.6}
   .err{color:var(--bad)}
 </style>
@@ -156,8 +163,17 @@
     <div class="note" id="plan-note"></div>
   </section>
 
+  <section id="s-watch" hidden>
+    <h2>7 · What you will be told, and when</h2>
+    <div id="watch-head" class="note" style="margin-top:0"></div>
+    <div id="watch-list"></div>
+    <div class="note">Every one of these is a deadline with money or a bed behind it.
+      Deadlines with nothing behind them stay in the impact graph — a product that alerts on
+      everything is one nobody keeps installed.</div>
+  </section>
+
   <section id="s-hand" hidden>
-    <h2>7 · Who can actually do each thing</h2>
+    <h2>8 · Who can actually do each thing</h2>
     <div id="handoff"></div>
   </section>
 </div>
@@ -180,7 +196,7 @@ const LANES = {
 };
 
 let IN = [], ON = [], HOTELS = [], PICK = {in:null, on:null, hotel:null};
-let TRIP = null, OUT = null, PICKED = null;
+let TRIP = null, OUT = null, PICKED = null, WATCH = null;
 
 // The recordings were made three weeks out, and replay shifts them to whatever
 // date is asked for. Defaulting to that same distance keeps the demo on live
@@ -329,7 +345,31 @@ async function cancel(bookingId){
   PICKED = null;
   paintTrip();
   paintOutcome();
+  try { WATCH = await api(`/api/alerts?trip=${encodeURIComponent(TRIP.trip_id)}`); }
+  catch (e) { WATCH = null; }
+  paintWatch();
   $('#s-out').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function paintWatch(){
+  if (!WATCH || !WATCH.watching){ $('#s-watch').hidden = true; return; }
+  $('#s-watch').hidden = false;
+
+  const reach = WATCH.reaches_you || [];
+  // Never claim a channel that is not wired. An alert nobody receives is worse
+  // than no alert, because the page has already promised it.
+  $('#watch-head').innerHTML =
+    `${WATCH.alerts.length} things to say, watched from ${at(WATCH.now)}. `
+    + `Reaches you by: <b>${esc(reach.join(', ') || 'nothing — no channel is configured')}</b>.`
+    + (WATCH.next ? `<br>Next: ${esc(WATCH.next.message)} — at ${at(WATCH.next.at)}.`
+                  : '<br>Nothing further ahead on this trip.');
+
+  $('#watch-list').innerHTML = WATCH.alerts.map(a => `
+    <div class="alert ${a.kind} ${a.passed ? 'past' : ''}">
+      <div class="at">${at(a.at)}<br>${a.kind === 'final' ? 'deadline' : 'T−' + a.lead}</div>
+      <div class="msg">${esc(a.message)}
+        <div class="m">${eur(a.worth)} behind this one${a.passed ? ' · already passed' : ''}</div></div>
+    </div>`).join('');
 }
 
 function paintOutcome(){
