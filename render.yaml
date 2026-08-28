@@ -1,0 +1,50 @@
+# Render Blueprint. Import this rather than clicking through the dashboard, so
+# the deployment is reviewable in the repo instead of living in a browser tab.
+#
+# Its own service, separate from lostphone, deliberately: different API keys,
+# independent deploys, and two URLs to open in front of judges on the same day.
+# A broken build on one must not take the other down.
+#
+# Free instances sleep when idle and take about a minute to wake. Open the URL a
+# few minutes before demoing.
+services:
+  - type: web
+    name: downstream
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python serve.py
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+
+      # replay is the mode that runs in front of judges: every API response is a
+      # committed fixture, so a cold request or an expired token cannot kill the
+      # demo. "live" calls the providers and falls back to the recording if a
+      # call fails, announcing the fallback rather than hiding it.
+      - key: DOWNSTREAM_PORTS
+        value: replay
+
+      # Optional. The engine is arithmetic and runs without a model; the model
+      # reads fare prose into deadlines and writes the plan's rationale. Both
+      # have deterministic fallbacks, so "none" is a supported mode rather than
+      # a broken one.
+      - key: LLM_PROVIDER
+        value: none
+      - key: AWS_DEFAULT_REGION
+        value: ap-southeast-1
+      # AWS_PROFILE must NOT be set here — ~/.aws/credentials does not exist in
+      # a container. boto3 picks up the two keys below.
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+
+      # Only needed with DOWNSTREAM_PORTS=live. Fixtures cover replay.
+      - key: AERODATABOX_KEY
+        sync: false
+      - key: DUFFEL_TOKEN
+        sync: false

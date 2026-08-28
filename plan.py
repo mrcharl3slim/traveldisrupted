@@ -78,6 +78,13 @@ class Action:
     cash_in: float = 0.0
     note: str = ""
     deadline: datetime | None = None
+    #: "quoted" when a booking API sold us this number, "estimate" when it is
+    #: ours because no reachable API quotes the fare. Carried as a field rather
+    #: than detected by reading the note: the note is a human sentence, and the
+    #: first version of that check looked for "estimate" while the sentence
+    #: said "ESTIMATE", so no row was ever flagged and the footnote below the
+    #: table claimed a caveat the table never showed.
+    price_source: str = ""
 
 
 @dataclass
@@ -240,6 +247,7 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
             verb="buy", booking_id=None, lane=lane_for(offer.carrier, "buy"),
             label=f"Book {offer.label}, EUR {offer.price:,.0f}",
             cash_out=offer.price,
+            price_source=getattr(offer, "price_source", "quoted"),
             note=f"departs {offer.depart:%H:%M}, arrives {offer.arrive:%H:%M}"
                  + ("" if getattr(offer, "price_source", "quoted") == "quoted"
                     else " - fare is an ESTIMATE, confirm at checkout")))

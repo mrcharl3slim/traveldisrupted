@@ -83,7 +83,7 @@ print("  " + "-" * 78)
 for p in plans:
     cash = f"{p.net_cash:+,.0f}" if p.net_cash else "0"
     arr = f"{p.arrives_where} {p.arrives_at:%H:%M}" if p.arrives_at else "-"
-    est = " *" if any(a.verb == "buy" and "estimate" in a.note for a in p.actions) else ""
+    est = " *" if any(a.price_source == "estimate" for a in p.actions) else ""
     print(f"  {p.name[:43]:<44}{cash:>10}{p.total_damage:>9,.0f}   {arr}{est}")
 print("\n  * fare is an estimate - no reachable API quotes Swiss rail prices")
 

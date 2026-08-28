@@ -4,7 +4,9 @@ Cross-provider disruption replanning. Detection is commodity; this is the part
 that is not.
 
 ```bash
-python cli.py                     # status -> impact -> ranked plans -> handoff
+python serve.py                   # the web app, first free port from 8000
+python cli.py                     # the same numbers, in a terminal
+python cli.py --base today        # anchor the trip to run time
 python -m pytest tests/ -q        # 48 tests, no keys, no network
 ```
 
@@ -38,3 +40,21 @@ expires.
 - **Live flight status only covers about a week either side of today**, so a
   fixed October scenario cannot be demonstrated live in September. Anchoring
   the trip relative to run time is scheduled for days 9–10.
+
+
+## The web app
+
+`serve.py` is a translation layer over the engine and nothing more. Every figure on the page comes
+from the same `propagate` and `generate` calls `cli.py` makes — if the page and the terminal ever
+disagree, the page is wrong.
+
+Five stages, matching the CLI: the signal, what it costs, the knock-on impact, the ranked plans, and
+the handoff. Two things it refuses to hide:
+
+- **`degraded`** — a live call failed and a recording was replayed.
+- **`shifted`** — a recording was replayed under a different date because the trip is anchored to
+  run time. Both appear in the banner and in `/health`.
+
+Times are formatted server-side in the trip's own timezone. Letting the browser format them renders
+a Zurich arrival in the viewer's zone, which is a different flight as far as the traveller is
+concerned.

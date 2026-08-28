@@ -104,3 +104,26 @@ def test_paid_actions_never_land_in_the_automatic_lane(plans):
     for p in plans.values():
         for a in p.lane(Lane.AUTO):
             assert a.cash_out == 0.0 and a.cash_in == 0.0
+
+
+def test_every_plan_carries_its_offer_s_price_provenance(plans):
+    """Regression, and the reason it is worth a test.
+
+    The caveat used to be detected by searching the action's note for
+    "estimate" while the note said "ESTIMATE", so no row was ever marked and the
+    footnote under the table promised a warning the table never gave. The Swiss
+    rail fare is the one number in the whole engine that no reachable API can
+    quote; it is the last one that should quietly lose its caveat.
+
+    Keyed off the offers rather than plan names, because the seeded offers and
+    the live rail port label the same train differently.
+    """
+    for offer in OFFERS:
+        plan = plans.get(offer.id)
+        assert plan is not None, f"no plan built from offer {offer.id}"
+        buys = [a for a in plan.actions if a.verb == "buy"]
+        assert buys, f"plan {offer.id} books nothing"
+        assert all(a.price_source == offer.price_source for a in buys), offer.id
+
+    assert any(o.price_source == "estimate" for o in OFFERS), (
+        "the scenario has stopped exercising an estimated fare at all")
