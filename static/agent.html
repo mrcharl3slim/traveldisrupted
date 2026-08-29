@@ -117,7 +117,7 @@
 
 <div class="bar"><div class="inner">
   <input type="text" id="say" autocomplete="off"
-         placeholder="e.g. book me a flight from Zurich to Milan on 18 September, one way, with a hotel">
+         placeholder="a trip, or a meeting — &ldquo;book me a flight to Milan on 18 September&rdquo; · &ldquo;meeting with the vendor on the 19th at 10am&rdquo;">
   <button class="btn key" id="send">Send</button>
 </div></div>
 
@@ -200,30 +200,48 @@ async function say(text, answers){
   STATE = turn.state; LAST = turn; PICK = {flight:null, ret:null, hotel:null};
 
   let html = esc(turn.reply);
-  if (STATE.summary && STATE.summary.trim() !== 'to  · date to confirm')
-    html += `<div class="note">So far: <b>${esc(STATE.summary)}</b></div>`;
+  const blank = ['to  · date to confirm', 'Appointment'];
+  const shown = turn.saved || STATE;
+  if (shown.summary && !blank.includes(shown.summary.trim()))
+    html += `<div class="note">${turn.saved ? '' : 'So far: '}<b>${esc(shown.summary)}</b></div>`;
+
+  // An appointment is judged rather than searched. What it collides with is
+  // the answer, so it goes where the offers would have gone.
+  if (turn.kind === 'appointment' && turn.feasible !== undefined){
+    const hits = (turn.about_this || []).length ? turn.about_this : (turn.clashes || []);
+    html += turn.feasible
+      ? `<div class="banner">nothing else is in the way</div>`
+      : `<div class="banner bad">` + hits.map(esc).join('<br>') + `</div>`;
+    if (turn.bookings)
+      html += `<div class="note">That day now reads:</div>` + turn.bookings.map(b => `
+        <div class="leg"><div>${esc(b.title)}${b.commitment
+          ? '<span class="tag">commitment</span>' : ''}
+          <div class="m">${esc(b.where)} · ${at(b.starts)}</div></div>
+        <div class="n">${b.price ? eur(b.price) : ''}</div></div>`).join('');
+  }
 
   // The question carries the reason it is being asked. A question you can see
   // the point of is a question worth answering.
   const ask = (turn.asks || []).find(a => !a.optional) || (turn.asks || [])[0];
-  if (ask && !turn.flights.length){
+  if (ask && !(turn.flights || []).length){
     if (ask.why) html += `<div class="why">Why I'm asking: ${esc(ask.why)}</div>`;
     if (ask.options.length)
-      html += `<div class="chips">` + ask.options.map(o =>
-        `<button class="chip" data-field="${esc(ask.field)}" data-value="${esc(o)}">${esc(o)}</button>`
+      html += `<div class="chips">` + ask.options.map((o, i) =>
+        `<button class="chip" data-field="${esc(ask.field)}"
+                 data-value="${esc(ask.ids ? ask.ids[i] : o)}">${esc(o)}</button>`
       ).join('') + `</div>`;
   }
 
   // Which systems were actually called. This is where it stops looking like a
   // chatbot and starts looking like something with its hands on real systems.
-  if (turn.ports.length)
+  if ((turn.ports || []).length)
     html += `<div class="ports">called ${turn.ports.map(p =>
       `<b>${esc(p)}</b>`).join(' · ')} <i>· test accounts, nothing is charged</i></div>`;
 
-  if (turn.flights.length) html += offerTable('flight', 'Outbound', turn.flights);
-  if (turn.returns.length) html += offerTable('ret', 'Return', turn.returns);
-  if (turn.stays.length)   html += stayTable(turn.stays);
-  if (turn.flights.length)
+  if ((turn.flights || []).length) html += offerTable('flight', 'Outbound', turn.flights);
+  if ((turn.returns || []).length) html += offerTable('ret', 'Return', turn.returns);
+  if ((turn.stays || []).length)   html += stayTable(turn.stays);
+  if ((turn.flights || []).length)
     html += `<div class="chips"><button class="btn key" id="confirm" disabled>
              Save this itinerary</button></div>`;
   if (turn.note)
@@ -339,7 +357,8 @@ function openTrip(id, quiet){
     <div class="leg ${b.pending ? 'pending' : ''}">
       <div>${esc(b.title)}
         ${b.pending ? '<span class="tag warn">not paid</span>' : ''}
-        <div class="m">${at(b.starts)}</div></div>
+        ${b.commitment ? '<span class="tag">commitment</span>' : ''}
+        <div class="m">${at(b.starts)}${b.who ? ' · ' + esc(b.who) : ''}</div></div>
       <div class="n" style="white-space:nowrap">${eur(b.price)}
         ${b.kind === 'flight' ? `<br><button class="btn bad sm"
           data-break="${esc(b.id)}">Cancel</button>` : ''}</div>
@@ -434,8 +453,10 @@ api('/health').then(h => {
   bubble('Downstream',
     `Tell me where you want to go and I'll book it — then I'll watch it, and when
      something breaks I'll tell you what it costs and what to do about it.
-     <div class="note">You can book several trips. Break any of them from the panel
-     on the right.</div>
+     <div class="note">Tell me about meetings too — "meeting with the Milan team on
+     19 September at 10am" — and I'll work out which trip it lands on and whether
+     you can actually make it. You can book several trips; break any of them from
+     the panel on the right.</div>
      <div class="ports">ports <b>${esc(h.ports_mode)}</b> · model
      <b>${esc(h.model)}</b> · storage <b>${esc(h.storage)}</b></div>`
     + (h.model_status && !h.model_status.ready && h.model_status.configured !== 'none'

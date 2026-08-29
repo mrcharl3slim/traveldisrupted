@@ -168,6 +168,73 @@ def infeasible(trip: Trip) -> list[str]:
     return problems
 
 
+#: Getting from an airport to an address the engine has never heard of. Coarse
+#: on purpose, and stated rather than hidden: it is the last hop after the
+#: transit table runs out.
+LOCAL_HOP = timedelta(minutes=45)
+
+
+def _span(b: Booking) -> tuple:
+    """When the traveller has to be somewhere, and until when.
+
+    Lodging is excluded by the caller rather than given a span: a room is
+    somewhere you may be, not somewhere you must be, and treating a three-night
+    stay as a three-day commitment makes every meeting in the trip a clash.
+    """
+    return b.start, (b.end or b.start)
+
+
+def clashes(trip: Trip) -> list[str]:
+    """Things that cannot both happen, and things there is no time to reach.
+
+    Two rules, applied to everything with a time on it:
+
+    **Overlap.** Two commitments in the same hours are one you will miss. This
+    is the check an appointment needs and a purchase never did, which is why it
+    was not here before -- nobody sells you two flights at once, and everybody
+    accepts two meetings at once.
+
+    **Reach.** Consecutive commitments in different places need the travel time
+    between them to exist and to fit. `transit` returns None for pairs it does
+    not know, and None means "there is no ground route", not "assume it is
+    fine" -- the same rule the engine applies everywhere else.
+    """
+    out: list[str] = []
+    ordered = [b for b in trip.in_order()
+               if b.kind is not Kind.LODGING and b.start]
+
+    for i, earlier in enumerate(ordered):
+        for later in ordered[i + 1:]:
+            (a_start, a_end), (b_start, b_end) = _span(earlier), _span(later)
+            if b_start >= a_end:
+                break                      # sorted: nothing after this overlaps
+            # No exemption for "same place, same kind". Two meetings in the
+            # same building at the same time is still two meetings, and the
+            # first version let exactly that through — the case an appointment
+            # feature exists to catch.
+            out.append(
+                f"{later.title} at {b_start:%H:%M} overlaps {earlier.title}, "
+                f"which runs to {a_end:%d %b %H:%M}")
+
+    for earlier, later in zip(ordered, ordered[1:]):
+        if not later.commitment and not earlier.commitment:
+            continue                       # purchases are `infeasible`'s job
+        from_where = earlier.destination or earlier.where
+        if not from_where or not later.where or from_where == later.where:
+            continue
+        leg = transit(from_where, later.where)
+        if leg is None:
+            out.append(f"no route the engine knows from {from_where} to "
+                       f"{later.where} for {later.title}")
+            continue
+        arrive = (earlier.end or earlier.start) + leg + LOCAL_HOP
+        if arrive > later.start:
+            late = int((arrive - later.start).total_seconds() // 60)
+            out.append(f"{later.title} starts {late} min before you could get "
+                       f"there from {earlier.title}")
+    return out
+
+
 def _unreachable_stays(ordered: list) -> list[str]:
     """Rooms nobody can get to before the door stops being held.
 

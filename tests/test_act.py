@@ -26,12 +26,22 @@ def book(client, text="one way flight zurich to milan on 18 september "
                       "with a hotel, cheapest") -> dict:
     """A trip bought through the agent, the way a traveller buys one."""
     turn = client.post("/api/chat", json={"text": text}).json()
-    while turn["asks"] and not turn["state"]["ready"]:
+    answers = {"hotel": "yes", "preference": "cheapest", "ret": "one way",
+               "stay_nights": "2", "depart": "18 september",
+               "origin": "zurich", "destination": "milan"}
+    # Bounded, because an answer the server cannot read leaves the question
+    # open and an unbounded loop then hangs rather than fails. That is exactly
+    # the trap a traveller hit; a test helper should not be able to sit in it
+    # silently for two minutes and take CI with it.
+    for _ in range(10):
+        if not turn["asks"] or turn["state"]["ready"]:
+            break
         field = turn["asks"][0]["field"]
-        answer = {"hotel": "yes", "preference": "cheapest",
-                  "ret": "one way"}.get(field, "yes")
+        assert field in answers, f"nothing to answer {field!r} with"
         turn = client.post("/api/chat", json={"state": turn["state"],
-                                              "answers": {field: answer}}).json()
+                                              "answers": {field: answers[field]}}).json()
+    else:
+        pytest.fail(f"still asking after 10 turns: {turn['asks'][0]['field']}")
     assert turn["flights"], turn.get("note")
     return client.post("/api/chat/choose", json={
         "state": turn["state"],
@@ -273,7 +283,7 @@ def test_typing_walks_the_whole_conversation(client):
     answerable by typing, because that is what a person does first."""
     turn = client.post("/api/chat", json={
         "text": "flight from zurich to milan on 18 september"}).json()
-    for said in ("one way", "yes", "cheapest"):
+    for said in ("one way", "yes", "2 nights", "cheapest"):
         turn = client.post("/api/chat", json={
             "state": turn["state"], "text": said}).json()
     assert turn["state"]["ready"]
@@ -300,3 +310,126 @@ def test_an_unhandled_error_is_still_readable_json(client, monkeypatch):
     body = response.json()                       # must parse, that is the point
     assert "something specific went wrong" in body["detail"]
     assert "RuntimeError" in body["detail"]
+
+
+# --------------------------------------------------------------------------
+# appointments, through the same box
+# --------------------------------------------------------------------------
+
+
+def tell(client, text: str, trip_id: str = "") -> dict:
+    """Say something about an appointment, settling which trip if asked.
+
+    The question is real and not a test nuisance: once a traveller has several
+    itineraries covering the same day, which one a meeting lands on genuinely
+    is ambiguous, and guessing produces a confident feasibility answer about
+    the wrong week.
+    """
+    turn = client.post("/api/chat", json={"text": text}).json()
+    if any(a["field"] == "trip" for a in turn.get("asks", [])):
+        assert trip_id, "ambiguous trip and the test did not say which"
+        turn = client.post("/api/chat", json={
+            "state": turn["state"], "answers": {"trip": trip_id}}).json()
+    return turn
+
+
+def test_one_box_tells_a_meeting_from_a_booking(client):
+    """A request is something to buy; an appointment is something to be at.
+    Told apart by the verb, not by asking a model."""
+    booking = client.post("/api/chat", json={
+        "text": "book me a flight to milan on 18 september"}).json()
+    meeting = client.post("/api/chat", json={
+        "text": "meeting with the vendor on 19 september at 10am"}).json()
+    assert booking["kind"] == "book"
+    assert meeting["kind"] == "appointment"
+
+
+def test_a_half_told_meeting_is_chased_for_who_when_and_where(client, booked):
+    day = booked["bookings"][0]["starts"]["iso"][:10]
+    turn = client.post("/api/chat", json={"text": "i have a meeting"}).json()
+    asked = []
+    replies = {"who": "the Milan design team", "day": day, "at": "11pm",
+               "where": "MXP", "trip": booked["trip_id"]}
+    for _ in range(6):
+        if not turn.get("asks"):
+            break
+        field = turn["asks"][0]["field"]
+        asked.append(field)
+        turn = client.post("/api/chat", json={
+            "state": turn["state"], "answers": {field: replies[field]}}).json()
+
+    assert asked[:4] == ["who", "day", "at", "where"]
+    assert turn["feasible"] is True
+    assert turn["saved"]["ready"], "finished without a complete appointment"
+    # Cleared once it is filed, so the next appointment does not inherit this
+    # one's day and place.
+    assert turn["state"] == {"kind": "appointment"}
+
+
+def test_a_meeting_is_placed_on_the_trip_that_covers_that_day(client, booked):
+    day = booked["bookings"][0]["starts"]["iso"][:10]
+    turn = tell(client, f"meeting with the vendor on {day} at 11pm at MXP",
+                booked["trip_id"])
+    assert turn.get("trip_id") == booked["trip_id"]
+    titles = [b["title"] for b in turn["bookings"]]
+    assert any("vendor" in t for t in titles)
+
+
+def test_a_meeting_on_a_day_you_are_not_travelling_is_refused_kindly(client, booked):
+    turn = client.post("/api/chat", json={
+        "text": "meeting with the vendor on 30 november at 10am at MXP"}).json()
+    assert turn.get("trip_id") is None
+    assert "nothing you have booked" in turn["reply"].lower()
+
+
+def test_a_clash_is_reported_against_the_thing_it_clashes_with(client, booked):
+    leg = [b for b in booked["bookings"] if b["kind"] == "flight"][0]
+    airborne = leg["starts"]["iso"]
+    hour = int(airborne[11:13]) + 1
+    turn = tell(client, f"meeting with the vendor on {airborne[:10]} "
+                        f"at {hour}:00 at MXP", booked["trip_id"])
+    assert turn["feasible"] is False
+    assert turn["about_this"], "said it does not fit and named nothing"
+    assert any(leg["title"] in c for c in turn["about_this"])
+
+
+def test_a_meeting_survives_storage_as_a_commitment(client, booked):
+    day = booked["bookings"][0]["starts"]["iso"][:10]
+    tell(client, f"review with the auditors on {day} at 11pm at MXP",
+         booked["trip_id"])
+
+    reloaded = next(i for i in client.get("/api/itineraries").json()["itineraries"]
+                    if i["trip_id"] == booked["trip_id"])
+    row = next(b for b in reloaded["bookings"] if "auditors" in b["title"])
+    assert row["commitment"] is True
+    assert row["price"] == 0.0
+    assert row["who"] == "auditors"   # "with the auditors" drops the article
+
+
+def test_a_finished_appointment_does_not_furnish_the_next_one(client, booked):
+    """"workshop on 18 September at ZRH" was filed on the 19th at Malpensa,
+    because the day and place from the meeting before it were still sitting in
+    the state. A finished thing must not furnish the next one."""
+    day = booked["bookings"][0]["starts"]["iso"][:10]
+    first = tell(client, f"meeting with the design team on {day} at 11pm at MXP",
+                 booked["trip_id"])
+    assert first.get("trip_id")
+
+    follow = client.post("/api/chat", json={
+        "state": first["state"],
+        "text": "workshop with the vendor on 30 november at 10am at ZRH"}).json()
+    assert follow["state"]["day"] == "2026-11-30"
+    assert follow["state"]["where"] == "ZRH"
+
+
+def test_a_message_that_moves_things_along_is_not_apologised_for(client, booked):
+    """Answering "19 september" to "which day" advanced the conversation and
+    still drew "Sorry — I couldn't make that out", because the check compared
+    against the state after the sentence had already been read."""
+    turn = client.post("/api/chat", json={"text": "i have a meeting"}).json()
+    turn = client.post("/api/chat", json={
+        "state": turn["state"], "text": "the vendor"}).json()
+    moved = client.post("/api/chat", json={
+        "state": turn["state"], "text": "19 september"}).json()
+    assert not moved["reply"].lower().startswith("sorry")
+    assert moved["state"]["day"] == "2026-09-19"

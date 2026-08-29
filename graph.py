@@ -157,6 +157,17 @@ class Impact:
         return sum(n.exposure for n in self.broken)
 
     @property
+    def missed(self) -> list[Node]:
+        """Commitments that will not happen. Counted, never priced.
+
+        Kept apart from the money on purpose. "EUR 445 and you miss the Milan
+        meeting" is two facts a traveller weighs differently, and adding a
+        made-up euro value to the second so it can join the first would be the
+        engine inventing the most important number on the page.
+        """
+        return [n for n in self.broken if n.booking.commitment]
+
+    @property
     def at_risk_value(self) -> float:
         """Money a phone call keeps alive. Not damage, and not safe either.
 
@@ -198,6 +209,14 @@ def propagate(trip: Trip, disruption: Disruption, now: datetime,
 
         if attends:
             sev, exposure, why = Severity.SAFE, 0.0, "reachable under this plan"
+        elif b.commitment:
+            # No fare, no refund, and it is the reason the trip exists. Broken
+            # with an exposure of zero: it belongs in the list of things that
+            # will not happen, and it must not be added to a euro total, so the
+            # headline number stays a number about money.
+            sev, exposure, why = (
+                Severity.BROKEN, 0.0,
+                f"you would miss this{' with ' + b.who if b.who else ''}")
         elif b.price <= 0:
             # Missed, but nothing was ever at stake. Saying so is a feature:
             # a traveller who knows what they can ignore acts faster.

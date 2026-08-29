@@ -72,6 +72,8 @@ class Request:
     travellers: int = 1
     hotel: bool | None = None           # None = nobody has said yet
     hotel_area: str = ""
+    #: Nights, when the trip has no return date to derive them from.
+    stay_nights: int = 0
     preference: str = ""
     raw: str = ""
     filled: tuple[str, ...] = ()        # what the traveller settled, for the UI
@@ -109,6 +111,16 @@ class Request:
                            why="it decides whether a stay is searched at all — "
                                "and a room is usually the thing a delayed "
                                "flight actually costs you"))
+        if self.hotel and self.ret is None and not self.stay_nights:
+            # Immediately after "do you want a hotel", because it is the same
+            # subject. Asked rather than assumed: the room has to cover the
+            # trip, a one-way flight says nothing about how long the trip is,
+            # and the old default of one night quietly booked a single night
+            # for a fortnight's stay. A hotel is the largest number on most
+            # itineraries and the easiest to get silently wrong.
+            out.append(Ask("stay_nights", "How many nights do you need?",
+                           why="the room should cover the whole trip, and a "
+                               "one-way flight does not say how long that is"))
         if not self.preference:
             out.append(Ask("preference", "What matters most on this trip?",
                            options=PREFERENCES,
@@ -139,13 +151,26 @@ class Request:
         """
         return (self.origin, self.destination, self.depart, self.ret,
                 self.one_way, self.travellers, self.hotel, self.hotel_area,
-                self.preference)
+                self.stay_nights, self.preference)
 
     @property
     def nights(self) -> int:
+        """The whole trip, never a default.
+
+        A return date settles it. Without one the traveller was asked, and
+        `gaps` will not let a search run until they have answered.
+        """
         if self.depart and self.ret:
             return max(1, (self.ret - self.depart).days)
-        return 1
+        return max(1, self.stay_nights)
+
+    @property
+    def check_out(self):
+        from datetime import timedelta as _td
+
+        if not self.depart:
+            return None
+        return self.ret or (self.depart + _td(days=self.nights))
 
     def summary(self) -> str:
         where = f"{places.label(self.origin)} to {places.label(self.destination)}"
@@ -289,6 +314,7 @@ def parse(text: str, today: date | None = None) -> Request:
     elif re.search(r"\b(cheap(est)?|budget|lowest fare|best price)\b", low):
         preference = "cheapest"
 
+    nights = re.search(r"(\d+)\s*nights?\b", low)
     people = _PEOPLE.search(low)
     travellers = int(people.group(1)) if people else 1
 
@@ -307,6 +333,7 @@ def parse(text: str, today: date | None = None) -> Request:
         depart=depart, ret=ret, one_way=one_way,
         travellers=max(1, min(travellers, 9)),
         hotel=hotel, preference=preference, raw=text,
+        stay_nights=int(nights.group(1)) if nights else 0,
     )
 
 
@@ -460,6 +487,10 @@ def answer(base: Request, field_name: str, value: str,
         if re.match(r"any|no|whatever|don'?t mind", value, re.I):
             return replace(base, hotel_area="anywhere", filled=filled)
         return replace(base, hotel_area=value[:60], filled=filled)
+    if field_name == "stay_nights":
+        digits = re.search(r"\d+", value)
+        return (replace(base, stay_nights=max(1, min(int(digits.group()), 60)),
+                        filled=filled) if digits else base)
     if field_name == "travellers":
         digits = re.search(r"\d+", value)
         return (replace(base, travellers=max(1, min(int(digits.group()), 9)),

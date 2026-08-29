@@ -98,10 +98,27 @@ def test_every_question_says_why_it_is_being_asked():
 
 
 def test_an_optional_question_never_blocks_a_search():
-    r = parse("cheapest flight singapore to london on 3 october one way with a hotel")
+    r = parse("cheapest flight singapore to london on 3 october one way "
+              "with a hotel for 4 nights")
     assert r.ready
     assert [a.field for a in r.gaps()] == ["hotel_area"]
     assert all(a.optional for a in r.gaps())
+
+
+def test_a_room_covers_the_trip_rather_than_one_night():
+    """A one-way flight says nothing about how long the trip is, and the old
+    default booked a single night for a fortnight's stay without telling
+    anybody. A hotel is the largest number on most itineraries and the easiest
+    to get silently wrong."""
+    both_ways = parse("singapore to london 1 to 7 september with a hotel")
+    assert both_ways.nights == 6 and both_ways.check_out == date(2026, 9, 7)
+
+    one_way = parse("singapore to london on 1 september one way with a hotel")
+    assert "stay_nights" in {a.field for a in one_way.gaps()}, "guessed the length"
+    assert not one_way.ready
+
+    told = rq.answer(one_way, "stay_nights", "5 nights", TODAY)
+    assert told.nights == 5 and told.check_out == date(2026, 9, 6)
 
 
 def test_an_unreadable_answer_leaves_the_slot_open():

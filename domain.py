@@ -97,6 +97,18 @@ class Booking:
     #: replaced one silent failure with another, and the traveller finds out at
     #: the gate.
     pending: bool = False
+    #: A commitment whose value is not money. A meeting has no fare and no
+    #: refund, and missing it still costs the traveller the thing they flew for.
+    #:
+    #: The engine reads value from `price` everywhere else, which is right for
+    #: everything that was bought and wrong for everything that was promised --
+    #: a EUR 0 dinner with free cancellation genuinely costs nothing to miss,
+    #: and a EUR 0 meeting with the Milan team is the reason the trip exists.
+    #: One flag separates them, and it is the only thing that stops an
+    #: appointment being filed under "missed, but nothing prepaid".
+    commitment: bool = False
+    #: Who it is with. Empty for anything bought rather than arranged.
+    who: str = ""
 
     @property
     def where(self) -> str:

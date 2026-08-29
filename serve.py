@@ -32,13 +32,14 @@ from pydantic import BaseModel                                # noqa: E402
 
 import _model                                                 # noqa: E402
 import act as act_mod                                         # noqa: E402
+import appointment as appt_mod                                # noqa: E402
 import converse                                               # noqa: E402
 import flow                                                   # noqa: E402
 import places                                                 # noqa: E402
 import request as request_mod                                 # noqa: E402
 import monitor                                                # noqa: E402
 import notify                                                 # noqa: E402
-from builder import infeasible                                # noqa: E402
+from builder import clashes, infeasible                       # noqa: E402
 import ingest                                                 # noqa: E402
 import store as store_module                                  # noqa: E402
 from domain import Booking, Kind, Trip                        # noqa: E402
@@ -717,6 +718,7 @@ def _req_out(req) -> dict:
         "ret": req.ret.isoformat() if req.ret else None,
         "one_way": req.one_way, "travellers": req.travellers,
         "hotel": req.hotel, "hotel_area": req.hotel_area,
+        "stay_nights": req.stay_nights, "nights": req.nights,
         "preference": req.preference, "summary": req.summary(),
         "ready": req.ready,
     }
@@ -748,6 +750,7 @@ def _req_in(raw: dict):
         travellers=max(1, min(int(raw.get("travellers") or 1), 9)),
         hotel=raw.get("hotel") if isinstance(raw.get("hotel"), bool) else None,
         hotel_area=str(raw.get("hotel_area") or "")[:60],
+        stay_nights=max(0, min(int(raw.get("stay_nights") or 0), 60)),
         preference=(str(raw.get("preference") or "").lower()
                     if str(raw.get("preference") or "").lower()
                     in request_mod.PREFERENCES else ""),
@@ -784,6 +787,175 @@ def _rematch(offers: list, key: str, shown: float, what: str) -> tuple:
     return chosen, moved
 
 
+def _appt_out(a) -> dict:
+    return {
+        "kind": "appointment",
+        "what": a.what, "who": a.who, "where": a.where, "place": a.place,
+        "day": a.day.isoformat() if a.day else None,
+        "at": a.when.strftime("%H:%M") if a.when else None,
+        "minutes": a.minutes, "trip_id": a.trip_id,
+        "summary": a.summary(), "ready": a.ready, "raw": a.raw,
+    }
+
+
+def _appt_in(raw: dict):
+    from datetime import date as _date, datetime as _dt, time as _time
+
+    def day(value):
+        try:
+            return _date.fromisoformat(str(value)[:10])
+        except (TypeError, ValueError):
+            return None
+
+    when = None
+    settled = day(raw.get("day"))
+    if settled and raw.get("at"):
+        try:
+            hour, minute = str(raw["at"]).split(":")[:2]
+            when = _dt.combine(settled, _time(int(hour), int(minute)))
+        except (ValueError, TypeError):
+            when = None
+
+    return appt_mod.Appointment(
+        what=str(raw.get("what") or "")[:60],
+        who=str(raw.get("who") or "")[:60],
+        where=str(raw.get("where") or "")[:60],
+        place=str(raw.get("place") or "")[:8],
+        day=settled, when=when,
+        minutes=max(5, min(int(raw.get("minutes") or 60), 12 * 60)),
+        trip_id=str(raw.get("trip_id") or "")[:40],
+        raw=str(raw.get("raw") or "")[:2000],
+    )
+
+
+def _loaded_trips() -> list[tuple[str, Trip, str]]:
+    out = []
+    for saved in store_module.store().list(OWNER, limit=25):
+        try:
+            out.append((saved.id, _load(saved.id), saved.label))
+        except HTTPException:
+            continue
+    return out
+
+
+def _appointment_turn(body: Chat) -> dict:
+    """The other half of the conversation: something to be at, not to buy.
+
+    Same shape as a booking turn -- ask what is missing, then act -- because it
+    is the same conversation. What differs is the three things that must be
+    settled (who, when, where) and what "done" means: an appointment is not
+    searched for, it is placed against an itinerary and judged.
+    """
+    base = _appt_in(body.state) if body.state.get("kind") == "appointment" else None
+    unread: list[str] = []
+
+    chosen = ""
+    for field_name, value in (body.answers or {}).items():
+        if field_name == "trip":
+            chosen = value
+            continue
+        before = base or appt_mod.Appointment()
+        base = appt_mod.answer(before, field_name, value)
+        if base == before:
+            unread.append(field_name)
+
+    # What was known before this message. Compared against later to ask
+    # whether the traveller told us anything -- and it has to be taken here,
+    # before the sentence is parsed, because the parse is part of the telling.
+    started_at = (base or appt_mod.Appointment()).settled
+    fresh = appt_mod.parse(body.text, date.today())
+    merged = appt_mod.Appointment(
+        what=(base.what if base else "") or fresh.what,
+        who=(base.who if base else "") or fresh.who,
+        where=(base.where if base else "") or fresh.where,
+        place=(base.place if base else "") or fresh.place,
+        day=(base.day if base else None) or fresh.day,
+        when=(base.when if base else None) or fresh.when,
+        minutes=(base.minutes if base and base.minutes != appt_mod.DEFAULT_MINUTES
+                 else fresh.minutes),
+        trip_id=chosen or (base.trip_id if base else ""),
+        raw=body.text or (base.raw if base else ""),
+    )
+    settled = appt_mod.enrich(merged, _model.get_model())
+
+    # A typed reply answers the open question first, exactly as it does when
+    # booking. Chips and typing must not be two different products.
+    if body.text.strip() and base is not None:
+        pending = [a for a in settled.gaps() if not a.optional]
+        if pending:
+            settled = appt_mod.answer(settled, pending[0].field, body.text)
+
+    asks = [{"field": a.field, "question": a.question, "options": list(a.options),
+             "why": a.why, "optional": a.optional} for a in settled.gaps()]
+    out = {"kind": "appointment", "state": _appt_out(settled), "asks": asks,
+           "unread": unread, "ports": [], "note": "", "detail": "",
+           "flights": [], "returns": [], "stays": []}
+
+    if asks:
+        reply = asks[0]["question"]
+        if (unread and asks[0]["field"] in unread) or (
+                body.text.strip() and base is not None
+                and settled.settled == started_at):
+            reply = f"Sorry — I couldn't make that out. {reply}"
+        return {**out, "reply": reply}
+
+    # Which itinerary. Never guessed: putting a meeting on the wrong trip
+    # produces a confident feasibility answer about the wrong week.
+    trips = _loaded_trips()
+    options = appt_mod.candidates(settled, [(tid, trip) for tid, trip, _ in trips])
+    if settled.trip_id and settled.trip_id in {t[0] for t in trips}:
+        options = [settled.trip_id]
+
+    if not options:
+        return {**out, "reply":
+                f"Nothing you have booked covers {settled.day:%d %B}. Book that "
+                "trip first and tell me about this again, and I'll check it "
+                "against the flights."}
+    if len(options) > 1:
+        labels = {tid: label for tid, _, label in trips}
+        return {**out,
+                "asks": [{"field": "trip", "question": "Which trip is this on?",
+                          "options": [labels[t][:44] for t in options],
+                          "ids": options, "why": "two of your trips cover that "
+                          "day, and the answer depends on which one",
+                          "optional": False}],
+                "reply": "Which trip is this on?"}
+
+    trip_id = options[0]
+    trip = next(t for tid, t, _ in trips if tid == trip_id)
+    verdict = appt_mod.assess(trip, settled)
+
+    saved = store_module.store().get(trip_id)
+    payload = dict(saved.payload)
+    payload["bookings"] = ingest.to_dicts(verdict["trip"].bookings)
+    store_module.store().update(trip_id, payload)
+
+    settled = replace_dataclass(settled, trip_id=trip_id)
+    return {**out,
+            # Cleared, because this one is finished. Carrying it forward meant
+            # the next appointment inherited its day and its place: "workshop
+            # on 18 September at ZRH" was filed on the 19th at Malpensa,
+            # because those were still sitting in the state from the meeting
+            # before it. A finished thing must not furnish the next one.
+            "state": {"kind": "appointment"},
+            "saved": _appt_out(settled),
+            "trip_id": trip_id,
+            "feasible": verdict["feasible"],
+            "clashes": verdict["clashes"],
+            "about_this": verdict["about_this"],
+            "bookings": _bookings_out(_load(trip_id)),
+            "reply": (f"Added to {saved.label}. "
+                      + ("That works — nothing else is in the way."
+                         if verdict["feasible"]
+                         else "That does not fit:"))}
+
+
+def replace_dataclass(obj, **changes):
+    from dataclasses import replace as _replace
+
+    return _replace(obj, **changes)
+
+
 @app.post("/api/chat")
 def chat(body: Chat) -> dict:
     """One exchange with the agent.
@@ -793,6 +965,13 @@ def chat(body: Chat) -> dict:
     traveller say "ok, now go".
     """
     from base import PortError
+
+    # Which conversation is this? An appointment in flight stays an
+    # appointment; otherwise the text decides.
+    if (body.state.get("kind") == "appointment"
+            or (not body.state and converse.classify(
+                {"text": body.text})["kind"] == "appointment")):
+        return _appointment_turn(body)
 
     req = _req_in(body.state) if body.state else None
 
@@ -846,7 +1025,7 @@ def chat(body: Chat) -> dict:
         "reply": reply,
         "unread": unread,
         "kind": state.get("kind", "book"),
-        "state": {**_req_out(out), "raw": out.raw},
+        "state": {**_req_out(out), "kind": "book", "raw": out.raw},
         "asks": asks,
         # Named so the page can show which systems were actually called. This
         # is the moment it stops looking like a chatbot.
@@ -901,7 +1080,7 @@ def choose(body: Choice) -> dict:
         stays = []
         if body.hotel_id and req.hotel:
             place = places.by_code(req.destination)
-            checkout = req.ret or req.depart + timedelta(days=1)
+            checkout = req.check_out
             found = flow.search_hotels(
                 place.hotel_city, place.country,
                 _day(req.depart.isoformat(), zone_back),
@@ -1028,6 +1207,7 @@ def _bookings_out(trip: Trip) -> list[dict]:
              "starts": _when(b.start), "ends": _when(b.end),
              "must_arrive_by": _when(b.must_arrive_by),
              "price": b.price, "currency": b.currency, "pending": b.pending,
+             "commitment": b.commitment, "who": b.who,
              "ticket_group": b.ticket_group, "policy": b.policy.source}
             for b in trip.in_order()]
 

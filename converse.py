@@ -27,8 +27,9 @@ that unstated assumptions are what cost people money later.
 
 from __future__ import annotations
 
+import re
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import asdict, replace
+from dataclasses import asdict, fields, replace
 from datetime import date, datetime, timedelta
 from typing import Any, TypedDict
 
@@ -66,6 +67,25 @@ class State(TypedDict, total=False):
 # --------------------------------------------------------------------------
 
 
+def _set(value) -> bool:
+    """Has this slot been settled?
+
+    False is a settled answer for `one_way` and `hotel` and an empty one for a
+    string, which is why this asks about None and emptiness rather than
+    truthiness. `hotel=False` means "no room, thank you" and must survive the
+    next sentence.
+    """
+    if value is None:
+        return False
+    if isinstance(value, bool):
+        # Checked before the numeric test, because `False == 0` is True in
+        # Python and `hotel=False` is a settled answer -- "no room, thank you"
+        # -- that has to survive the next sentence. Without this line the agent
+        # asks about a hotel the traveller has already declined.
+        return True
+    return value != "" and value != 0
+
+
 def read(s: State) -> State:
     """Text -> a Request, deterministically, then the model on the blanks."""
     base = s.get("req") or request_mod.Request()
@@ -73,18 +93,22 @@ def read(s: State) -> State:
 
     # A follow-up sentence adds to what is already known rather than replacing
     # it. "actually make it the 3rd" must not wipe the destination.
-    merged = replace(
-        base,
-        origin=base.origin or fresh.origin,
-        destination=base.destination or fresh.destination,
-        depart=base.depart or fresh.depart,
-        ret=base.ret or fresh.ret,
-        one_way=base.one_way if base.one_way is not None else fresh.one_way,
-        travellers=max(base.travellers, fresh.travellers),
-        hotel=base.hotel if base.hotel is not None else fresh.hotel,
-        preference=base.preference or fresh.preference,
-        raw=s.get("text", "") or base.raw,
-    )
+    #
+    # FIELD-AGNOSTIC, for the same reason `shift_trip` is. The first version
+    # named every field, and the first field added after it -- how many nights
+    # the room is for -- was silently dropped here: parsed correctly, carried
+    # nowhere, and the agent asked a question the traveller had already
+    # answered in their opening sentence. Naming fields means the next one
+    # added is forgotten too, and the failure is not a crash but a question
+    # that will not go away.
+    merged = replace(base, **{
+        f.name: (getattr(base, f.name) if _set(getattr(base, f.name))
+                 else getattr(fresh, f.name))
+        for f in fields(base) if f.name not in ("raw", "filled", "travellers")
+    })
+    merged = replace(merged,
+                     travellers=max(base.travellers, fresh.travellers),
+                     raw=s.get("text", "") or base.raw)
     return {"req": request_mod.enrich(merged, s.get("model"), s.get("today"))}
 
 
@@ -99,13 +123,32 @@ def classify(s: State) -> State:
     """
     text = s.get("text", "")
     low = text.lower()
+
+    # An appointment is something to BE at; a request is something to buy.
+    # Told apart by the verb, not by a model: "meeting with", "call with",
+    # "dinner with" are arrangements, and none of them mention a fare.
+    appointment = re.search(
+        r"\b(meeting|appointment|call|conference|workshop|interview|"
+        r"standup|stand-up|review|catch[- ]?up|coffee|drinks|dinner|lunch|"
+        r"breakfast|site visit|viewing|class|lecture|ceremony|wedding|"
+        r"handover|demo)\b", low)
+    buying = re.search(r"\b(flight|fly|book me|hotel|room|one way|return|"
+                       r"cheapest|airfare)\b", low)
+
     marks = sum(1 for m in (
         "booking reference", "confirmation number", "e-ticket", "pnr",
         "your booking", "booking confirmed", "check-in", "check in",
         "non-refundable", "fare rules", "total paid", "order number",
     ) if m in low)
     long_enough = len(text) > 220 and text.count("\n") >= 3
-    return {"kind": "confirmation" if (marks >= 2 and long_enough) else "book"}
+
+    if marks >= 2 and long_enough:
+        return {"kind": "confirmation"}
+    # "dinner in Milan" while booking a trip is part of the trip, not a
+    # separate arrangement -- so buying language wins when both are present.
+    if appointment and not buying:
+        return {"kind": "appointment"}
+    return {"kind": "book"}
 
 
 def branch(s: State) -> str:
@@ -206,7 +249,9 @@ def search(s: State) -> State:
 
     if req.hotel:
         place = places.by_code(req.destination)
-        checkout = req.ret or (req.depart + timedelta(days=1))
+        # The whole trip, from `Request.check_out` -- a return date when there
+        # is one, and otherwise the nights the traveller was asked for.
+        checkout = req.check_out
         jobs.append(("stays",
                      f"no stays recorded in {place.hotel_city} for those nights",
                      lambda: flow.search_hotels(

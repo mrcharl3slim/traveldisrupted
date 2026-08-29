@@ -8,7 +8,7 @@ python serve.py                   # the web app, first free port from 8000
 python cli.py                     # the same numbers, in a terminal
 python cli.py --base written      # the October scenario, as the tests assert it
 python mcp_server.py              # the engine as MCP tools, over stdio
-python -m pytest tests/ -q        # 173 tests, no keys, no network
+python -m pytest tests/ -q        # 201 tests, no keys, no network
 ```
 
 `/health` reports `ports_mode`, `model_status` and `storage`, and the front page
@@ -122,6 +122,40 @@ takes the one nearest the price that was on screen and **reports the
 difference** rather than swallowing it. A flight that is gone entirely is
 refused — silently booking the nearest thing is how somebody ends up holding a
 ticket they did not choose.
+
+## Appointments
+
+The same box takes things nobody sold you:
+
+    "meeting with the Milan team on 19 September at 10am at their office"
+
+`appointment.py` chases exactly three things — **who, when, where** — because
+those are the three that decide anything. The day and time place it against an
+itinerary, the location decides whether it can be reached, and who it is with
+is what makes a clash legible when it is read back. Nothing about those three
+is ever guessed: a meeting whose time we invented is worse than no meeting in
+the system at all, because it will be checked against flights and pronounced
+feasible.
+
+**An appointment becomes a `Booking`.** It is a place, a time and a consequence
+for not being there, which is what every other row already is — so it is one,
+with no price and `commitment=True`, and from that moment the whole engine
+applies. `propagate` marks it broken when the traveller cannot get there;
+recovery plans weigh options that save it; the deadline watch counts down to it.
+Modelling it separately would have meant a second reachability check and a
+second clash rule, and the second one is always the one that rots.
+
+`commitment` is the only field that had to be added, and it exists because the
+engine reads value from `price`. A EUR 0 dinner with free cancellation costs
+nothing to miss. A EUR 0 meeting with the Milan team is the reason the trip
+exists. Missed commitments are **counted, never priced** — inventing a euro
+figure so the meeting could join the money total would be the engine making up
+the most important number on the page.
+
+`builder.clashes` then answers two questions: what overlaps, and what there is
+no time to reach. A hotel is excluded from both — a room is somewhere you *may*
+be, not somewhere you *must* be, and treating a three-night stay as a three-day
+commitment makes every meeting in the trip a clash.
 
 ## Acting on a plan
 
