@@ -35,7 +35,8 @@ def book(client, text="one way flight zurich to milan on 18 september "
     assert turn["flights"], turn.get("note")
     return client.post("/api/chat/choose", json={
         "state": turn["state"],
-        "flight_id": turn["flights"][0]["id"],
+        "flight_key": turn["flights"][0]["key"],
+        "flight_price": turn["flights"][0]["price"],
         "hotel_id": turn["stays"][0]["id"] if turn["stays"] else ""}).json()
 
 
@@ -77,7 +78,7 @@ def test_acting_sends_what_it_said_it_would_send(client, booked):
 
     done = client.post("/api/act", json={
         "trip_id": booked["trip_id"], "booking_id": leg["id"],
-        "plan_id": plans[0]["id"]}).json()
+        "plan_key": plans[0]["key"]}).json()
 
     assert done["sent"], "acted and sent nothing"
     assert all(d["channels"] for d in done["sent"]), "claimed a send with no channel"
@@ -94,7 +95,7 @@ def test_acting_rewrites_the_itinerary(client, booked):
 
     done = client.post("/api/act", json={
         "trip_id": booked["trip_id"], "booking_id": leg["id"],
-        "plan_id": replacement["id"]}).json()
+        "plan_key": replacement["key"]}).json()
 
     titles = [b["title"] for b in done["bookings"]]
     assert leg["title"] not in titles, "the cancelled leg is still in the trip"
@@ -110,7 +111,7 @@ def test_a_replacement_is_marked_as_not_yet_paid_for(client, booked):
     replacement = next(p for p in plans if p["id"] != "noop")
     client.post("/api/act", json={
         "trip_id": booked["trip_id"], "booking_id": leg["id"],
-        "plan_id": replacement["id"]})
+        "plan_key": replacement["key"]})
 
     reloaded = next(i for i in client.get("/api/itineraries").json()["itineraries"]
                     if i["trip_id"] == booked["trip_id"])
@@ -130,7 +131,7 @@ def test_nothing_is_bought(client, booked):
 
     done = client.post("/api/act", json={
         "trip_id": booked["trip_id"], "booking_id": leg["id"],
-        "plan_id": replacement["id"]}).json()
+        "plan_key": replacement["key"]}).json()
 
     buys = [d for d in done["pending"] if d["verb"] == "buy"]
     assert buys and buys[0]["state"] == "pending"
@@ -148,7 +149,7 @@ def test_acting_ends_the_disruption(client, booked):
 
     client.post("/api/act", json={
         "trip_id": booked["trip_id"], "booking_id": leg["id"],
-        "plan_id": plans[0]["id"]})
+        "plan_key": plans[0]["key"]})
 
     assert not client.get("/api/alerts",
                           params={"trip": booked["trip_id"]}).json()["watching"]
@@ -158,16 +159,78 @@ def test_a_plan_that_is_not_on_this_disruption_is_refused(client, booked):
     leg = [b for b in booked["bookings"] if b["kind"] == "flight"][0]
     response = client.post("/api/act", json={
         "trip_id": booked["trip_id"], "booking_id": leg["id"],
-        "plan_id": "off_madeup"})
-    assert response.status_code == 404
+        "plan_key": "ZZ 9999|ZRH|MXP|2026-09-18T09:00:00+02:00"})
+    assert response.status_code == 409
 
 
-def test_an_expired_fare_is_refused_rather_than_substituted(client):
+def test_a_withdrawn_flight_is_refused_rather_than_substituted(client):
+    """Silently booking the nearest thing is how somebody ends up holding a
+    ticket they did not choose."""
     turn = client.post("/api/chat", json={
         "text": "one way flight zurich to milan on 18 september, cheapest, no hotel"}).json()
     response = client.post("/api/chat/choose", json={
-        "state": turn["state"], "flight_id": "off_gone"})
+        "state": turn["state"],
+        "flight_key": "ZZ 9999|ZRH|MXP|2026-09-18T09:00:00+02:00",
+        "flight_price": 100.0})
     assert response.status_code == 409
+    assert "no longer being sold" in response.json()["detail"]
+
+
+def test_a_selection_survives_the_search_that_found_it(client):
+    """The bug that broke every booking the moment the ports went live. Duffel
+    mints offer ids per offer request, so the id shown to the traveller does
+    not exist in the search `choose` runs a moment later. Matching on what the
+    flight IS survives that; matching on the id could not."""
+    turn = client.post("/api/chat", json={
+        "text": "one way flight zurich to milan on 18 september, cheapest, no hotel"}).json()
+    shown = turn["flights"][0]
+
+    saved = client.post("/api/chat/choose", json={
+        "state": turn["state"], "flight_key": shown["key"],
+        "flight_price": shown["price"],
+        # An id from a search that no longer exists, exactly as live Duffel
+        # would leave it. The key has to carry the selection on its own.
+        "flight_id": "off_0000fromanoldofferrequest"})
+    assert saved.status_code == 200, saved.text
+    assert shown["label"] in [b["title"] for b in saved.json()["bookings"]]
+
+
+def test_the_same_flight_at_two_fares_picks_the_one_shown(client):
+    """A key names an aircraft, not a price: the same flight is sold under
+    several fare brands, and JU 0333 came back at both EUR 170 and EUR 255 in
+    one search. The traveller meant the number they were looking at."""
+    turn = client.post("/api/chat", json={
+        "text": "one way flight zurich to milan on 18 september, cheapest, no hotel"}).json()
+    by_key: dict[str, list] = {}
+    for offer in turn["flights"]:
+        by_key.setdefault(offer["key"], []).append(offer)
+    shared = [rows for rows in by_key.values() if len(rows) > 1]
+    if not shared:
+        pytest.skip("no duplicate fare brands in the recorded search")
+
+    dearer = max(shared[0], key=lambda o: o["price"])
+    saved = client.post("/api/chat/choose", json={
+        "state": turn["state"], "flight_key": dearer["key"],
+        "flight_price": dearer["price"]}).json()
+    booked_price = [b["price"] for b in saved["bookings"]
+                    if b["kind"] == "flight"][0]
+    assert booked_price == dearer["price"]
+
+
+def test_a_fare_that_moved_is_reported_not_swallowed(client):
+    """Between the click and the booking, a price can change. That is ordinary
+    and it is the traveller's business."""
+    turn = client.post("/api/chat", json={
+        "text": "one way flight zurich to milan on 18 september, cheapest, no hotel"}).json()
+    shown = turn["flights"][0]
+
+    saved = client.post("/api/chat/choose", json={
+        "state": turn["state"], "flight_key": shown["key"],
+        # What they saw a moment ago, before it moved.
+        "flight_price": shown["price"] - 25}).json()
+    assert saved["repriced"], "booked at a different price and said nothing"
+    assert saved["repriced"][0]["now"] == shown["price"]
+    assert saved["repriced"][0]["moved"] == 25
 
 
 def test_an_unreadable_answer_is_acknowledged_not_repeated(client):

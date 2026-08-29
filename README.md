@@ -8,7 +8,7 @@ python serve.py                   # the web app, first free port from 8000
 python cli.py                     # the same numbers, in a terminal
 python cli.py --base written      # the October scenario, as the tests assert it
 python mcp_server.py              # the engine as MCP tools, over stdio
-python -m pytest tests/ -q        # 150 tests, no keys, no network
+python -m pytest tests/ -q        # 152 tests, no keys, no network
 ```
 
 `/health` reports `ports_mode`, `model_status` and `storage`, and the front page
@@ -89,6 +89,23 @@ with `LLM_PROVIDER=none`.
 
 The page names the providers it called. Book as many itineraries as you like,
 then break any one of them from the panel and take a plan.
+
+### Why a selection is matched by key and not by id
+
+Duffel mints offer ids per *offer request*: search twice for the same flight
+and you get two ids. That is correct on their side — an id names a priced,
+time-limited contract, not an aircraft — and it means an id cannot identify
+"the thing the traveller pointed at ninety seconds ago".
+
+Matching on it worked perfectly against recordings, where the fixture returns
+the same ids forever, and failed on **every** selection the moment the ports
+went live. `Offer.key` is a designator, two airports and a departure minute,
+which survives re-searching. Deliberately no fare: the same aircraft is sold
+under several brands, so a key can match more than one offer, and `choose`
+takes the one nearest the price that was on screen and **reports the
+difference** rather than swallowing it. A flight that is gone entirely is
+refused — silently booking the nearest thing is how somebody ends up holding a
+ticket they did not choose.
 
 ## Acting on a plan
 

@@ -123,6 +123,11 @@ class Plan:
         """Comparable with doing nothing. This is the number that ranks."""
         return self.wasted + self.net_cash
 
+    #: The offer this plan books, identified by what it is rather than by an
+    #: id that expires with the search that produced it. Empty for `noop`,
+    #: which books nothing and therefore always exists.
+    key: str = ""
+
     def lane(self, lane: Lane) -> list[Action]:
         return [a for a in self.actions if a.lane is lane]
 
@@ -243,7 +248,7 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
         held = [n for n in baseline.nodes
                 if n.severity is Severity.AT_RISK and n.booking.mitigation]
         return Plan(
-            id="noop", name="Do nothing", tagline="",
+            id="noop", name="Do nothing", tagline="", key="noop",
             actions=[Action(
                 verb="notify", booking_id=n.id,
                 lane=lane_for(n.booking.provider, "notify"),
@@ -386,6 +391,7 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
         delivered=delivered, wasted_ids=wasted_ids, wasted=wasted,
         at_risk_ids=at_risk_ids, at_risk=at_risk,
         tightest=tightest,
+        key=getattr(offer, "key", "") if offer is not None else "",
     )
 
 

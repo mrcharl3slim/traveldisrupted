@@ -141,6 +141,9 @@ def _day(iso: str, zone) -> datetime:
 class Leg(BaseModel):
     """One chosen flight, named by the search that found it.
 
+    ``offer_key`` is what is matched; ``offer_id`` is kept for older clients
+    and only works while the search that produced it is still the current one.
+
     The offer id alone is not enough to re-resolve: Duffel offers live inside
     the search that produced them. Sending the query back costs three fields and
     means the server never has to hold search results between requests, which is
@@ -150,7 +153,8 @@ class Leg(BaseModel):
     origin: str
     destination: str
     on: str
-    offer_id: str
+    offer_key: str = ""
+    offer_id: str = ""
 
 
 class Stay(BaseModel):
@@ -183,17 +187,29 @@ class Chat(BaseModel):
 
 
 class Choice(BaseModel):
+    """A selection, named by what it is plus what it cost on screen.
+
+    `flight_id` is still accepted so an existing client keeps working, but the
+    key is what is matched: ids do not survive the re-search, and the price is
+    what tells a moved fare apart from a withdrawn one.
+    """
+
     state: dict
-    flight_id: str
-    return_id: str = ""
+    flight_key: str = ""
+    flight_price: float = 0.0
+    return_key: str = ""
+    return_price: float = 0.0
     hotel_id: str = ""
     label: str = ""
+    flight_id: str = ""          # deprecated; ignored when a key is supplied
+    return_id: str = ""
 
 
 class Act(BaseModel):
     trip_id: str
     booking_id: str
-    plan_id: str
+    plan_key: str = ""
+    plan_id: str = ""            # deprecated; ignored when a key is supplied
 
 
 class Cancellation(BaseModel):
@@ -298,6 +314,7 @@ def _action(a) -> dict:
 def _plan(p, best: bool) -> dict:
     return {
         "id": p.id,
+        "key": p.key,
         "name": p.name,
         "tagline": p.tagline,
         "net_cash": p.net_cash,
@@ -604,6 +621,10 @@ def add_trip(body: Paste) -> dict:
 def _offer(o) -> dict:
     return {
         "id": o.id,
+        # What the flight IS. The id names a priced contract that expires with
+        # the search; this survives re-searching, which is what a selection
+        # made ninety seconds ago actually needs.
+        "key": o.key,
         "mode": o.mode,
         "carrier": o.carrier,
         "label": o.label,
@@ -721,6 +742,35 @@ def _req_in(raw: dict):
     )
 
 
+def _rematch(offers: list, key: str, shown: float, what: str) -> tuple:
+    """Find the flight the traveller pointed at, in a search they have not seen.
+
+    Two things can have happened between the click and this request. The fare
+    can have moved, which is ordinary and has to be said rather than swallowed.
+    Or the flight can have gone, which is a refusal -- silently booking the
+    nearest thing is how somebody ends up holding a ticket they did not choose.
+
+    Several offers can share a key: the same aircraft is sold under several
+    fare brands, and we saw JU 0333 at both EUR 170 and EUR 255 in one search.
+    The one nearest what was on screen is the one they meant.
+    """
+    candidates = [o for o in offers if o.key == key]
+    if not candidates:
+        # An older client sent an id instead of a key. It only matches while
+        # the search that produced it is still the current one -- which is true
+        # in replay and almost never true live -- so it is a fallback and not a
+        # path worth relying on.
+        candidates = [o for o in offers if o.id == key]
+    if not candidates:
+        raise HTTPException(
+            409, f"that {what} is no longer being sold — the airline has "
+                 "withdrawn it or the schedule moved. Search again and pick "
+                 "from what is there now.")
+    chosen = min(candidates, key=lambda o: abs(o.price - shown))
+    moved = round(chosen.price - shown, 2) if shown else 0.0
+    return chosen, moved
+
+
 @app.post("/api/chat")
 def chat(body: Chat) -> dict:
     """One exchange with the agent.
@@ -814,20 +864,26 @@ def choose(body: Choice) -> dict:
         raise HTTPException(400, "that request is not complete enough to book")
 
     zone_out, zone_back = _zone_for(req.origin), _zone_for(req.destination)
+    repriced: list[dict] = []
     try:
         outbound = flow.search_flights(req.origin, req.destination,
                                        _day(req.depart.isoformat(), zone_out))
-        picked = [o for o in outbound if o.id == body.flight_id]
-        if not picked:
-            raise HTTPException(409, "that fare is no longer in the search — "
-                                     "search again and pick from current prices")
-        if body.return_id and req.ret:
+        chosen, moved = _rematch(outbound, body.flight_key or body.flight_id,
+                                 body.flight_price, "fare")
+        picked = [chosen]
+        if moved:
+            repriced.append({"label": chosen.label, "was": body.flight_price,
+                             "now": chosen.price, "moved": moved})
+
+        if (body.return_key or body.return_id) and req.ret:
             back = flow.search_flights(req.destination, req.origin,
                                        _day(req.ret.isoformat(), zone_back))
-            found = [o for o in back if o.id == body.return_id]
-            if not found:
-                raise HTTPException(409, "that return fare is no longer available")
-            picked.extend(found)
+            found, moved = _rematch(back, body.return_key or body.return_id,
+                                    body.return_price, "return fare")
+            picked.append(found)
+            if moved:
+                repriced.append({"label": found.label, "was": body.return_price,
+                                 "now": found.price, "moved": moved})
 
         stays = []
         if body.hotel_id and req.hotel:
@@ -858,6 +914,9 @@ def choose(body: Choice) -> dict:
     return {"trip_id": saved.id, "label": saved.label,
             "problems": infeasible(trip),
             "preference": req.preference,
+            # Said, not swallowed. A fare that moved between the click and the
+            # booking is the traveller's business.
+            "repriced": repriced,
             "total": round(sum(b.price for b in trip.bookings), 2),
             "bookings": _bookings_out(trip)}
 
@@ -910,9 +969,18 @@ def act(body: Act) -> dict:
     except (PortError, KeyError) as exc:
         raise HTTPException(503 if isinstance(exc, PortError) else 404, str(exc))
 
-    plan = next((p for p in recovery.plans if p.id == body.plan_id), None)
+    # By key, for the same reason `choose` matches by key: `cancel` searched
+    # and showed these plans, `act` searches again, and in live mode the second
+    # search has entirely different offer ids. Matching on the id worked
+    # against recordings and would have failed on every plan a traveller ever
+    # took.
+    wanted = body.plan_key or body.plan_id
+    plan = next((p for p in recovery.plans if p.key == wanted), None) \
+        or next((p for p in recovery.plans if p.id == wanted), None)
     if plan is None:
-        raise HTTPException(404, "no such plan on this disruption")
+        raise HTTPException(
+            409, "that option is no longer available — the search has moved on. "
+                 "Cancel again to see what is there now.")
 
     lines: list[str] = []
     done = act_mod.perform(plan, trip, body.trip_id, log=lines.append)
@@ -972,11 +1040,13 @@ def select(body: Selection) -> dict:
             found = flow.search_flights(leg.origin.upper(),
                                         leg.destination.upper(),
                                         _day(leg.on, zone))
-            offer = next((o for o in found if o.id == leg.offer_id), None)
+            offer = (next((o for o in found if o.key == leg.offer_key), None)
+                     if leg.offer_key else None)
+            offer = offer or next((o for o in found if o.id == leg.offer_id), None)
             if offer is None:
                 raise HTTPException(
-                    409, f"offer {leg.offer_id} is no longer in that search — "
-                         "search again and pick from the current fares")
+                    409, "that flight is no longer being sold — search again "
+                         "and pick from what is there now")
             picked.append(offer)
 
         stays = []

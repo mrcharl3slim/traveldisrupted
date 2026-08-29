@@ -292,8 +292,10 @@ async function select(){
   const body = {
     label: 'Booked here',
     flights: [
-      {origin:$('#a-from').value, destination:$('#a-to').value, on, offer_id:PICK.in},
-      {origin:$('#b-from').value, destination:$('#b-to').value, on, offer_id:PICK.on},
+      {origin:$('#a-from').value, destination:$('#a-to').value, on,
+       offer_key:(IN.find(o => o.id === PICK.in) || {}).key || ''},
+      {origin:$('#b-from').value, destination:$('#b-to').value, on,
+       offer_key:(ON.find(o => o.id === PICK.on) || {}).key || ''},
     ],
     hotels: PICK.hotel ? [{city:$('#city').value, country:'IT', check_in:on,
                            check_out:iso(on, nights), hotel_id:PICK.hotel}] : [],
