@@ -284,8 +284,16 @@ def propagate(trip: Trip, disruption: Disruption, now: datetime,
     # itinerary into the next one's.
     reached = ReachModel(dict(model.arrivals), model.settled_from)
 
+    # WALKED BY DEADLINE, NOT BY START. `exposed_to` already argues that
+    # downstream is a question about deadlines; it then handed them over in
+    # start order, which is a different sequence and the wrong one to walk. The
+    # room's desk opens at 14:00 and the onward flight leaves at 15:10, so the
+    # hotel came first -- and was judged before the flight that delivers the
+    # traveller to it had been taken. A thirty-minute delay, comfortably
+    # absorbed by a six-hour connection, reported EUR 445 of room at risk.
     prior: list[str] = [source.id]
-    for b in exposed_to(trip, disruption):
+    walked: list[Node] = []
+    for b in sorted(exposed_to(trip, disruption), key=lambda b: b.must_arrive_by):
         # Taken once and kept, because both facts fall out of it and plan.py
         # needs both: whether the traveller gets there, and by how much.
         at = reached.presence(b.where, b.must_arrive_by)
@@ -314,7 +322,7 @@ def propagate(trip: Trip, disruption: Disruption, now: datetime,
         else:
             sev, exposure, why = Severity.BROKEN, b.price, "cannot be attended"
 
-        nodes.append(Node(
+        walked.append(Node(
             booking=b,
             severity=sev,
             exposure=exposure,
@@ -328,4 +336,8 @@ def propagate(trip: Trip, disruption: Disruption, now: datetime,
         ))
         prior.append(b.id)
 
+    # Returned in itinerary order, because that is how a person reads a trip.
+    # The walk needs consequence order and the page needs the clock; they are
+    # different sequences and only one of them is a judgement.
+    nodes += sorted(walked, key=lambda n: n.booking.start)
     return Impact(nodes=nodes, now=now, reached=reached)

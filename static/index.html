@@ -153,6 +153,14 @@ const eur = n => (n < 0 ? '−' : '') + '€' + Math.abs(Math.round(n)).toLocale
 // flight as far as the traveller is concerned.
 const hhmm = w => w ? w.t : '—';
 const dayhhmm = w => w ? w.d : '—';
+// Start and end together, with the end's DATE shown only when it differs from
+// the start's. "18 Sep 23:55 - 06:30" reads as a seven-hour hop that lands
+// before it left; the arrival is the next morning and the row has to say so.
+// Both are already formatted in their own zone, so comparing the date halves
+// compares what the traveller reads at each end.
+const span = (a, b) => !b ? dayhhmm(a)
+  : dayhhmm(a) + ' \u2192 ' + (a && a.iso.slice(0, 10) === b.iso.slice(0, 10) ? b.t : b.d);
+
 let STATE = null, PICKED = null, TICK = null;
 
 const LANES = {
@@ -195,6 +203,7 @@ function render(){
   $('#nodes').innerHTML = i.nodes.map(n => `
     <div class="node ${n.severity}" data-id="${n.id}">
       <div class="t">${esc(n.title)}</div>
+      <div class="m">${span(n.starts, n.ends)}</div>
       <div class="m">${n.exposure ? eur(n.exposure) + ' exposed' : n.severity}
         ${n.recoverable ? ' · ' + eur(n.recoverable) + ' recoverable' : ''}
         ${n.cutoff ? ' · by ' + dayhhmm(n.cutoff) : ''}</div>

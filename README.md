@@ -66,6 +66,12 @@ Times are formatted server-side in the trip's own timezone. Letting the browser 
 a Zurich arrival in the viewer's zone, which is a different flight as far as the traveller is
 concerned.
 
+Every row shows **when it starts and when it ends** — the impact cards too, which had a cutoff and
+no start, so placing a booking in the trip meant holding the trip in your head. The end carries its
+date only when that date differs from the start's: `18 Sep 23:55 → 06:30` reads as a seven-hour hop
+that lands before it left, and the arrival is the next morning. Both ends are formatted in their own
+zone, so the comparison is between the two dates the traveller actually reads.
+
 
 ## Telling it what you want
 
@@ -115,6 +121,39 @@ flips a stated `one way` back to False as a side effect.
 
 The page names the providers it called. Book as many itineraries as you like,
 then break any one of them from the panel and take a plan.
+
+### Late, or not going
+
+Two buttons, because they are two different events and the engine turns on the
+difference: a delay eventually puts the traveller at the destination, a
+cancellation leaves them where they started. **Cancel** and **Late** sit
+together on every flight, with the amount beside them — 30m to 12h, spread so
+the answer actually changes. Under an hour is absorbed by any sane connection,
+a few hours is where a trip comes apart, overnight is a cancellation in all but
+name; one hard-coded number would only ever demonstrate whichever of those the
+inventory happened to land on.
+
+Delay was the disruption the engine modelled best and the one nobody could
+produce. It reached `/demo` from a recorded status and stopped there, so on a
+trip you had booked yourself the only available signal was the blunt one. Three
+things had to be right before the button could be honest:
+
+- **The clock starts when they are told, not when they land.** `new_end` is the
+  moment of learning for a cancellation and the new *arrival* for a delay.
+  Taking it as "now" puts the engine hours past deadlines that have not
+  happened yet, and a trip with everything still to play for reports nothing
+  left to save. `flow.learned_at` bounds it by the departure — you find out at
+  the gate at the latest.
+- **The walk is ordered by deadline, not by start.** `exposed_to` already
+  argued that downstream is a question about deadlines and then handed the
+  bookings over in start order. A room whose desk opens at 14:00 came before
+  the 15:10 flight that delivers the traveller to it, so a thirty-minute delay
+  — comfortably absorbed by a six-hour connection — reported EUR 445 of room at
+  risk. Crying wolf on the commonest disruption is how an alert gets ignored.
+- **A delayed leg stays on the itinerary.** `act.apply` dropped the disrupted
+  booking unconditionally, which is right for a flight that does not exist any
+  more and hands the traveller a trip missing the leg they are about to board
+  when it is merely late.
 
 ### What replay cannot check
 

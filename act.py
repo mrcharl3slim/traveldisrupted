@@ -144,7 +144,15 @@ def apply(plan: Plan, trip: Trip, disruption, offer=None) -> tuple[Trip, list[st
     """
     from builder import flight
 
-    dropped = {disruption.booking_id} | set(plan.wasted_ids)
+    # The disrupted leg goes only if it is not going. A cancelled flight is off
+    # the itinerary because it does not exist any more; a delayed one is still
+    # flying and the traveller is still on it -- deleting it would hand them a
+    # trip missing the leg they are about to board. It is also never in
+    # `wasted_ids`: `plan.build` walks what the disruption BROKE, and the
+    # source of the disruption is not downstream of itself.
+    dropped = set(plan.wasted_ids)
+    if disruption.cancelled:
+        dropped.add(disruption.booking_id)
     kept = [b for b in trip.in_order() if b.id not in dropped]
     changed = [f"removed {trip.by_id(b).title}"
                for b in sorted(dropped) if _has(trip, b)]

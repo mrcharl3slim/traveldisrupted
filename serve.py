@@ -240,6 +240,24 @@ class Cancellation(BaseModel):
     booking_id: str
 
 
+class Delay(BaseModel):
+    """The other button. This leg is going, and it is going late.
+
+    Its own model rather than a field on `Cancellation`, for the same reason
+    `flow.delay` is its own verb: a delay eventually puts the traveller at the
+    destination and a cancellation never does, and that is the one distinction
+    the whole engine turns on. A request that could mean either is a request
+    that can be misread.
+    """
+
+    trip_id: str
+    booking_id: str
+    #: How late. Asked rather than assumed: ninety minutes is an inconvenience
+    #: and six hours is a different trip, and which one it is is the entire
+    #: question the traveller wants answered.
+    minutes: int = 90
+
+
 #: Live flight status covers roughly a week either side of now. Asking about a
 #: flight two months out returns nothing useful, and judging a trip that has not
 #: started against the current clock produces arithmetic about a day nobody is
@@ -443,6 +461,11 @@ def _assessment(trip: Trip, disruption, impact: Impact, plans: list,
                 "severity": n.severity.value,
                 "exposure": n.exposure,
                 "recoverable": n.recoverable,
+                # When it happens, not only when it stops waiting. A card that
+                # shows a cutoff and no start asks the traveller to hold the
+                # itinerary in their head to place it.
+                "starts": _when(n.booking.start),
+                "ends": _when(n.booking.end),
                 "cutoff": _when(n.cutoff),
                 "reason": n.reason,
                 "parents": list(n.parents),
@@ -1241,8 +1264,18 @@ def act(body: Act) -> dict:
     trip = _load(body.trip_id)
     preference = saved.payload.get("preference", "")
 
+    # The disruption that produced these plans, not a fresh guess at one. This
+    # rebuilt a cancellation unconditionally, which was harmless while that was
+    # the only thing anybody could inject and becomes a lie the moment a
+    # traveller says "late" instead: acting on a plan for something that did
+    # not happen.
+    said = flow.from_dict(saved.payload.get("disruption"))
     try:
-        recovery = flow.replan(trip, body.booking_id, preference=preference)
+        recovery = flow.replan(
+            trip,
+            said if said and said.booking_id == body.booking_id
+            else flow.cancel(trip, body.booking_id),
+            preference=preference)
     except (PortError, KeyError) as exc:
         raise HTTPException(503 if isinstance(exc, PortError) else 404, str(exc))
 
@@ -1368,25 +1401,27 @@ def select(body: Selection) -> dict:
     }
 
 
-@app.post("/api/cancel")
-def cancel(body: Cancellation) -> dict:
-    """The button. Cancel one leg and answer the whole question from live data.
+def _injected(trip_id: str, booking_id: str, make) -> dict:
+    """Answer the whole question about one injected disruption.
 
-    Nothing here decides anything: the gap is derived in plan.py from where the
-    traveller now stands, the replacements come from the same provider that sold
-    the original, and the ranking is the same arithmetic the terminal runs.
+    Shared by both buttons because everything after the signal is identical --
+    the gap is derived in plan.py from where the traveller now stands, the
+    replacements come from the same provider that sold the original, and the
+    ranking is the same arithmetic the terminal runs. ``make`` is the only
+    difference, and it is a whole one: it decides whether the traveller ends up
+    late at the destination or still at the origin.
     """
     from base import PortError
 
-    trip = _load(body.trip_id)
+    trip = _load(trip_id)
     try:
-        trip.by_id(body.booking_id)
+        trip.by_id(booking_id)
     except KeyError as exc:
         raise HTTPException(404, "no booking with that id on this trip") from exc
 
-    saved = store_module.store().get(body.trip_id)
+    saved = store_module.store().get(trip_id)
     try:
-        recovery = flow.replan(trip, body.booking_id,
+        recovery = flow.replan(trip, make(trip),
                                preference=saved.payload.get("preference", ""))
     except PortError as exc:
         raise HTTPException(503, str(exc)) from exc
@@ -1399,16 +1434,41 @@ def cancel(body: Cancellation) -> dict:
     stored["disruption"] = flow.to_dict(recovery.disruption)
     stored.pop("watermark", None)      # a new disruption starts a new clock
     stored.pop("last_sent", None)
-    store_module.store().update(body.trip_id, stored)
+    store_module.store().update(trip_id, stored)
 
+    # The clock the engine used, carried on the Recovery. Passing new_end here
+    # was right only while every injected disruption was a cancellation: for a
+    # delay it is the new arrival, hours ahead, and the page would have counted
+    # down to deadlines it had already placed itself after.
     payload = _assessment(trip, recovery.disruption, recovery.impact,
-                          recovery.plans, recovery.disruption.new_end, None,
-                          body.trip_id, gap=recovery.gap, injected=True)
+                          recovery.plans, recovery.now, None,
+                          trip_id, gap=recovery.gap, injected=True)
     payload["searched"] = [_offer(o) for o in recovery.offers]
     payload["saved"] = recovery.saved
     payload["preference"] = recovery.preference
     payload["warning"] = recovery.warning
     return payload
+
+
+@app.post("/api/cancel")
+def cancel(body: Cancellation) -> dict:
+    """One leg is not going, and the traveller has just found out."""
+    return _injected(body.trip_id, body.booking_id,
+                     lambda trip: flow.cancel(trip, body.booking_id))
+
+
+@app.post("/api/delay")
+def delay(body: Delay) -> dict:
+    """One leg is going late. Not a small cancellation -- a different world.
+
+    The engine has always modelled this and only the scripted demo could reach
+    it, so the disruption it handles best was the one a traveller could not
+    produce on a trip they had booked.
+    """
+    if body.minutes < 1:
+        raise HTTPException(422, "a delay has to be at least a minute")
+    return _injected(body.trip_id, body.booking_id,
+                     lambda trip: flow.delay(trip, body.booking_id, body.minutes))
 
 
 def _load(trip_id: str) -> Trip:

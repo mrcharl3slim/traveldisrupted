@@ -98,7 +98,7 @@ def test_a_room_nobody_can_reach_is_refused_at_selection(parts):
 
 def test_the_gap_is_derived_from_the_leg_that_was_cancelled(trip):
     leg = [b for b in trip.in_order() if b.kind is Kind.FLIGHT][1]
-    recovery = flow.replan(trip, leg.id)
+    recovery = flow.replan(trip, flow.cancel(trip, leg.id))
     assert recovery.gap is not None
     assert (recovery.gap.origin, recovery.gap.destination) == ("ZRH", "MXP")
     assert recovery.gap.by.hour == 22          # the room, not the check-in desk
@@ -118,7 +118,7 @@ def test_cancelling_the_first_leg_strands_the_whole_itinerary(trip):
     said there was nothing to fix.
     """
     leg = trip.in_order()[0]
-    recovery = flow.replan(trip, leg.id)
+    recovery = flow.replan(trip, flow.cancel(trip, leg.id))
 
     downstream = [n for n in recovery.impact.nodes if n.booking.id != leg.id]
     assert downstream, "the fixture trip has nothing after its first leg"
@@ -140,13 +140,60 @@ def test_a_delay_still_lets_the_itinerary_resume_the_next_day(trip):
     assert no_action_model(late, trip).presence("MXP", tomorrow) == tomorrow
 
 
+def test_a_delay_is_not_a_small_cancellation(trip):
+    """The one distinction the whole engine turns on. Late still lands them at
+    the destination; cancelled leaves them where they started, and the plans
+    have to be searched from two different places."""
+    leg = trip.in_order()[0]
+    late = flow.replan(trip, flow.delay(trip, leg.id, 240))
+    gone = flow.replan(trip, flow.cancel(trip, leg.id))
+
+    assert late.disruption.cancelled is False
+    assert late.disruption.delay(trip) == timedelta(minutes=240)
+    assert gone.disruption.delay(trip) == timedelta(0), "no arrival to be late for"
+    assert no_action_model(late.disruption, trip).arrivals.keys() == {leg.destination}
+    assert no_action_model(gone.disruption, trip).arrivals.keys() == {leg.origin}
+
+
+def test_a_delay_small_enough_to_absorb_costs_nothing(trip):
+    """The answer a traveller most often needs and the one a cancel button
+    cannot give. The connection here has hours of slack; a delay inside it is a
+    fact, not a disruption, and reporting damage would train everybody to
+    ignore the alerts that matter."""
+    leg = trip.in_order()[0]
+    onward = [b for b in trip.in_order() if b.kind is Kind.FLIGHT][1]
+    slack = onward.must_arrive_by - leg.end
+    assert slack > timedelta(hours=2), "the fixture no longer has room to test this"
+
+    inside = flow.replan(trip, flow.delay(trip, leg.id, 30))
+    assert inside.impact.do_nothing_cost == 0.0
+    assert inside.impact.at_risk_value == 0.0
+
+    beyond = int(slack.total_seconds() // 60) + 60
+    outside = flow.replan(trip, flow.delay(trip, leg.id, beyond))
+    assert outside.impact.do_nothing_cost > 0
+
+
+def test_the_clock_starts_when_they_are_told_not_when_they_land(trip):
+    """`new_end` is the moment of learning for a cancellation and the new
+    ARRIVAL for a delay. Taking it as "now" for a delay puts the engine hours
+    past deadlines that have not happened yet, and a trip with everything still
+    to play for comes back with nothing left to save."""
+    leg = trip.in_order()[0]
+    disruption = flow.delay(trip, leg.id, 600)
+
+    assert disruption.new_end > leg.start, "the premise: the arrival is later"
+    assert flow.learned_at(trip, disruption) == leg.start
+    assert flow.replan(trip, disruption).now == leg.start
+
+
 def test_the_cancelled_flight_is_not_offered_back(trip):
     """The cancellation is ours, so the airline's inventory has not moved and
     the search returns the same JU 0333 at two fares. Re-buying a seat on an
     aircraft that is not going is the one recommendation that cannot be
     defended."""
     leg = [b for b in trip.in_order() if b.kind is Kind.FLIGHT][1]
-    recovery = flow.replan(trip, leg.id)
+    recovery = flow.replan(trip, flow.cancel(trip, leg.id))
 
     itself = [o for o in recovery.offers
               if o.depart == leg.start
@@ -161,7 +208,7 @@ def test_a_cancelled_onward_leg_does_not_destroy_the_inbound_fare(trip):
     EUR 1,031 to the cancellation of a EUR 170 hop -- a headline six times too
     large, in the direction that flatters us."""
     inbound, leg = [b for b in trip.in_order() if b.kind is Kind.FLIGHT][:2]
-    recovery = flow.replan(trip, leg.id)
+    recovery = flow.replan(trip, flow.cancel(trip, leg.id))
     assert inbound.id not in {n.id for n in recovery.impact.nodes}
     assert recovery.impact.do_nothing_cost < inbound.price
 
@@ -172,7 +219,7 @@ def test_doing_nothing_is_charged_the_same_hotel_as_everything_else(trip):
     the full rate for it. Two ledgers, one ranking, and the answer depended on
     which branch computed it."""
     leg = [b for b in trip.in_order() if b.kind is Kind.FLIGHT][1]
-    recovery = flow.replan(trip, leg.id)
+    recovery = flow.replan(trip, flow.cancel(trip, leg.id))
     stay = next(b for b in trip.in_order() if b.kind is Kind.LODGING)
 
     stranded = [p for p in recovery.plans
@@ -194,7 +241,8 @@ def test_a_room_that_cannot_be_defused_is_damage(trip):
                 if b.kind is Kind.LODGING else b
                 for b in trip.in_order()]
     leg = [b for b in bookings if b.kind is Kind.FLIGHT][1]
-    recovery = flow.replan(Trip(bookings), leg.id)
+    stripped = Trip(bookings)
+    recovery = flow.replan(stripped, flow.cancel(stripped, leg.id))
     stay = next(b for b in bookings if b.kind is Kind.LODGING)
 
     noop = next(p for p in recovery.plans if p.id == "noop")
@@ -204,7 +252,7 @@ def test_a_room_that_cannot_be_defused_is_damage(trip):
 
 def test_every_plan_is_one_the_traveller_could_board(trip):
     leg = [b for b in trip.in_order() if b.kind is Kind.FLIGHT][1]
-    recovery = flow.replan(trip, leg.id)
+    recovery = flow.replan(trip, flow.cancel(trip, leg.id))
     for plan in recovery.plans:
         if plan.arrives_at:
             assert plan.arrives_where == "MXP"
@@ -220,7 +268,7 @@ def test_the_stay_is_downstream_of_a_flight_that_starts_after_it(trip):
     stay = next(b for b in trip.in_order() if b.kind is Kind.LODGING)
     leg = [b for b in trip.in_order() if b.kind is Kind.FLIGHT][1]
     assert leg.start > stay.start
-    assert flow.replan(trip, leg.id).gap.for_booking == stay.id
+    assert flow.replan(trip, flow.cancel(trip, leg.id)).gap.for_booking == stay.id
 
 
 def test_doing_nothing_still_makes_the_call_it_is_credited_for(trip):
@@ -230,7 +278,7 @@ def test_doing_nothing_still_makes_the_call_it_is_credited_for(trip):
     call" over EUR 443 and, two sections down, "this plan asks nothing of
     anybody"."""
     leg = [b for b in trip.in_order() if b.kind is Kind.FLIGHT][1]
-    recovery = flow.replan(trip, leg.id)
+    recovery = flow.replan(trip, flow.cancel(trip, leg.id))
     noop = next(p for p in recovery.plans if p.id == "noop")
 
     assert noop.at_risk > 0

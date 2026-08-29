@@ -50,7 +50,8 @@ TRIP = Trip([
     Booking(
         id="transfer", kind=Kind.TRANSFER, provider="Welcome Pickups",
         title="Malpensa to hotel private transfer",
-        start=dt(12, 10, 0), origin="MXP", destination="MILAN",
+        start=dt(12, 10, 0), end=dt(12, 10, 50),
+        origin="MXP", destination="MILAN",
         price=48.0,
         policy=Policy(
             source="Free change up to 4 hours before pickup",
@@ -63,7 +64,7 @@ TRIP = Trip([
     Booking(
         id="hotel", kind=Kind.LODGING, provider="Booking.com",
         title="Hotel Le Marais Milano - 3 nights",
-        start=dt(12, 14, 0), origin="MILAN",
+        start=dt(12, 14, 0), end=dt(15, 11, 0), origin="MILAN",
         price=624.0, hard_deadline=dt(12, 22, 0),
         mitigation="arrival guarantee lapses at 22:00 - notify the property",
         policy=Policy(source="Non-refundable rate, arrival guarantee to 22:00"),
@@ -71,7 +72,7 @@ TRIP = Trip([
     Booking(
         id="lastsupper", kind=Kind.ACTIVITY, provider="GetYourGuide",
         title="The Last Supper - timed entry",
-        start=dt(12, 16, 0), origin="SMG",
+        start=dt(12, 16, 0), end=dt(12, 16, 15), origin="SMG",
         price=92.0, fixed_slot=True,
         policy=Policy(
             source="Non-refundable. Date change subject to slots, EUR 18 fee",
@@ -82,14 +83,14 @@ TRIP = Trip([
     Booking(
         id="dinner", kind=Kind.ACTIVITY, provider="Trattoria Milanese",
         title="Dinner - Trattoria Milanese",
-        start=dt(12, 20, 0), origin="MILAN",
+        start=dt(12, 20, 0), end=dt(12, 22, 0), origin="MILAN",
         price=0.0,
         policy=Policy(source="Free cancellation, nothing prepaid"),
     ),
     Booking(
         id="como", kind=Kind.ACTIVITY, provider="GetYourGuide",
         title="Bellagio and Lake Como day tour",
-        start=dt(13, 9, 15), origin="MILAN",
+        start=dt(13, 9, 15), end=dt(13, 18, 0), origin="MILAN",
         price=128.0,
         policy=Policy(
             source="Free cancellation to 12 Oct 09:15",
@@ -99,7 +100,8 @@ TRIP = Trip([
     ),
     Booking(
         id="scala", kind=Kind.ACTIVITY, provider="Teatro alla Scala",
-        title="La Scala - Rigoletto", start=dt(13, 19, 30), origin="MILAN",
+        title="La Scala - Rigoletto",
+        start=dt(13, 19, 30), end=dt(13, 22, 15), origin="MILAN",
         price=180.0, fixed_slot=True,
         policy=Policy(source="Non-refundable, seat-specific"),
     ),
@@ -113,7 +115,7 @@ TRIP = Trip([
     Booking(
         id="palazzo", kind=Kind.LODGING, provider="Booking.com",
         title="Palazzo Vecchietti - 2 nights",
-        start=dt(15, 15, 0), origin="FLR", price=430.0,
+        start=dt(15, 15, 0), end=dt(17, 11, 0), origin="FLR", price=430.0,
         policy=Policy(
             source="Flexible rate, free cancellation to 14 Oct",
             windows=[Window(closes=dt(14, 23, 59), refund=430.0,
@@ -130,7 +132,8 @@ TRIP = Trip([
     Booking(
         id="sq345", kind=Kind.FLIGHT, provider="Singapore Airlines",
         title="SQ 345 - Zurich to Singapore",
-        start=dt(17, 13, 40), origin="ZRH", destination="SIN",
+        start=dt(17, 13, 40), end=dt(18, 7, 25, SGT),
+        origin="ZRH", destination="SIN",
         price=0.0, currency="SGD", ticket_group="SQ-9F2K",
         policy=Policy(source="Return leg of the outbound ticket"),
     ),

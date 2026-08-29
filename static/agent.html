@@ -62,6 +62,11 @@
   .btn.key{background:#173254;border-color:#2b5384}
   .btn.bad{background:#2a1618;border-color:#4d2326;color:#ffb4ae}
   .btn.sm{font-size:12.5px;padding:6px 12px;border-radius:8px}
+  .btn.warn{background:#2a2413;border-color:#4d4423;color:#f0d68c}
+  /* Both buttons and the amount that qualifies one of them, on one line: it is
+     one control -- "break this leg" -- with two ways of breaking it. */
+  .break{display:flex;gap:5px;justify-content:flex-end;margin-top:6px}
+  select.btn.sm{padding:6px 4px}
   .btn:disabled{opacity:.45;cursor:default}
 
   aside .box{background:var(--card);border:1px solid var(--edge);border-radius:12px;padding:16px;
@@ -138,12 +143,25 @@ const eur = n => (n < 0 ? '−' : '') + '€' + Math.abs(Math.round(n)).toLocale
 // Times arrive pre-formatted in the trip's own timezone. Formatting them here
 // renders a Zurich arrival in whatever zone this laptop is set to.
 const at = w => w ? w.d : '—';
+// Start and end together, with the end's DATE shown only when it differs from
+// the start's. "18 Sep 23:55 - 06:30" reads as a seven-hour hop that lands
+// before it left; the arrival is the next morning and the row has to say so.
+// Both are already formatted in their own zone, so comparing the date halves
+// compares what the traveller reads at each end.
+const span = (a, b) => !b ? at(a)
+  : at(a) + ' \u2192 ' + (a && a.iso.slice(0, 10) === b.iso.slice(0, 10) ? b.t : b.d);
+
 
 let STATE = {};          // the request so far — the server holds nothing
 let LAST = null;         // the last agent turn, for the option tables
 // Selections are held as the offer itself, not as an id: the id belongs to the
 // search that produced it and the server has to find the flight again.
 let PICK = {flight:null, ret:null, hotel:null};
+// Spread so the answer actually changes. Under an hour is absorbed by any sane
+// connection, a few hours is where a trip starts to come apart, and overnight
+// is a cancellation in all but name -- one hard-coded number would only ever
+// demonstrate whichever of those the inventory happened to land on.
+const DELAYS = [30, 90, 180, 360, 720];
 let TRIPS = [], OPEN = null, RECOVERY = null;
 
 async function api(path, body){
@@ -229,7 +247,7 @@ async function say(text, answers){
       html += `<div class="note">That day now reads:</div>` + turn.bookings.map(b => `
         <div class="leg"><div>${esc(b.title)}${b.commitment
           ? '<span class="tag">commitment</span>' : ''}
-          <div class="m">${esc(b.where)} · ${at(b.starts)}</div></div>
+          <div class="m">${esc(b.where)} · ${span(b.starts, b.ends)}</div></div>
         <div class="n">${b.price ? eur(b.price) : ''}</div></div>`).join('');
   }
 
@@ -382,28 +400,53 @@ function openTrip(id, quiet){
       <div>${esc(b.title)}
         ${b.pending ? '<span class="tag warn">not paid</span>' : ''}
         ${b.commitment ? '<span class="tag">commitment</span>' : ''}
-        <div class="m">${at(b.starts)}${b.who ? ' · ' + esc(b.who) : ''}</div></div>
+        <div class="m">${span(b.starts, b.ends)}${b.who ? ' · ' + esc(b.who) : ''}</div></div>
       <div class="n" style="white-space:nowrap">${eur(b.price)}
-        ${b.kind === 'flight' ? `<br><button class="btn bad sm"
-          data-break="${esc(b.id)}">Cancel</button>` : ''}</div>
+        ${b.kind === 'flight' ? `<div class="break">
+          <select class="btn sm" data-mins="${esc(b.id)}">${DELAYS.map(m =>
+            `<option value="${m}"${m === 180 ? ' selected' : ''}>${
+              m < 60 ? m + 'm' : (m / 60) + 'h'}</option>`).join('')}</select>
+          <button class="btn warn sm" data-late="${esc(b.id)}">Late</button>
+          <button class="btn bad sm" data-break="${esc(b.id)}">Cancel</button>
+        </div>` : ''}</div>
     </div>`).join('');
   $('#detail').querySelectorAll('[data-break]').forEach(el =>
-    el.onclick = () => breakLeg(id, el.dataset.break));
+    el.onclick = () => breakLeg(id, {booking_id: el.dataset.break}, '/api/cancel'));
+  $('#detail').querySelectorAll('[data-late]').forEach(el =>
+    el.onclick = () => breakLeg(id, {
+      booking_id: el.dataset.late,
+      minutes: Number($(`[data-mins="${CSS.escape(el.dataset.late)}"]`).value)},
+      '/api/delay'));
 }
 
-async function breakLeg(tripId, bookingId){
+// How late, said the way a person says it. "delayed 180 minutes" is a number
+// the traveller has to divide before it means anything.
+const late = m => m >= 60
+  ? Math.floor(m / 60) + 'h' + (m % 60 ? ' ' + (m % 60) + 'm' : '')
+  : m + 'm';
+
+async function breakLeg(tripId, what, path){
   let d;
-  try { d = await api('/api/cancel', {trip_id: tripId, booking_id: bookingId}); }
+  try { d = await api(path, Object.assign({trip_id: tripId}, what)); }
   catch (e) { return bubble('Downstream',
     `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
-  RECOVERY = {trip: tripId, booking: bookingId, body: d};
+  RECOVERY = {trip: tripId, booking: what.booking_id, body: d};
 
-  bubble('You', `My ${esc(d.signal.title)} has been cancelled.`);
+  // Said in the traveller's own words, and the two are different events: one
+  // leaves them where they started and the other lands them late somewhere.
+  const gone = d.signal.cancelled;
+  bubble('You', gone
+    ? `My ${esc(d.signal.title)} has been cancelled.`
+    : `My ${esc(d.signal.title)} is running ${late(d.signal.delay_minutes)} late.`);
 
-  let html = `<b>${esc(d.signal.title)}</b> is cancelled. `
+  let html = gone
+    ? `<b>${esc(d.signal.title)}</b> is cancelled. `
+    : `<b>${esc(d.signal.title)}</b> is ${late(d.signal.delay_minutes)} late — `
+      + `now in at ${at(d.signal.now_arrives)}, was ${at(d.signal.was)}. `
     + (d.gap
-       ? `You are at ${esc(d.gap.origin)}, and you are due in ${esc(d.gap.destination)} by
-          ${at(d.gap.by)}. I searched ${d.searched.length} replacements.`
+       ? `${gone ? 'You are at' : 'You land at'} ${esc(d.gap.origin)}, and you are due
+          in ${esc(d.gap.destination)} by ${at(d.gap.by)}. I searched
+          ${d.searched.length} replacements.`
        : `Nothing downstream is out of reach — there is nothing to fix.`)
     + `<div class="note">Destroyed <b>${eur(d.impact.do_nothing)}</b> ·
        held by a phone call <b>${eur(d.impact.at_risk)}</b> ·

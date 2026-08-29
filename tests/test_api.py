@@ -58,6 +58,96 @@ def booked(client):
     return book(client)
 
 
+def test_the_delay_button_reaches_the_engine(client):
+    """The disruption the engine models best was the one a traveller could not
+    produce. It existed only in the scripted demo, from a recorded status.
+
+    Its own trip, not the module's: this files a disruption against whatever it
+    is pointed at, and the shared one is read by every test after it.
+    """
+    booked = book(client)
+    leg = [b for b in booked["bookings"] if b["kind"] == "flight"][0]
+    body = client.post("/api/delay", json={
+        "trip_id": booked["trip_id"], "booking_id": leg["id"], "minutes": 240}).json()
+
+    assert body["signal"]["cancelled"] is False
+    assert body["signal"]["delay_minutes"] == 240
+    assert body["signal"]["injected"] is True
+    assert body["signal"]["now_arrives"]["iso"] > leg["ends"]["iso"]
+    assert body["plans"], "a delay has to produce options like anything else"
+
+
+def test_a_delay_of_nothing_is_refused(client, booked):
+    """Zero minutes is not a disruption, and storing one would leave the watch
+    counting down to a flight that is running exactly on time.
+
+    Safe on the shared trip precisely because it is refused: nothing is filed.
+    """
+    leg = [b for b in booked["bookings"] if b["kind"] == "flight"][0]
+    for minutes in (0, -30):
+        response = client.post("/api/delay", json={
+            "trip_id": booked["trip_id"], "booking_id": leg["id"],
+            "minutes": minutes})
+        assert response.status_code == 422
+
+
+def test_acting_on_a_delay_does_not_rebuild_it_as_a_cancellation(client):
+    """`/api/act` re-derived the recovery to search again, and derived it by
+    cancelling -- harmless while cancelling was the only thing anybody could
+    inject, and a lie the moment a traveller says "late" instead.
+
+    Its own trip: acting REWRITES the itinerary, which is the point of it.
+    """
+    booked = book(client)
+    leg = [b for b in booked["bookings"] if b["kind"] == "flight"][0]
+    late = client.post("/api/delay", json={
+        "trip_id": booked["trip_id"], "booking_id": leg["id"], "minutes": 600}).json()
+    assert late["plans"]
+
+    plan = late["plans"][0]
+    done = client.post("/api/act", json={
+        "trip_id": booked["trip_id"], "booking_id": leg["id"],
+        "plan_id": plan.get("key") or plan["id"]})
+    assert done.status_code == 200, done.text
+
+    # Rebuilding it as a cancellation showed up here: `act.apply` drops the
+    # disrupted leg, so the traveller was handed an itinerary missing the
+    # flight they are about to board. It is late, not gone.
+    after = {b["id"] for b in done.json()["bookings"]}
+    assert leg["id"] in after, "deleted a flight the traveller is still taking"
+
+
+def test_every_row_can_say_when_it_starts_and_when_it_ends(client, booked):
+    """A row that shows only a start makes the reader supply the other half.
+    "Hotel, 18 Sep 14:00" is a stay of unknown length, and the length is the
+    thing a disrupted traveller is trying to work out."""
+    for row in booked["bookings"]:
+        assert row["starts"] and row["ends"], row["title"]
+        assert {"iso", "t", "d"} <= set(row["ends"])
+
+
+def test_the_impact_cards_carry_the_times_too(client):
+    """The knock-on map is an itinerary as much as the detail panel is, and it
+    was showing a cutoff with no start -- so placing a booking in the trip
+    meant holding the trip in your head."""
+    state = client.get("/api/state", params={"base": "written"}).json()
+    nodes = state["impact"]["nodes"]
+    assert nodes
+    for node in nodes:
+        assert node["starts"] and node["ends"], node["title"]
+
+
+def test_the_scripted_trip_leaves_no_row_half_told():
+    """Eight of its twelve bookings had no end at all. The engine never read
+    one, so nothing failed -- it just could not be displayed, and the demo is
+    the one itinerary anybody reads line by line."""
+    from demo_trip import build_trip
+
+    for booking in build_trip(None).in_order():
+        assert booking.end is not None, booking.title
+        assert booking.end >= booking.start, booking.title
+
+
 def test_a_search_quotes_fares_and_says_where_they_came_from(client):
     body = client.get("/api/search/flights", params={
         "origin": "ZRH", "destination": "MXP", "on": DAY}).json()

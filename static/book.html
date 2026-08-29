@@ -36,7 +36,13 @@
   .btn:hover{background:#1d2b3b}
   .btn.key{background:#173254;border-color:#2b5384}
   .btn.bad{background:#2a1618;border-color:#4d2326;color:#ffb4ae}
+  .btn.warn{background:#2a2413;border-color:#4d4423;color:#f0d68c}
+  .btn.sm{padding:8px 9px;font-size:13px}
   .btn:disabled{opacity:.45;cursor:default}
+  /* The two buttons and the amount that qualifies one of them, on one line so
+     it reads as a single control rather than as two unrelated hazards. */
+  .break{display:flex;gap:6px;justify-content:flex-end;margin-top:6px}
+  select.btn{padding-right:6px}
 
   table{width:100%;border-collapse:collapse;font-size:14px}
   th{text-align:left;font:11px var(--mono);letter-spacing:.1em;text-transform:uppercase;
@@ -188,6 +194,21 @@ const eur = n => (n < 0 ? '−' : '') + '€' + Math.abs(Math.round(n)).toLocale
 // different flight as far as the traveller is concerned.
 const at = w => w ? w.d : '—';
 const hm = w => w ? w.t : '—';
+// Start and end together, with the end's DATE shown only when it differs from
+// the start's. "18 Sep 23:55 - 06:30" reads as a seven-hour hop that lands
+// before it left; the arrival is the next morning and the row has to say so.
+// Both are already formatted in their own zone, so comparing the date halves
+// compares what the traveller reads at each end.
+const span = (a, b) => !b ? at(a)
+  : at(a) + ' \u2192 ' + (a && a.iso.slice(0, 10) === b.iso.slice(0, 10) ? b.t : b.d);
+
+
+// What to offer. Spread so the answer changes: under an hour is absorbed by
+// any sane connection, a few hours is where a trip starts to come apart, and
+// overnight is a cancellation in all but name. A single "delay" button with one
+// hard-coded number would demonstrate whichever of those the fixture happened
+// to land on.
+const DELAYS = [30, 90, 180, 360, 720];
 
 const LANES = {
   auto: ['Downstream handles it', 'no payment, no authorisation, nobody to phone'],
@@ -325,24 +346,36 @@ function paintTrip(){
       OUT && OUT.signal.booking_id === b.id ? 'gone' : ''}">
       <div>
         <div class="t">${esc(b.title)}</div>
-        <div class="m">${esc(b.where)} · ${at(b.starts)}${
-          b.ends ? ' → ' + hm(b.ends) : ''} · last moment ${at(b.must_arrive_by)}
+        <div class="m">${esc(b.where)} · ${span(b.starts, b.ends)} · last moment ${at(b.must_arrive_by)}
           ${b.ticket_group ? ' · ticket ' + esc(b.ticket_group.slice(-6)) : ''}</div>
       </div>
       <div style="text-align:right;white-space:nowrap">
         <div class="m">${esc(b.currency)} ${Math.round(b.price).toLocaleString()}</div>
-        ${b.kind === 'flight' ? `<button class="btn bad" style="margin-top:6px"
-          data-cancel="${esc(b.id)}">Cancel this flight</button>` : ''}
+        ${b.kind === 'flight' ? `<div class="break">
+          <select class="btn sm" data-mins="${esc(b.id)}">${DELAYS.map(m =>
+            `<option value="${m}"${m === 180 ? ' selected' : ''}>${
+              m < 60 ? m + 'm' : (m / 60) + 'h'} late</option>`).join('')}</select>
+          <button class="btn warn" data-delay="${esc(b.id)}">Delay</button>
+          <button class="btn bad" data-cancel="${esc(b.id)}">Cancel</button>
+        </div>` : ''}
       </div>
     </div>`).join('');
 
   document.querySelectorAll('[data-cancel]').forEach(el =>
-    el.onclick = () => cancel(el.dataset.cancel));
+    el.onclick = () => disrupt('/api/cancel', {booking_id: el.dataset.cancel}));
+  document.querySelectorAll('[data-delay]').forEach(el =>
+    el.onclick = () => disrupt('/api/delay', {
+      booking_id: el.dataset.delay,
+      minutes: Number($(`[data-mins="${CSS.escape(el.dataset.delay)}"]`).value)}));
 }
 
-async function cancel(bookingId){
+// One path for both buttons, because everything after the signal is the same
+// question. What differs is upstream of here and it is the whole difference:
+// a delay puts the traveller at the destination late, a cancellation leaves
+// them where they started.
+async function disrupt(path, what){
   try {
-    OUT = await api('/api/cancel', {trip_id: TRIP.trip_id, booking_id: bookingId});
+    OUT = await api(path, Object.assign({trip_id: TRIP.trip_id}, what));
   } catch (e) { return fail('#trip-problems', e); }
   PICKED = null;
   paintTrip();

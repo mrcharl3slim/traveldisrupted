@@ -13,13 +13,19 @@ which is exactly the right shape for the thing being demonstrated: the hard part
 was never the card, it was knowing what to buy and by when. Booking is a lane
 (`tap`), and it stays one.
 
-WHERE THE CANCELLATION COMES FROM. Two sources, and the difference is worth
+WHERE THE DISRUPTION COMES FROM. Three sources, and the differences are worth
 keeping visible. Live status (`aerodatabox`) is the real signal and only reaches
 about a week either side of today. A traveller pressing "my flight was
-cancelled" is the injected one, and it is not a lesser thing -- it is what
+cancelled" is an injected one, and it is not a lesser thing -- it is what
 happens when the airline has not published yet and the gate agent has already
-said so. Both produce the same Disruption, and neither is allowed to pretend to
-be the other.
+said so. "My flight is running late" is the third, and it is a different signal
+rather than a smaller version of the second: a delay eventually puts the
+traveller at the destination and a cancellation never does, which is the one
+distinction the whole engine turns on.
+
+All three produce a Disruption and none is allowed to pretend to be another,
+which is why `replan` takes one rather than making one. Building a cancellation
+inside it meant a delay could only be answered by lying about what happened.
 """
 
 from __future__ import annotations
@@ -115,6 +121,52 @@ def cancel(trip: Trip, booking_id: str, at: datetime | None = None) -> Disruptio
     )
 
 
+def delay(trip: Trip, booking_id: str, minutes: int,
+          at: datetime | None = None) -> Disruption:
+    """The other button. This leg is going, late, and the traveller knows.
+
+    Not a small cancellation, and the engine already insists on the difference:
+    a delayed flight eventually puts them at the destination, so everything
+    downstream is merely late, and `no_action_model` reads `cancelled` to
+    decide which of those two worlds it is in. Injecting a delay is therefore
+    the same act as injecting a cancellation and a different signal, which is
+    why it gets its own verb rather than a flag on that one.
+
+    ``new_end`` is the new ARRIVAL. That is what the field means for anything
+    not cancelled -- `Disruption.delay` subtracts the original arrival from it
+    to report how late this is -- and it is emphatically not the moment of
+    learning. See `learned_at`.
+    """
+    booking = trip.by_id(booking_id)
+    scheduled = booking.end or booking.start
+    return Disruption(
+        booking_id=booking_id,
+        new_end=scheduled + timedelta(minutes=max(1, minutes)),
+        reason=f"delayed {minutes} minutes",
+        # The traveller has been told. A live prediction carries the
+        # provider's own confidence; a person pressing the button is certain.
+        confidence=1.0,
+        cancelled=False,
+    )
+
+
+def learned_at(trip: Trip, disruption: Disruption) -> datetime:
+    """When the clock starts: the moment the traveller can begin acting.
+
+    For a cancellation this is `new_end`, because that is already what the
+    field holds -- there is no arrival to record, so it records the moment of
+    learning instead. For a delay the two come apart, and taking `new_end`
+    there is badly wrong: it is the new arrival, hours away, so "now" would
+    land after deadlines that have not happened yet and the engine would
+    report a trip with nothing left to save. You find out at the gate at the
+    latest, so the departure bounds it.
+
+    Pessimistic on purpose, like every other clock in this system: it is the
+    least time the engine gets to claim it saved.
+    """
+    return min(disruption.new_end, trip.by_id(disruption.booking_id).start)
+
+
 def to_dict(disruption: Disruption) -> dict:
     """A disruption that outlives the request that created it.
 
@@ -187,6 +239,12 @@ class Recovery:
     gap: Gap | None
     offers: list
     plans: list
+    #: The clock every figure above was computed against. Carried rather than
+    #: re-derived by the caller: `serve` used to pass `disruption.new_end` to
+    #: the page, which is the moment of learning for a cancellation and the new
+    #: arrival for a delay -- so the page and the engine would have been
+    #: counting down to different things the moment delays became injectable.
+    now: datetime | None = None
     preference: str = ""
     #: Set when the recommended plan is not the kind of trip they asked for.
     warning: str = ""
@@ -204,16 +262,21 @@ class Recovery:
         return round(noop.total_damage - self.best.total_damage, 2)
 
 
-def replan(trip: Trip, booking_id: str, at: datetime | None = None,
-           now: datetime | None = None, preference: str = "") -> Recovery:
-    """Cancel a leg and answer the whole question in one call.
+def replan(trip: Trip, disruption: Disruption, now: datetime | None = None,
+           preference: str = "") -> Recovery:
+    """One disruption, answered in full.
+
+    Takes the disruption rather than making one, because there are three ways
+    to arrive at this point and the difference between them is worth keeping
+    in the caller's hands: live status, a traveller saying their flight is
+    cancelled, and a traveller saying it is late. Building a cancellation in
+    here meant a delay could only be answered by pretending to be one.
 
     ``preference`` comes off the stored itinerary, which is where the traveller
     left it when they booked. Asking again at the moment their flight is
     cancelled would be a strange time to take a survey.
     """
-    disruption = cancel(trip, booking_id, at)
-    now = now or disruption.new_end
+    now = now or learned_at(trip, disruption)
     gap = recovery_gap(trip, disruption, now)
     offers = replacements(trip, disruption, gap)
     plans = generate(trip, disruption, now, offers, preference)
@@ -223,6 +286,7 @@ def replan(trip: Trip, booking_id: str, at: datetime | None = None,
         gap=gap,
         offers=offers,
         plans=plans,
+        now=now,
         preference=preference,
         warning=("the only plan that saves this trip has a connection, and you "
                  "asked for direct flights"
