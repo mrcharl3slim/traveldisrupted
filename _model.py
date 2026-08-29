@@ -51,7 +51,52 @@ def label() -> str:
 
 
 def available() -> bool:
+    """What was ASKED for. Not the same question as whether it works."""
     return PROVIDER in ("bedrock", "anthropic", "groq")
+
+
+def effective() -> dict:
+    """What is actually there, having tried to build it.
+
+    `label` reports configuration, which is the wrong thing to put on a status
+    page on its own. Set LLM_PROVIDER=bedrock with a region that has not been
+    granted the model and the banner says "bedrock:claude-haiku-4-5" in
+    confident blue while every call quietly falls back to a template. Nobody
+    finds out until a judge asks what the model is doing.
+
+    So this builds it -- cached, so the cost is paid once -- and reports the
+    difference between asked-for and available. Everywhere else in this system
+    a degradation is announced (`degraded` when a port replays, `shifted` when
+    a recording moves, which channels actually took a message). This is the
+    same rule applied to the model.
+    """
+    model = get_model()
+    return {
+        "configured": PROVIDER,
+        "label": label(),
+        # CONSTRUCTED, not proven. Building a client resolves no credentials
+        # and calls nothing, so this says the wiring is present -- not that
+        # Bedrock will answer. A key with no model access still reads True
+        # here and fails on the first invoke, which is why `note_failure`
+        # exists: the first real call that fails writes its reason in, and the
+        # page stops claiming a model it does not have.
+        "ready": model is not None and not unavailable,
+        # Empty unless something failed. A provider of "none" is a choice, not
+        # a fault, and must not be reported as one.
+        "why_not": unavailable,
+    }
+
+
+def note_failure(exc: BaseException) -> None:
+    """Record a model call that failed, so /health stops saying it is fine.
+
+    Called from the places that catch model exceptions and carry on. Carrying
+    on is right -- the arithmetic does not need the model -- but doing it
+    silently means a broken token looks identical to a working one for as long
+    as nobody reads the phrasing closely.
+    """
+    global unavailable
+    unavailable = f"{PROVIDER}: {type(exc).__name__}: {exc}"[:200]
 
 
 #: Why the model is unavailable, when it is. Surfaced by /health rather than

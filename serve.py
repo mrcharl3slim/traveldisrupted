@@ -554,7 +554,9 @@ def health() -> dict:
         "degraded": list(degraded),
         "shifted": list(shifted),
         "model": _model.label(),
-        "model_unavailable": _model.unavailable,
+        # Configured vs actually working. /health is the one place that must
+        # not report an intention as a fact.
+        "model_status": _model.effective(),
         "storage": "postgres" if store_module.store().durable else "memory (lost on restart)",
         "watch": {
             "running": os.environ.get("DOWNSTREAM_WATCH", "1") != "0",

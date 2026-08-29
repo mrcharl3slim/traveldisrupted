@@ -272,3 +272,48 @@ def test_bookkeeping_is_not_mistaken_for_an_answer():
     from dataclasses import replace as _replace
     assert _replace(r, raw="something else").settled == r.settled
     assert _replace(r, preference="direct").settled != r.settled
+
+
+def test_a_model_that_cannot_start_is_reported_not_hidden(monkeypatch):
+    """/health must not report an intention as a fact. A provider configured
+    but not working reads identically to a working one otherwise, for as long
+    as nobody looks closely at the phrasing."""
+    import _model
+
+    monkeypatch.setattr(_model, "PROVIDER", "bedrock")
+    monkeypatch.setattr(_model, "unavailable", "")
+    monkeypatch.setattr(_model, "_CACHE", {})
+    monkeypatch.setattr(_model, "_build",
+                        lambda t: (_ for _ in ()).throw(RuntimeError("no access")))
+
+    status = _model.effective()
+    assert status["configured"] == "bedrock"
+    assert status["ready"] is False
+    assert "no access" in status["why_not"]
+
+
+def test_choosing_no_model_is_not_reported_as_a_fault(monkeypatch):
+    """"none" is a supported mode. Flagging it as broken would train everyone
+    to ignore the one line that matters when something really is broken."""
+    import _model
+
+    monkeypatch.setattr(_model, "PROVIDER", "none")
+    monkeypatch.setattr(_model, "unavailable", "")
+    monkeypatch.setattr(_model, "_CACHE", {})
+    assert _model.effective()["why_not"] == ""
+
+
+def test_a_model_call_that_fails_is_recorded(monkeypatch):
+    """The model is allowed to fail and the booking is allowed to continue.
+    Both. What is not allowed is failing quietly."""
+    import _model
+
+    class Broken:
+        def invoke(self, _prompt):
+            raise RuntimeError("expired token")
+
+    monkeypatch.setattr(_model, "PROVIDER", "bedrock")
+    monkeypatch.setattr(_model, "unavailable", "")
+    base = rq.parse("take me somewhere", TODAY)
+    assert rq.enrich(base, Broken(), TODAY) == base      # carried on
+    assert "expired token" in _model.unavailable         # and said so

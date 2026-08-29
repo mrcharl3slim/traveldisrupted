@@ -349,8 +349,14 @@ def enrich(base: Request, model, today: date | None = None) -> Request:
         if isinstance(body, list):                # some providers chunk it
             body = "".join(p.get("text", "") for p in body if isinstance(p, dict))
         data = json.loads(re.search(r"\{.*\}", str(body), re.S).group(0))
-    except Exception:                             # noqa: BLE001
-        return base                               # arithmetic still works
+    except Exception as exc:                      # noqa: BLE001
+        # Arithmetic still works, and that is the point -- but a swallowed
+        # failure that nobody records is how a broken token looks identical to
+        # a working one for a whole demo.
+        import _model
+
+        _model.note_failure(exc)
+        return base
 
     def place_code(value) -> str:
         found = places.find(str(value or ""))

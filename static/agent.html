@@ -402,7 +402,11 @@ api('/health').then(h => {
      <div class="note">You can book several trips. Break any of them from the panel
      on the right.</div>
      <div class="ports">ports <b>${esc(h.ports_mode)}</b> · model
-     <b>${esc(h.model)}</b> · storage <b>${esc(h.storage)}</b></div>`);
+     <b>${esc(h.model)}</b> · storage <b>${esc(h.storage)}</b></div>`
+    + (h.model_status && !h.model_status.ready && h.model_status.configured !== 'none'
+       ? `<div class="banner warn">${esc(h.model_status.label)} is configured but
+          did not start — running on arithmetic. ${esc(h.model_status.why_not)}</div>`
+       : ''));
   loadTrips();
 }).catch(e => bubble('Downstream', `<span style="color:var(--bad)">${esc(e.message)}</span>`));
 </script>

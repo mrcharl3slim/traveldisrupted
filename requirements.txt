@@ -6,6 +6,10 @@
 langgraph>=0.6
 langchain-core>=0.3
 langchain-aws>=1.4.3          # LLM_PROVIDER=bedrock
+boto3>=1.35                   # imported directly by _model.py, so pinned here
+                              # rather than relied on as a langchain-aws
+                              # transitive — a dependency you import is a
+                              # dependency you declare
 langchain-anthropic>=0.3      # LLM_PROVIDER=anthropic
 fastapi>=0.115                # day 9-10
 uvicorn>=0.32

@@ -8,8 +8,14 @@ python serve.py                   # the web app, first free port from 8000
 python cli.py                     # the same numbers, in a terminal
 python cli.py --base written      # the October scenario, as the tests assert it
 python mcp_server.py              # the engine as MCP tools, over stdio
-python -m pytest tests/ -q        # 147 tests, no keys, no network
+python -m pytest tests/ -q        # 150 tests, no keys, no network
 ```
+
+`/health` reports `ports_mode`, `model_status` and `storage`, and the front page
+prints them. `model_status.ready` is the one worth reading: `label` is what was
+configured and `ready` is whether it started — a Bedrock key with no model
+access says "bedrock:claude-haiku-4-5" in confident blue otherwise, while every
+call quietly falls back to a template.
 
 Runs in **replay** by default: every API response is a committed fixture, so
 the demo cannot be killed by a cold request or an expired token. To go live:
