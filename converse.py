@@ -110,15 +110,21 @@ def read(s: State) -> State:
     # this right?", the only reason to type is to change something, and an
     # additive merge would silently ignore them. Answering a confirmation with
     # a correction that changes nothing is worse than not offering to confirm.
-    correcting = (not base.confirmed
-                  and [a.field for a in base.gaps() if not a.optional] == ["confirm"])
+    # Read off the state rather than inferred from the shape of what is left.
+    # Inferring it was wrong by exactly one turn: the sentence that ANSWERS the
+    # last open question also leaves `confirm` as the only gap, so it was
+    # treated as a correction and re-parsed -- and "22 september", meant as the
+    # return date, came back out of a fresh parse as a DEPARTURE and overwrote
+    # the day out. The card being on screen is a fact about the conversation,
+    # so the node that put it there records it.
+    correcting = base.shown and not base.confirmed
     merged = replace(base, **{
         f.name: (getattr(fresh, f.name)
                  if (correcting and _set(getattr(fresh, f.name)))
                  else getattr(base, f.name) if _set(getattr(base, f.name))
                  else getattr(fresh, f.name))
         for f in fields(base) if f.name not in ("raw", "filled", "travellers",
-                                                "confirmed")
+                                                "confirmed", "shown")
     })
     merged = replace(merged,
                      travellers=max(base.travellers, fresh.travellers),
@@ -184,9 +190,19 @@ def needs_answers(s: State) -> str:
 
 
 def ask(s: State) -> State:
+    """Ask the first blocking question -- and record it if it was the card.
+
+    Putting the summary in front of somebody is what turns their next sentence
+    from an answer into a correction. That is a thing that happened, so it is
+    written down here, at the moment it happens, rather than guessed at later
+    from how much is still missing.
+    """
     blocking = [a for a in s["asks"] if not a.optional]
     first = blocking[0]
-    return {"reply": first.question}
+    out: State = {"reply": first.question}
+    if first.field == "confirm" and not s["req"].shown:
+        out["req"] = replace(s["req"], shown=True)
+    return out
 
 
 def route(s: State) -> State:

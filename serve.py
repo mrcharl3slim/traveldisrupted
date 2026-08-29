@@ -718,7 +718,7 @@ def _req_out(req) -> dict:
         "ret": req.ret.isoformat() if req.ret else None,
         "one_way": req.one_way, "travellers": req.travellers,
         "hotel": req.hotel, "hotel_area": req.hotel_area,
-        "confirmed": req.confirmed, "nights": req.nights,
+        "confirmed": req.confirmed, "shown": req.shown, "nights": req.nights,
         "hotel_in": req.hotel_in.isoformat() if req.hotel_in else None,
         "hotel_out": req.hotel_out.isoformat() if req.hotel_out else None,
         "preference": req.preference, "summary": req.summary(),
@@ -753,7 +753,7 @@ def _req_in(raw: dict):
         hotel=raw.get("hotel") if isinstance(raw.get("hotel"), bool) else None,
         hotel_area=str(raw.get("hotel_area") or "")[:60],
         hotel_in=when(raw.get("hotel_in")), hotel_out=when(raw.get("hotel_out")),
-        confirmed=bool(raw.get("confirmed")),
+        confirmed=bool(raw.get("confirmed")), shown=bool(raw.get("shown")),
         preference=(str(raw.get("preference") or "").lower()
                     if str(raw.get("preference") or "").lower()
                     in request_mod.PREFERENCES else ""),
@@ -797,7 +797,7 @@ def _appt_out(a) -> dict:
         "confirmed": a.confirmed,
         "day": a.day.isoformat() if a.day else None,
         "at": a.when.strftime("%H:%M") if a.when else None,
-        "minutes": a.minutes, "trip_id": a.trip_id,
+        "minutes": a.minutes, "trip_id": a.trip_id, "shown": a.shown,
         "summary": a.summary(), "ready": a.ready, "raw": a.raw,
     }
 
@@ -828,7 +828,7 @@ def _appt_in(raw: dict):
         day=settled, when=when,
         minutes=max(5, min(int(raw.get("minutes") or 60), 12 * 60)),
         trip_id=str(raw.get("trip_id") or "")[:40],
-        confirmed=bool(raw.get("confirmed")),
+        confirmed=bool(raw.get("confirmed")), shown=bool(raw.get("shown")),
         raw=str(raw.get("raw") or "")[:2000],
     )
 
@@ -873,8 +873,10 @@ def _appointment_turn(body: Chat) -> dict:
     # Additive while collecting, overwriting while correcting -- the same rule
     # `converse.read` applies to a booking, and for the same reason: offering
     # to confirm and then ignoring the correction is worse than not offering.
-    correcting = (base is not None and not base.confirmed
-                  and [a.field for a in base.gaps() if not a.optional] == ["confirm"])
+    # Taken from the state, not inferred: the turn that answers the last
+    # question would otherwise look identical to the turn that corrects the
+    # card, and the answer would be re-parsed as a correction.
+    correcting = base is not None and base.shown and not base.confirmed
 
     def pick(field_name, empty):
         was = getattr(base, field_name) if base else empty
@@ -891,6 +893,7 @@ def _appointment_turn(body: Chat) -> dict:
                  else (base.minutes if base else appt_mod.DEFAULT_MINUTES)),
         trip_id=chosen or (base.trip_id if base else ""),
         confirmed=(base.confirmed if base and not correcting else False),
+        shown=bool(base and base.shown),
         raw=body.text or (base.raw if base else ""),
     )
     if correcting and fresh.where and not fresh.place:
@@ -922,6 +925,10 @@ def _appointment_turn(body: Chat) -> dict:
                 known += [places.label(b.where) for b in trip.in_order()
                           if places.by_code(b.where)]
         pending["options"] = list(dict.fromkeys(known))[:4]
+
+    # Showing the card is what makes the next sentence a correction.
+    if pending and pending["field"] == "confirm" and not settled.shown:
+        settled = replace_dataclass(settled, shown=True)
 
     out = {"kind": "appointment", "state": _appt_out(settled), "asks": asks,
            "unread": unread, "ports": [], "note": "", "detail": "",

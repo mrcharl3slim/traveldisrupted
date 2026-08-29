@@ -146,6 +146,16 @@ to the 22nd` works — a bare day is read against the month already on the card,
 while a bare number is not, because "2 adults" and "2 nights" are far commoner
 than "the 2nd".
 
+Which mode it is in turns on whether the card has actually been **shown**, and
+that is recorded when it goes up rather than inferred afterwards. Inferring it
+from "is `confirm` the only question left?" was wrong by exactly one turn: the
+sentence that *answers* the last question also satisfies that test, so it was
+re-read as a correction — and in a fresh parse a lone date is a departure.
+Typing `22 september` at "which day are you coming back?" moved the day out to
+the 22nd and put the trip home on the same date. Answering a question and
+amending an answer look identical from the outside; only the conversation knows
+which one just happened.
+
 ## Appointments
 
 The same box takes things nobody sold you:

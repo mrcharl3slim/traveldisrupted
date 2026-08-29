@@ -391,16 +391,29 @@ def test_the_card_spells_the_dates_out_in_full():
     assert rows["Hotel"]["value"] == "18 Sep – 20 Sep · 2 nights"
 
 
+def _at_the_card(text: str):
+    """The state a traveller is in once the summary is on screen.
+
+    Built by walking the same path the product walks, because the thing that
+    puts the card up is also the thing that records that it went up. Hand-
+    assembling the request instead would test a state the product never
+    reaches.
+    """
+    req = converse.turn(text, today=TODAY)["req"]
+    req = rq.answer(req, "hotel_dates", "the whole trip", TODAY)
+    req = converse.turn("", req, today=TODAY)["req"]        # the card goes up
+    assert [a.field for a in req.gaps() if not a.optional] == ["confirm"]
+    assert req.shown, "the card was asked for and not recorded as shown"
+    return req
+
+
 def test_a_correction_at_the_confirmation_overwrites():
     """Collecting is additive so "make it the 3rd" cannot wipe the
     destination. Correcting is not: once everything is settled and the
     traveller is looking at "have I got this right?", the only reason to type
     is to change something, and an additive merge would ignore them."""
-    settled = converse.turn("zurich to milan 18 to 20 september with a hotel, "
-                            "cheapest", today=TODAY)["req"]
-    settled = rq.answer(settled, "hotel_dates", "the whole trip", TODAY)
-    assert [a.field for a in settled.gaps() if not a.optional] == ["confirm"]
-
+    settled = _at_the_card("zurich to milan 18 to 20 september with a hotel, "
+                           "cheapest")
     fixed = converse.turn("actually the 19th to the 22nd", settled,
                           today=TODAY)["req"]
     assert fixed.depart == date(2026, 9, 19) and fixed.ret == date(2026, 9, 22)
@@ -429,22 +442,35 @@ def test_blocking_questions_come_before_optional_ones():
 def test_a_bare_day_is_read_against_the_month_on_the_card():
     """"actually the 19th to the 22nd" is how a person corrects a date they
     are looking at. The month is the one already recorded."""
-    settled = converse.turn("zurich to milan 18 to 20 september with a hotel, "
-                            "cheapest", today=TODAY)["req"]
-    settled = rq.answer(settled, "hotel_dates", "the whole trip", TODAY)
-    assert [a.field for a in settled.gaps() if not a.optional] == ["confirm"]
+    settled = _at_the_card("zurich to milan 18 to 20 september with a hotel, "
+                           "cheapest")
     fixed = converse.turn("actually the 19th to the 22nd", settled,
                           today=TODAY)["req"]
     assert (fixed.depart, fixed.ret) == (date(2026, 9, 19), date(2026, 9, 22))
+
+
+def test_a_bare_day_answers_the_return_question():
+    """"the 22nd" is a whole answer to "which day are you coming back?".
+
+    Asking the question named the month, so the ordinal does not need one --
+    and a day that has already gone by the time the trip leaves belongs to the
+    month after. A return before the departure is not a date worth storing.
+    """
+    out = rq.answer(parse("zurich to milan on 18 september"),
+                    "ret_date", "the 22nd", TODAY)
+    assert out.ret == date(2026, 9, 22)
+
+    late = rq.answer(parse("zurich to milan on 30 september"),
+                     "ret_date", "the 3rd", TODAY)
+    assert late.ret == date(2026, 10, 3), "the return was filed before the flight out"
 
 
 def test_a_bare_number_is_not_mistaken_for_a_date():
     """"2 adults" and "2 nights" are far commoner than "the 2nd", and reading
     them as a date would be the confident kind of wrong. Only an ordinal or a
     leading "the" counts."""
-    settled = converse.turn("zurich to milan 18 to 20 september with a hotel, "
-                            "cheapest", today=TODAY)["req"]
-    settled = rq.answer(settled, "hotel_dates", "the whole trip", TODAY)
+    settled = _at_the_card("zurich to milan 18 to 20 september with a hotel, "
+                           "cheapest")
     same = converse.turn("2 adults", settled, today=TODAY)["req"]
     assert same.depart == date(2026, 9, 18)
     assert same.travellers == 2

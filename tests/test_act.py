@@ -281,6 +281,28 @@ def test_a_typed_reply_answers_the_open_question(client):
     assert typed["reply"] != turn["reply"]
 
 
+def test_answering_the_last_question_is_not_a_correction(client):
+    """The return date, typed, landed on the day OUT.
+
+    Answering it leaves "have I got this right?" as the only question -- which
+    is the same shape as a traveller standing in front of the finished card,
+    and the agent could not tell the two apart. So it re-read the answer as a
+    correction, and in a fresh parse a lone date is a DEPARTURE: 22 September
+    quietly replaced the 18th, and the trip left on the day it was meant to
+    come home.
+    """
+    turn = client.post("/api/chat", json={
+        "text": "zurich to milan on 18 september, coming back, cheapest, "
+                "no hotel"}).json()
+    assert turn["asks"][0]["field"] == "ret_date"
+
+    typed = client.post("/api/chat", json={
+        "state": turn["state"], "text": "22 september"}).json()
+    assert typed["state"]["depart"] == turn["state"]["depart"], \
+        "answering the return question moved the day out"
+    assert str(typed["state"]["ret"]).endswith("-22")
+
+
 def test_typing_walks_the_whole_conversation(client):
     """Chips are a shortcut, not the only path. Every question has to be
     answerable by typing, because that is what a person does first."""

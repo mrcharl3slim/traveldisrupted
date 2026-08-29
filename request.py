@@ -81,6 +81,13 @@ class Request:
     hotel_out: date | None = None
     preference: str = ""
     confirmed: bool = False
+    #: Whether the summary card has actually been PUT IN FRONT of the
+    #: traveller. Not the same as everything being answered, and the difference
+    #: is a whole turn: the sentence that answers the last question also leaves
+    #: `confirm` as the only gap, so deriving this from the gaps made the agent
+    #: read that answer as a correction. "22 september", offered as the return
+    #: date, was re-parsed as a fresh departure and overwrote the day out.
+    shown: bool = False
     raw: str = ""
     filled: tuple[str, ...] = ()        # what the traveller settled, for the UI
 
@@ -316,6 +323,26 @@ def _bare(text: str, context: date) -> tuple[date | None, date | None]:
         return start, (end if start and end and end >= start else None)
     m = _BARE_ONE.search(text)
     return (on(int(m.group(1))), None) if m else (None, None)
+
+
+def _after(day: date, floor: date) -> date:
+    """The first time this day-of-month falls on or after ``floor``.
+
+    A day with no month, answered to "which day are you coming back?", belongs
+    to the month the traveller is travelling in -- unless that has already
+    passed, in which case it belongs to the next one. A return before the
+    departure is not a date this engine should be willing to store.
+    """
+    year, month = floor.year, floor.month
+    for _ in range(13):
+        try:
+            candidate = date(year, month, day.day)
+        except ValueError:
+            candidate = None
+        if candidate is not None and candidate >= floor:
+            return candidate
+        month, year = (1, year + 1) if month == 12 else (month + 1, year)
+    return floor
 
 
 def _dates(text: str, today: date,
@@ -573,6 +600,14 @@ def answer(base: Request, field_name: str, value: str,
             return replace(base, one_way=True, ret=None, filled=filled)
         found, second = _dates(value.lower(), today)
         found = second or found
+        if found is None and base.depart is not None:
+            # "the 22nd". Asking the question named the month, so a bare day is
+            # a complete answer here even though it is not one in an opening
+            # sentence, where a lone number is more likely to be two adults.
+            bare_start, bare_end = _bare(value.lower(), base.depart)
+            found = bare_end or bare_start
+            if found is not None and found < base.depart:
+                found = _after(found, base.depart)
         if found:
             return replace(base, ret=found, one_way=False, filled=filled)
         if re.search(r"\b(coming back|come back|return(ing)?|round[-\s]?trip|"

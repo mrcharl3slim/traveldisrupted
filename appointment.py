@@ -70,6 +70,10 @@ class Appointment:
     minutes: int = DEFAULT_MINUTES
     trip_id: str = ""
     confirmed: bool = False
+    #: Whether the card has been shown. See `Request.shown` -- same rule, same
+    #: reason: an answer arriving on the turn that completes the form must not
+    #: be mistaken for a correction of the summary it has not seen yet.
+    shown: bool = False
     raw: str = ""
 
     def gaps(self) -> list[Ask]:

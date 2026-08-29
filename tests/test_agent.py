@@ -67,10 +67,17 @@ def test_the_lanes_are_grouped_for_the_handoff():
 
 
 def test_without_a_model_the_sentence_is_still_good():
-    """The fallback has to be publishable, not a placeholder."""
-    r = run()["rationale"]
+    """The fallback has to be publishable, not a placeholder.
+
+    The buffer is read off the chosen plan rather than typed in here. It is a
+    property of the recording, and pinning the number meant the test failed
+    the day a different train won -- which said nothing about the sentence.
+    """
+    out = run()
+    r = out["rationale"]
     assert "back in your pocket" in r and "282" not in r
-    assert "20 minutes to spare" in r
+    _bid, buf = out["chosen"].tightest
+    assert f"{int(buf.total_seconds() // 60)} minutes to spare" in r
 
 
 def test_a_dead_model_costs_prose_never_the_plan():
