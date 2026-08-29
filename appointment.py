@@ -33,7 +33,7 @@ from datetime import date, datetime, time, timedelta
 
 import places
 from domain import Booking, Kind
-from request import MONTHS, Ask, _dates
+from request import MONTHS, Ask, _dates, mentions_a_day
 
 #: What a meeting takes if nobody says. An hour is the commonest working
 #: default and it is a *stated* assumption -- shown on screen, and overridden
@@ -57,6 +57,7 @@ _WITH = re.compile(
 _AT_PLACE = re.compile(
     r"\b(?:at|in)\s+(?:the\s+)?([A-Za-z][\w'&.\- ]{1,48}?)"
     r"(?=\s+(?:on|at|from|next|this|tomorrow|for|with)\b|[,.]|$)", re.I)
+
 
 
 @dataclass(frozen=True)
@@ -329,7 +330,7 @@ def enrich(base: Appointment, model, today: date | None = None) -> Appointment:
         found = places.find(str(data["where"]))
         if found:
             changes["place"] = found.code
-    if base.day is None and data.get("day"):
+    if base.day is None and data.get("day") and mentions_a_day(base.raw):
         try:
             changes["day"] = date.fromisoformat(str(data["day"])[:10])
         except ValueError:

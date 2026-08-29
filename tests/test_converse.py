@@ -319,6 +319,82 @@ def test_bookkeeping_is_not_mistaken_for_an_answer():
     assert _replace(r, preference="direct").settled != r.settled
 
 
+class Echoes:
+    """A model that answers about the whole request when shown a fragment.
+
+    Not a strawman: this is verbatim what Haiku returns for these two inputs
+    through `LLM_PROVIDER=bedrock`. It is being reasonable -- a flight leaves
+    on a day, the only day it has been shown is the one in the prompt -- which
+    is exactly why the prompt cannot be the thing that stops it.
+    """
+
+    def __init__(self, payload: str):
+        self.payload = payload
+
+    def invoke(self, _prompt):
+        return self.payload
+
+
+ONE_WAY = ('{"origin_city": null, "destination_city": null, '
+           '"depart": "2026-08-29", "ret": null, "travellers": null, '
+           '"hotel": false, "preference": null}')
+TWO_NIGHTS = ('{"origin_city": null, "destination_city": null, '
+              '"depart": null, "ret": "2026-08-31", "travellers": null, '
+              '"hotel": true, "preference": null}')
+
+
+def test_a_room_is_not_declined_on_the_travellers_behalf():
+    """The whole product in one boolean. A hallucinated date at least goes on
+    the card to be checked; `hotel: false` does not appear anywhere -- it
+    deletes the question, and nothing asks again. Answering "one way" left the
+    traveller with no room and no memory of having refused one."""
+    base = rq.parse("one way", TODAY)
+    assert base.hotel is None
+    assert rq.enrich(base, Echoes(ONE_WAY), TODAY).hotel is None
+
+    # Still allowed where the traveller did raise it, in words the pattern
+    # does not cover: "nights" is not in the deterministic list, and reading
+    # it is the whole reason there is a model in this path at all.
+    nights = rq.parse("one way, three nights in milan", TODAY)
+    assert nights.hotel is None, "the pattern settled this and the model is moot"
+    assert rq.enrich(nights, Echoes(TWO_NIGHTS), TODAY).hotel is True
+
+
+def test_a_date_is_not_taken_from_a_sentence_that_names_no_day():
+    """The prompt names today so "next Tuesday" can be resolved, which also
+    hands the model a date to reach for when there is none. Two words about a
+    return leg came back with today as the departure."""
+    base = rq.parse("one way", TODAY)
+    assert rq.enrich(base, Echoes(ONE_WAY), TODAY).depart is None
+
+    cued = rq.parse("leaving tomorrow", TODAY)
+    assert rq.enrich(cued, Echoes(ONE_WAY), TODAY).depart == TODAY, (
+        "a cue the traveller put there is what the model is for")
+
+
+def test_one_way_is_not_undone_by_a_date_nobody_asked_for():
+    """`one_way` was set to False as a side effect of accepting a return date,
+    so a settled answer was overwritten by a blank being filled -- and "one
+    way" followed by any sentence with a number in it grew a return leg."""
+    base = rq.answer(rq.parse("zurich to milan 18 september", TODAY),
+                     "ret", "one way", TODAY)
+    assert base.one_way is True
+
+    after = rq.enrich(base, Echoes(TWO_NIGHTS), TODAY)
+    assert after.one_way is True and after.ret is None
+
+
+def test_a_return_before_the_outbound_is_not_a_return():
+    """Arithmetic, where a cue cannot help: "2 nights" genuinely refers to a
+    span, so it passes any test for whether a day was mentioned. What comes
+    back is the anchor date with two nights added to it, which lands three
+    weeks before the flight out."""
+    base = rq.answer(rq.parse("zurich to milan 18 september", TODAY),
+                     "ret", "coming back", TODAY)
+    assert base.one_way is False and base.ret is None
+    assert rq.enrich(base, Echoes(TWO_NIGHTS), TODAY).ret is None
+
+
 def test_a_model_that_cannot_start_is_reported_not_hidden(monkeypatch):
     """/health must not report an intention as a fact. A provider configured
     but not working reads identically to a working one otherwise, for as long

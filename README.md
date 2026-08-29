@@ -87,6 +87,32 @@ only about what is still blank, which means a model having an imaginative day
 cannot move a date the traveller stated plainly, and the whole thing still runs
 with `LLM_PROVIDER=none`.
 
+### Blanks only is half a fence
+
+Filling blanks stops the model *moving* a value and does nothing about it
+*supplying* one, and every blank is by definition unfenced. The prompt names
+today so relative phrasing can be resolved, which also hands the model a date
+to reach for when the sentence has none: asked to read the two words `one way`,
+Haiku returns today as the departure and `hotel: false`, every other key
+correctly null. It is not being careless — a flight leaves on a day, the only
+day in front of it is the one in the prompt — which is why the prompt saying
+"do not infer" is not the thing that can stop it.
+
+`hotel` is the expensive one. A hallucinated date at least goes on the card in
+full for the traveller to check; a boolean does not appear on the card at all —
+it **deletes the question**, and nothing downstream asks again. Answering "one
+way" left the traveller with no room and no memory of having refused one, which
+is the one thing this file says it will never do.
+
+So a supplied value is corroborated: `mentions_a_day` and `mentions_a_stay` ask
+whether the traveller brought the subject up at all, and a value about a
+subject they did not raise is dropped. This is not parsing — "next Thursday" is
+a cue and not a date, and reading it is exactly what the model is for. It only
+has to be a cue somebody actually typed. Two things the cue cannot catch are
+caught by arithmetic instead: a return before the outbound is the anchor date
+with a couple of nights added to it, and accepting a return date no longer
+flips a stated `one way` back to False as a side effect.
+
 The page names the providers it called. Book as many itineraries as you like,
 then break any one of them from the panel and take a plan.
 

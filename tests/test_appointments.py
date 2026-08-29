@@ -77,6 +77,42 @@ def test_nothing_about_the_three_is_ever_guessed():
     assert not a.ready
 
 
+class Echoes:
+    """Verbatim what Haiku returns for "i have a meeting" over bedrock.
+
+    Every key correctly null except the day, which comes back as today. It is
+    not being careless: a meeting is on a day, the only day in front of it is
+    the one the prompt supplies so that "next Thursday" can be resolved, and
+    "Do not infer" loses to that.
+    """
+
+    def invoke(self, _prompt):
+        return ('{"what": "meeting", "who": null, "where": null, '
+                '"day": "2026-08-29", "at": null, "minutes": null}')
+
+
+def test_a_day_is_not_invented_for_a_sentence_that_names_none():
+    """The guess does not merely add a wrong day -- it removes the question
+    that would have caught it. `gaps` stops asking "which day", so the
+    traveller is asked what time, and when they later type "19 september" the
+    additive merge keeps the guess and discards what they said. The meeting is
+    then filed on a day nobody chose and checked against flights."""
+    base = ap.parse("i have a meeting", TODAY)
+    assert base.day is None
+    assert ap.enrich(base, Echoes(), TODAY).day is None
+    assert [a.field for a in ap.enrich(base, Echoes(), TODAY).gaps()][:2] == [
+        "who", "day"]
+
+
+def test_a_day_the_traveller_did_raise_is_still_read_by_the_model():
+    """The guard is corroboration, not a ban. "Next Thursday" is a cue and not
+    a date -- `_dates` cannot resolve it and the model can, which is the only
+    reason it is in this path."""
+    base = ap.parse("meeting with the vendor next thursday", TODAY)
+    assert base.day is None, "the pattern settled this and the model is moot"
+    assert ap.enrich(base, Echoes(), TODAY).day == TODAY
+
+
 def test_a_named_part_of_the_day_becomes_a_stated_hour():
     """"Morning" has to become a number before anything can be checked against
     a flight — and the number is shown, not hidden."""

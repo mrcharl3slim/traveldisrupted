@@ -485,6 +485,63 @@ def parse(text: str, today: date | None = None,
 # the model, on the blanks only
 # --------------------------------------------------------------------------
 
+#: Anything that could possibly refer to a day, and anything that could
+#: possibly refer to somewhere to sleep. Deliberately loose: neither is trying
+#: to read the value, only to answer "did the traveller bring this up at all?"
+#: See `mentions_a_day`.
+_DAY_CUE = re.compile(
+    r"\d"                                    # 18 september, the 3rd, 9/18
+    r"|\b(?:" + "|".join(sorted(MONTHS)) + r")\b"
+    r"|\b(?:today|tonight|tomorrow|yesterday|overnight|weekend|new year"
+    r"|mon|tue|tues|wed|weds|thu|thur|thurs|fri|sat|sun"
+    r"|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b"
+    r"|\b(?:next|this|coming|following|last|end\s+of|start\s+of)\s+\w+"
+    r"|\bin\s+(?:a|an|one|two|three|four|five|six|seven)\b"
+    r"|\bday\s+after\b|\bday\s+before\b", re.I)
+_STAY_CUE = re.compile(
+    r"\b(?:hotel|hotels|room|rooms|stay|stays|staying|night|nights|bed|beds"
+    r"|accommodation|lodging|hostel|airbnb|apartment|apartments|b&b|b\s?and\s?b"
+    r"|somewhere\s+to\s+(?:stay|sleep)|place\s+to\s+(?:stay|sleep))\b", re.I)
+
+
+def mentions_a_day(text: str) -> bool:
+    """Did the traveller refer to a day at all?
+
+    The model is asked for blanks only, which fences it from overwriting
+    anything stated. That fence has a gap: it stops the model MOVING a value
+    and does nothing about the model SUPPLYING one out of nothing, and every
+    blank is by definition unfenced.
+
+    The prompt names today so relative phrasing can be resolved, which also
+    hands the model a date to reach for when the text has none. Asked to read
+    the two words "one way", Haiku returns today as the departure -- every
+    other key correctly null. It is not being careless: a flight leaves on a
+    day, the only day in front of it is the one in the prompt, and "Do not
+    infer beyond what is written" loses to that.
+
+    So a supplied date is corroborated instead: the sentence has to contain
+    something that refers to a day before one is taken from it. This is not
+    parsing -- "next Thursday" is a cue and not a date, and reading it is
+    exactly what the model is here for. It only has to be a cue the traveller
+    actually put there.
+    """
+    return bool(_DAY_CUE.search(text or ""))
+
+
+def mentions_a_stay(text: str) -> bool:
+    """The same question about a room, and the more expensive one to get wrong.
+
+    A hallucinated date is at least visible -- it goes on the card, in full,
+    for the traveller to check. `hotel` is a boolean, and the wrong one is
+    invisible: `false` does not appear on the card, it DELETES the question,
+    and nothing downstream ever asks again. "One way" came back with
+    `hotel: false` attached and the room was never mentioned again -- which is
+    the one thing `converse` says it will never do, decided by a model that had
+    been shown two words about a return leg.
+    """
+    return bool(_STAY_CUE.search(text or ""))
+
+
 _PROMPT = """Read this travel request and return ONLY JSON.
 
 Request: {text}
@@ -544,12 +601,24 @@ def enrich(base: Request, model, today: date | None = None) -> Request:
         changes["origin"] = place_code(data["origin_city"])
     if not base.destination and place_code(data.get("destination_city")):
         changes["destination"] = place_code(data["destination_city"])
-    if base.depart is None and when(data.get("depart")):
+    stated_a_day = mentions_a_day(base.raw)
+    if base.depart is None and when(data.get("depart")) and stated_a_day:
         changes["depart"] = when(data["depart"])
-    if base.ret is None and when(data.get("ret")):
-        changes["ret"] = when(data["ret"])
-        changes["one_way"] = False
-    if base.hotel is None and isinstance(data.get("hotel"), bool):
+    # Not when they have already said one way. A return date is then a
+    # contradiction rather than a blank, and `one_way` was being flipped back
+    # to False as a side effect of accepting it -- so "one way" followed by any
+    # sentence with a number in it quietly grew a return leg.
+    if base.ret is None and not base.one_way and stated_a_day:
+        ret = when(data.get("ret"))
+        depart = changes.get("depart", base.depart)
+        # A return before the outbound is not a return. It is the anchor date
+        # coming back with a couple of nights added to it.
+        if ret and not (depart and ret < depart):
+            changes["ret"] = ret
+            if base.one_way is None:
+                changes["one_way"] = False
+    if (base.hotel is None and isinstance(data.get("hotel"), bool)
+            and mentions_a_stay(base.raw)):
         changes["hotel"] = data["hotel"]
     if not base.preference and str(data.get("preference", "")).lower() in PREFERENCES:
         changes["preference"] = str(data["preference"]).lower()
