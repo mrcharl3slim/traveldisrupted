@@ -267,8 +267,8 @@ loop: `search_flights`, `search_hotels`, `select`, `cancel`, `replan`.
 Nothing about the scenario is configured. The recovery query — where the
 traveller now stands, where they are contractually due next, by when — is
 derived in `plan.recovery_gap`, so cancelling a different leg searches a
-different route without an edit. Four things this flow made visible that a
-literal trip had hidden:
+different route without an edit. What this flow made visible that a literal
+trip had hidden:
 
 - **A cancelled flight is not its own replacement.** The cancellation is ours,
   not the airline's, so its seats are still in inventory and the search returns
@@ -288,6 +288,15 @@ literal trip had hidden:
   under this plan": a Milan room guaranteed to 22:00 is 04:00 tomorrow in
   Singapore, and a 23:55 departure settles five minutes after it is cancelled,
   so a whole cancelled outbound reported *nothing downstream is out of reach*.
+- **The walk has to walk.** Judging every booking against the disruption point
+  alone leaves `transit` as the only way onward, and `transit` knows ground
+  routes, not flights — so a trip that flies on past the connection lost
+  everything after it. Zurich to Milan to Rome said the flight to Rome was
+  safe and the meeting in Rome was missed, in the same table. A leg the
+  traveller can still take is now recorded before the next booking is judged.
+  It only ever forgives, and it forgives the baseline and every candidate plan
+  through the same map. The scripted trip has one destination and nothing
+  flying on from it, which is exactly why it never showed.
 
 The old scripted demo — one late flight, eleven bookings, EUR 282 — still runs
 at `/`, from the same fixtures, asserting the same numbers.

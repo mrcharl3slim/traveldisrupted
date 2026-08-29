@@ -77,6 +77,25 @@ class ReachModel:
         at = self.presence(b.where, b.must_arrive_by)
         return at is not None and at <= b.must_arrive_by
 
+    def took(self, b: Booking) -> None:
+        """Record that the traveller took ``b`` and is now where it ends.
+
+        Only things that MOVE somebody: a booking with a destination. A hotel
+        and a meeting are places you have to be, not journeys that put you
+        somewhere, and both carry an origin and no destination -- so this is
+        the whole test, and it stays right for the next kind of booking added.
+
+        Earliest wins. Two ways of being in the same city are not two
+        arrivals, they are one arrival at whichever comes first, and letting a
+        later leg overwrite an earlier one would make the traveller harder to
+        reach by giving them another way to get there.
+        """
+        if not b.destination or b.end is None:
+            return
+        held = self.arrivals.get(b.destination)
+        if held is None or b.end < held:
+            self.arrivals[b.destination] = b.end
+
 
 def no_action_model(disruption: Disruption, trip: Trip) -> ReachModel:
     """The traveller sleeps through it and sorts it out tomorrow.
@@ -206,7 +225,24 @@ class Impact:
 
 def propagate(trip: Trip, disruption: Disruption, now: datetime,
               model: ReachModel | None = None) -> Impact:
-    """Walk the itinerary forward and let the consequences fall out."""
+    """Walk the itinerary forward and let the consequences fall out.
+
+    THE WALK CARRIES THE TRAVELLER. Every booking is judged against where the
+    traveller can be by then, and a leg they can still take changes that -- so
+    taking it is recorded before the next booking is judged. Without it the
+    walk was not a walk: each booking was measured against the disruption point
+    alone, `transit` knows ground routes and not flights, and a trip that flies
+    on somewhere lost every booking past the connection. Zurich to Milan to
+    Rome, with the Zurich leg late: the Milan hop is still catchable, it lands
+    you in Rome, and the Rome hotel was reported destroyed because no road
+    goes there.
+
+    It only ever forgives. A booking is added to the arrivals map when the
+    traveller can attend it, which can turn a later BROKEN into SAFE and never
+    the other way round -- and it forgives the baseline and every candidate
+    plan through the same map, because `plan.build` scores both against the
+    broken set this returns.
+    """
     model = model or no_action_model(disruption, trip)
     source = trip.by_id(disruption.booking_id)
     nodes = [Node(
@@ -215,9 +251,17 @@ def propagate(trip: Trip, disruption: Disruption, now: datetime,
         reason=disruption.reason or "operational delay",
     )]
 
+    # Copied, because walking writes to it. The caller's model describes the
+    # disruption and is theirs to reuse -- `plan.generate` builds one per
+    # candidate and would otherwise accumulate every previous candidate's
+    # itinerary into the next one's.
+    reached = ReachModel(dict(model.arrivals), model.settled_from)
+
     prior: list[str] = [source.id]
     for b in exposed_to(trip, disruption):
-        attends = model.can_attend(b)
+        attends = reached.can_attend(b)
+        if attends:
+            reached.took(b)
         recoverable = b.recoverable_at(now)
         cut = b.policy.next_cutoff(now)
 

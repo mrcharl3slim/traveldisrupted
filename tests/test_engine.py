@@ -10,7 +10,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from demo_trip import TRIP, CEST, dt
-from domain import Disruption
+from domain import Booking, Disruption, Kind, Trip
 from graph import Severity, propagate
 
 # Detection lands at 02:38 on the 12th -- 5 h 42 m before the SWISS cutoff,
@@ -86,6 +86,77 @@ def test_countdown_anchors_to_a_real_deadline(impact):
     when, node = impact.next_cutoff
     assert node.id == "transfer"
     assert when - NOW == timedelta(hours=3, minutes=22)
+
+
+def test_a_leg_they_can_still_take_carries_them_to_the_next_one():
+    """The walk has to walk. Judging every booking against the disruption point
+    alone means the only way onward is `transit`, which knows ground routes and
+    not flights -- so a trip that flies on past the connection lost everything
+    after it.
+
+    Zurich to Milan to Rome, all one day so nothing is rescued by "later days
+    look after themselves". The Zurich leg lands 90 minutes late and the 14:00
+    onward hop is still comfortably catchable; it is the thing that puts the
+    traveller in Rome. Before this, the same table said the flight to Rome was
+    safe and the meeting in Rome was missed.
+    """
+    day = datetime(2026, 10, 12, tzinfo=CEST)
+
+    def at(hour, minute=0):
+        return day.replace(hour=hour, minute=minute)
+
+    onward = Booking(id="l2", kind=Kind.FLIGHT, provider="AZ",
+                     title="AZ 2050 MXP to FCO", start=at(14), end=at(15, 20),
+                     origin="MXP", destination="FCO", price=140.0)
+    room = Booking(id="h2", kind=Kind.LODGING, provider="hotel",
+                   title="Rome hotel", start=at(14), end=at(23), origin="FCO",
+                   price=430.0, hard_deadline=at(22),
+                   mitigation="call the property to hold the room")
+    client = Booking(id="m2", kind=Kind.ACTIVITY, provider="calendar",
+                     title="Rome client meeting", start=at(18), end=at(19),
+                     origin="FCO", price=0.0, commitment=True, who="the client")
+
+    trip = Trip([Booking(id="l1", kind=Kind.FLIGHT, provider="LX",
+                         title="LX 1608 ZRH to MXP", start=at(9), end=at(10, 10),
+                         origin="ZRH", destination="MXP", price=170.0),
+                 onward, room, client])
+    late = Disruption("l1", at(11, 40), "late inbound aircraft", 0.9)
+    impact = propagate(trip, late, at(8))
+
+    severities = {n.booking.id: n.severity for n in impact.nodes}
+    assert severities["l2"] is Severity.SAFE, "the premise: they still make it"
+    assert severities["h2"] is Severity.SAFE
+    assert severities["m2"] is Severity.SAFE
+    assert impact.do_nothing_cost == 0.0 and impact.at_risk_value == 0.0
+
+
+def test_a_leg_they_cannot_take_carries_them_nowhere():
+    """The other half, and the reason this only ever forgives. Same trip, with
+    the onward hop missed -- Rome has to go back to being out of reach, or
+    chaining would have quietly rescued the whole itinerary."""
+    day = datetime(2026, 10, 12, tzinfo=CEST)
+
+    def at(hour, minute=0):
+        return day.replace(hour=hour, minute=minute)
+
+    trip = Trip([
+        Booking(id="l1", kind=Kind.FLIGHT, provider="LX",
+                title="LX 1608 ZRH to MXP", start=at(9), end=at(10, 10),
+                origin="ZRH", destination="MXP", price=170.0),
+        Booking(id="l2", kind=Kind.FLIGHT, provider="AZ",
+                title="AZ 2050 MXP to FCO", start=at(14), end=at(15, 20),
+                origin="MXP", destination="FCO", price=140.0),
+        Booking(id="m2", kind=Kind.ACTIVITY, provider="calendar",
+                title="Rome client meeting", start=at(18), end=at(19),
+                origin="FCO", price=0.0, commitment=True, who="the client"),
+    ])
+    # Cancelled, so they never leave Zurich and the onward hop goes with it.
+    stuck = Disruption("l1", at(8, 30), "cancelled", 1.0, cancelled=True)
+    impact = propagate(trip, stuck, at(8))
+
+    severities = {n.booking.id: n.severity for n in impact.nodes}
+    assert severities["l2"] is Severity.BROKEN
+    assert severities["m2"] is Severity.BROKEN
 
 
 def test_nothing_is_recoverable_once_every_window_has_passed():
