@@ -173,6 +173,24 @@ def _property(b: Booking) -> str:
     return b.title.split(" - ")[0].strip() or b.provider
 
 
+def _caveat(source: str, quoted: str) -> str:
+    """Say which kind of not-quite-a-quote this is.
+
+    Lumping them together was wrong in both directions. A converted fare is a
+    real number the airline stated, with a fixed rate applied -- calling it an
+    ESTIMATE understates it and invites the traveller to distrust a figure they
+    can check. A rail fare genuinely is ours, because no reachable API sells
+    Swiss rail tickets, and calling that anything softer than an estimate
+    overstates it.
+    """
+    if source == "converted":
+        return (f" - {quoted} converted at a fixed rate" if quoted
+                else " - converted from another currency at a fixed rate")
+    if source and source != "quoted":
+        return " - fare is an ESTIMATE, confirm at checkout"
+    return ""
+
+
 def _designator(label: str) -> str:
     """"JU 0333 - ZRH to MXP via BEG" -> "JU 0333"."""
     return label.split(" - ")[0].strip().upper()
@@ -351,8 +369,8 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
             cash_out=offer.price,
             price_source=getattr(offer, "price_source", "quoted"),
             note=f"departs {offer.depart:%H:%M}, arrives {offer.arrive:%H:%M}"
-                 + ("" if getattr(offer, "price_source", "quoted") == "quoted"
-                    else " - fare is an ESTIMATE, confirm at checkout")))
+                 + _caveat(getattr(offer, "price_source", "quoted"),
+                           getattr(offer, "quoted", ""))))
 
     actions.append(Action(
         verb="monitor", lane=Lane.AUTO,
@@ -371,20 +389,69 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
     )
 
 
+def _preference_key(plan: "Plan", preference: str):
+    """Order two plans of equal damage by what the traveller said mattered.
+
+    Damage still decides. This only breaks ties -- and ties are common, because
+    two flights that both save the same hotel and cost within a euro of each
+    other are genuinely equivalent to the arithmetic and not at all equivalent
+    to somebody who told us at booking time that they wanted no connections.
+    Letting the stated preference decide there is the difference between an
+    engine that remembers a person and one that merely computes.
+
+    It is deliberately not allowed to outrank money. A traveller who prefers
+    direct flights has not agreed to pay two hundred euros more for one, and an
+    engine that quietly assumes they have is doing the thing this whole product
+    exists to stop.
+    """
+    if preference == "fastest" and plan.arrives_at:
+        return plan.arrives_at.timestamp()
+    if preference == "direct":
+        return _stops(plan.name)
+    return plan.net_cash
+
+
+def _stops(label: str) -> int:
+    if " via " in label:
+        return 1
+    tail = label.rsplit(", ", 1)[-1]
+    if tail.endswith("stops"):
+        try:
+            return int(tail.split()[0])
+        except ValueError:
+            return 0
+    return 0
+
+
+def breaks_preference(plan: "Plan", preference: str) -> bool:
+    """True when the best plan is not the kind of trip they asked for.
+
+    Said out loud rather than silently corrected. "This is the only option that
+    saves your room, and it has a connection you told me you did not want" is a
+    sentence a traveller can act on; quietly demoting it and recommending
+    something worse is a decision taken on their behalf.
+    """
+    return bool(preference == "direct" and plan.arrives_at and _stops(plan.name))
+
+
 def generate(trip: Trip, disruption: Disruption, now: datetime,
-             offers) -> list[Plan]:
+             offers, preference: str = "") -> list[Plan]:
     """Every option including inaction, ranked by what the disruption costs.
 
     Doing nothing is scored by the same code as everything else. That is the
     whole argument: it is not a rhetorical baseline, it is a candidate that
     loses.
+
+    ``preference`` is whatever the traveller said mattered when they booked.
+    It breaks ties and nothing more -- see `_preference_key`.
     """
     baseline = propagate(trip, disruption, now)
     built = [build(trip, disruption, now, baseline, o) for o in [None, *offers]]
     plans = [p for p in built if p is not None]
-    return sorted(plans, key=lambda p: (p.total_damage,
-                                        p.arrives_at or datetime.max.replace(
-                                            tzinfo=now.tzinfo)))
+    latest = datetime.max.replace(tzinfo=now.tzinfo)
+    return sorted(plans, key=lambda p: (round(p.total_damage, 2),
+                                        _preference_key(p, preference),
+                                        p.arrives_at or latest))
 
 
 @dataclass(frozen=True)

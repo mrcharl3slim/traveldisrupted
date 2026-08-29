@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Downstream</title>
+<style>
+  :root{
+    --bg:#0b0f14; --card:#141b23; --edge:#232d38; --ink:#e8eef4; --dim:#93a1b0; --faint:#5d6b7a;
+    --ok:#3fb950; --bad:#f85149; --warn:#e3b341; --key:#58a6ff;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  .wrap{max-width:1080px;margin:0 auto;padding:24px 20px 140px}
+  header{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap}
+  h1{font-size:20px;margin:0}
+  .sub{color:var(--dim);font-size:13px}
+  a{color:var(--key);text-decoration:none}
+  .cols{display:grid;grid-template-columns:1fr 320px;gap:18px;margin-top:18px}
+  @media (max-width:880px){.cols{grid-template-columns:1fr}}
+
+  .thread{display:flex;flex-direction:column;gap:12px}
+  .msg{border:1px solid var(--edge);border-radius:12px;padding:14px 16px;background:var(--card)}
+  .msg.me{background:#17222f;border-color:#2b3c4f;align-self:flex-end;max-width:76%}
+  .msg.agent{border-left:3px solid var(--key)}
+  .msg .who{font:10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;
+            color:var(--faint);margin-bottom:7px}
+  .why{font-size:12.5px;color:var(--dim);margin-top:8px;border-top:1px solid var(--edge);
+       padding-top:8px}
+
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .chip{background:#17222f;border:1px solid #2b3c4f;color:var(--ink);font:inherit;font-size:13.5px;
+        padding:7px 14px;border-radius:999px;cursor:pointer}
+  .chip:hover{background:#1d2b3b}
+
+  .ports{font:11.5px var(--mono);color:var(--key);margin-top:10px}
+  .ports i{font-style:normal;color:var(--faint)}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:10px}
+  th{text-align:left;font:10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;
+     color:var(--faint);font-weight:500;padding:0 8px 8px;border-bottom:1px solid var(--edge)}
+  th.n,td.n{text-align:right}
+  td{padding:9px 8px;border-bottom:1px solid #1b242e;vertical-align:top}
+  tr.pick{cursor:pointer}
+  tr.pick:hover{background:#18212b}
+  tr.sel{background:#12202f}
+  tr.sel td:first-child{border-left:2px solid var(--key)}
+  tr.best td:first-child{border-left:2px solid var(--key)}
+  .m{font:11px var(--mono);color:var(--faint)}
+  .neg{color:var(--ok)}
+
+  .bar{position:fixed;left:0;right:0;bottom:0;background:#0d131a;border-top:1px solid var(--edge);
+       padding:14px 20px}
+  .bar .inner{max-width:1080px;margin:0 auto;display:flex;gap:10px}
+  input[type=text]{flex:1;background:#0e151d;border:1px solid var(--edge);border-radius:10px;
+                   color:var(--ink);font:inherit;font-size:15px;padding:12px 14px}
+  .btn{background:#17222f;border:1px solid #2b3c4f;color:var(--ink);font:inherit;font-size:14px;
+       padding:11px 18px;border-radius:10px;cursor:pointer;white-space:nowrap}
+  .btn:hover{background:#1d2b3b}
+  .btn.key{background:#173254;border-color:#2b5384}
+  .btn.bad{background:#2a1618;border-color:#4d2326;color:#ffb4ae}
+  .btn.sm{font-size:12.5px;padding:6px 12px;border-radius:8px}
+  .btn:disabled{opacity:.45;cursor:default}
+
+  aside .box{background:var(--card);border:1px solid var(--edge);border-radius:12px;padding:16px;
+             margin-bottom:14px}
+  aside h2{font:10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--faint);
+           margin:0 0 12px;font-weight:600}
+  .trip{border:1px solid var(--edge);border-left:3px solid var(--ok);border-radius:9px;
+        padding:11px 12px;margin-bottom:9px;background:#101821;cursor:pointer}
+  .trip:hover{border-color:#3a4a5c}
+  .trip.broken{border-left-color:var(--bad)}
+  .trip.on{background:#12202f}
+  .trip .t{font-size:13px}
+  .leg{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:5px 0;
+       border-bottom:1px solid #1b242e}
+  .leg:last-child{border-bottom:none}
+  .leg.pending .n{color:var(--warn)}
+  .tag{display:inline-block;font:9.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;
+       padding:1px 7px;border-radius:999px;border:1px solid var(--edge);color:var(--faint);
+       margin-left:6px}
+  .tag.warn{color:var(--warn);border-color:#3d3016}
+  .tag.ok{color:var(--ok);border-color:#1c3a22}
+  .banner{font:12px var(--mono);color:var(--key);background:#101a27;border:1px solid #1d3350;
+          border-radius:9px;padding:10px 13px;margin-top:10px;line-height:1.7}
+  .banner.bad{color:#ffb4ae;background:#1b1113;border-color:#4d2326}
+  .banner.warn{color:#f0cf72;background:#1b1710;border-color:#4d3f16}
+  .note{font-size:12.5px;color:var(--dim);margin-top:10px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Downstream</h1>
+      <div class="sub">Tell it what you want. It books it, watches it, and fixes it when it breaks.</div>
+    </div>
+    <div class="sub"><a href="/book">manual search</a> · <a href="/demo">scripted demo</a></div>
+  </header>
+
+  <div class="cols">
+    <main class="thread" id="thread"></main>
+    <aside>
+      <div class="box">
+        <h2>Your itineraries</h2>
+        <div id="trips"><div class="note">Nothing booked yet.</div></div>
+      </div>
+      <div class="box" id="detail-box" hidden>
+        <h2 id="detail-title">Itinerary</h2>
+        <div id="detail"></div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div class="bar"><div class="inner">
+  <input type="text" id="say" autocomplete="off"
+         placeholder="e.g. book me a flight from Zurich to Milan on 18 September, one way, with a hotel">
+  <button class="btn key" id="send">Send</button>
+</div></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const eur = n => (n < 0 ? '−' : '') + '€' + Math.abs(Math.round(n)).toLocaleString();
+// Times arrive pre-formatted in the trip's own timezone. Formatting them here
+// renders a Zurich arrival in whatever zone this laptop is set to.
+const at = w => w ? w.d : '—';
+
+let STATE = {};          // the request so far — the server holds nothing
+let LAST = null;         // the last agent turn, for the option tables
+let PICK = {flight:null, ret:null, hotel:null};
+let TRIPS = [], OPEN = null, RECOVERY = null;
+
+async function api(path, body){
+  const r = await fetch(path, body
+    ? {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(body)}
+    : undefined);
+  const j = await r.json().catch(() => ({detail:'unreadable response'}));
+  if (!r.ok) throw new Error(typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail));
+  return j;
+}
+
+function bubble(who, html, cls){
+  // Anything actionable in an earlier turn stops being actionable. A "Save
+  // this itinerary" button three messages up still works otherwise, and a
+  // traveller who scrolls back and clicks it books a second copy of a trip
+  // they already have.
+  document.querySelectorAll('#thread button:not([data-field])').forEach(b => {
+    b.disabled = true;
+  });
+  document.querySelectorAll('#thread .chip[data-field]').forEach(b => {
+    b.disabled = true; b.style.opacity = .45; b.style.cursor = 'default';
+  });
+  document.querySelectorAll('#thread tr.pick').forEach(tr => {
+    tr.onclick = null; tr.classList.remove('pick');
+  });
+
+  const el = document.createElement('div');
+  el.className = 'msg ' + (cls || (who === 'You' ? 'me' : 'agent'));
+  el.innerHTML = `<div class="who">${esc(who)}</div>${html}`;
+  $('#thread').appendChild(el);
+  el.scrollIntoView({behavior:'smooth', block:'end'});
+  return el;
+}
+
+async function say(text, answers){
+  if (text) bubble('You', esc(text));
+  let turn;
+  try { turn = await api('/api/chat', {text: text || '', state: STATE, answers: answers || {}}); }
+  catch (e) { return bubble('Downstream', `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
+
+  STATE = turn.state; LAST = turn; PICK = {flight:null, ret:null, hotel:null};
+
+  let html = esc(turn.reply);
+  if (STATE.summary && STATE.summary.trim() !== 'to  · date to confirm')
+    html += `<div class="note">So far: <b>${esc(STATE.summary)}</b></div>`;
+
+  // The question carries the reason it is being asked. A question you can see
+  // the point of is a question worth answering.
+  const ask = (turn.asks || []).find(a => !a.optional) || (turn.asks || [])[0];
+  if (ask && !turn.flights.length){
+    if (ask.why) html += `<div class="why">Why I'm asking: ${esc(ask.why)}</div>`;
+    if (ask.options.length)
+      html += `<div class="chips">` + ask.options.map(o =>
+        `<button class="chip" data-field="${esc(ask.field)}" data-value="${esc(o)}">${esc(o)}</button>`
+      ).join('') + `</div>`;
+  }
+
+  // Which systems were actually called. This is where it stops looking like a
+  // chatbot and starts looking like something with its hands on real systems.
+  if (turn.ports.length)
+    html += `<div class="ports">called ${turn.ports.map(p =>
+      `<b>${esc(p)}</b>`).join(' · ')} <i>· test accounts, nothing is charged</i></div>`;
+
+  if (turn.flights.length) html += offerTable('flight', 'Outbound', turn.flights);
+  if (turn.returns.length) html += offerTable('ret', 'Return', turn.returns);
+  if (turn.stays.length)   html += stayTable(turn.stays);
+  if (turn.flights.length)
+    html += `<div class="chips"><button class="btn key" id="confirm" disabled>
+             Save this itinerary</button></div>`;
+  if (turn.note)
+    html += `<div class="banner bad">${esc(turn.note)}</div>`;
+
+  const el = bubble('Downstream', html);
+  el.querySelectorAll('.chip[data-field]').forEach(b =>
+    b.onclick = () => say('', {[b.dataset.field]: b.dataset.value}));
+  wireOffers(el);
+}
+
+function offerTable(kind, title, rows){
+  return `<table><thead><tr><th>${esc(title)}</th><th>Departs</th><th>Arrives</th>
+    <th class="n">Fare</th></tr></thead><tbody>` + rows.map(o => `
+    <tr class="pick" data-kind="${kind}" data-id="${esc(o.id)}">
+      <td>${esc(o.label)}<div class="m">${esc(o.carrier)}${
+        o.refundable ? ' · refundable' : ' · non-refundable'}</div></td>
+      <td>${at(o.depart)}</td>
+      <td>${at(o.arrive)}${o.overnight ? '<div class="m">next day</div>' : ''}</td>
+      <td class="n">${eur(o.price)}${o.quoted ? `<div class="m">${esc(o.quoted)}</div>` : ''}</td>
+    </tr>`).join('') + `</tbody></table>`;
+}
+
+function stayTable(rows){
+  return `<table><thead><tr><th>Stay</th><th>Check-in</th><th>Held until</th>
+    <th class="n">Total</th></tr></thead><tbody>` + rows.map(h => `
+    <tr class="pick" data-kind="hotel" data-id="${esc(h.id)}">
+      <td>${esc(h.name)}<div class="m">${esc(h.city)} · ${h.nights} night${
+        h.nights === 1 ? '' : 's'}</div></td>
+      <td>${at(h.check_in)}</td>
+      <td>${at(h.held_until)}<div class="m">then the room is gone</div></td>
+      <td class="n">${eur(h.price)}</td>
+    </tr>`).join('') + `</tbody></table>`;
+}
+
+function wireOffers(el){
+  el.querySelectorAll('tr.pick[data-kind]').forEach(tr => tr.onclick = () => {
+    const kind = tr.dataset.kind;
+    PICK[kind] = PICK[kind] === tr.dataset.id ? null : tr.dataset.id;
+    el.querySelectorAll(`tr[data-kind="${kind}"]`).forEach(r =>
+      r.classList.toggle('sel', r.dataset.id === PICK[kind]));
+    const go = el.querySelector('#confirm');
+    if (go) go.disabled = !PICK.flight;
+  });
+  const go = el.querySelector('#confirm');
+  if (go) go.onclick = () => confirm(go);
+}
+
+async function confirm(button){
+  button.disabled = true;
+  let saved;
+  try {
+    saved = await api('/api/chat/choose', {state: STATE, flight_id: PICK.flight,
+      return_id: PICK.ret || '', hotel_id: PICK.hotel || ''});
+  } catch (e) { button.disabled = false; return bubble('Downstream',
+    `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
+
+  STATE = {}; PICK = {flight:null, ret:null, hotel:null};
+  bubble('Downstream',
+    `Saved as <b>${esc(saved.label)}</b> — ${eur(saved.total)} across ${saved.bookings.length} bookings.`
+    + (saved.problems.length
+       ? `<div class="banner bad">${saved.problems.map(esc).join('<br>')}</div>` : '')
+    + `<div class="note">Book another trip whenever you like, or open it on the right to
+       break it and see what happens.</div>`);
+  await loadTrips();
+}
+
+async function loadTrips(){
+  TRIPS = (await api('/api/itineraries')).itineraries;
+  $('#trips').innerHTML = TRIPS.length ? TRIPS.map(t => `
+    <div class="trip ${t.disrupted ? 'broken' : ''} ${OPEN === t.trip_id ? 'on' : ''}"
+         data-id="${esc(t.trip_id)}">
+      <div class="t">${esc(t.label)}</div>
+      <div class="m">${t.legs} bookings · ${eur(t.total)}${
+        t.preference ? ' · ' + esc(t.preference) : ''}${
+        t.disrupted ? ' · <span style="color:var(--bad)">disrupted</span>' : ''}</div>
+    </div>`).join('') : '<div class="note">Nothing booked yet.</div>';
+  document.querySelectorAll('.trip').forEach(el =>
+    el.onclick = () => openTrip(el.dataset.id));
+  if (OPEN) openTrip(OPEN, true);
+}
+
+function openTrip(id, quiet){
+  OPEN = id;
+  const trip = TRIPS.find(t => t.trip_id === id);
+  if (!trip) return;
+  document.querySelectorAll('.trip').forEach(el =>
+    el.classList.toggle('on', el.dataset.id === id));
+  $('#detail-box').hidden = false;
+  // Trimmed on a separator rather than mid-word: "one way · hotel · ch" reads
+  // like a country code and is not one.
+  const parts = trip.label.split(' · ');
+  let title = parts[0];
+  for (const part of parts.slice(1)) {
+    if ((title + ' · ' + part).length > 44) break;
+    title += ' · ' + part;
+  }
+  $('#detail-title').textContent = title;
+  $('#detail').innerHTML = trip.bookings.map(b => `
+    <div class="leg ${b.pending ? 'pending' : ''}">
+      <div>${esc(b.title)}
+        ${b.pending ? '<span class="tag warn">not paid</span>' : ''}
+        <div class="m">${at(b.starts)}</div></div>
+      <div class="n" style="white-space:nowrap">${eur(b.price)}
+        ${b.kind === 'flight' ? `<br><button class="btn bad sm"
+          data-break="${esc(b.id)}">Cancel</button>` : ''}</div>
+    </div>`).join('');
+  $('#detail').querySelectorAll('[data-break]').forEach(el =>
+    el.onclick = () => breakLeg(id, el.dataset.break));
+}
+
+async function breakLeg(tripId, bookingId){
+  let d;
+  try { d = await api('/api/cancel', {trip_id: tripId, booking_id: bookingId}); }
+  catch (e) { return bubble('Downstream',
+    `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
+  RECOVERY = {trip: tripId, booking: bookingId, body: d};
+
+  bubble('You', `My ${esc(d.signal.title)} has been cancelled.`);
+
+  let html = `<b>${esc(d.signal.title)}</b> is cancelled. `
+    + (d.gap
+       ? `You are at ${esc(d.gap.origin)}, and you are due in ${esc(d.gap.destination)} by
+          ${at(d.gap.by)}. I searched ${d.searched.length} replacements.`
+       : `Nothing downstream is out of reach — there is nothing to fix.`)
+    + `<div class="note">Destroyed <b>${eur(d.impact.do_nothing)}</b> ·
+       held by a phone call <b>${eur(d.impact.at_risk)}</b> ·
+       acting is worth <b>${eur(d.saved)}</b>.</div>`;
+
+  if (d.warning) html += `<div class="banner warn">${esc(d.warning)}</div>`;
+
+  html += `<table><thead><tr><th>Plan</th><th class="n">Tonight</th>
+    <th class="n">Total damage</th><th>Arrives</th></tr></thead><tbody>`
+    + d.plans.slice(0, 6).map(p => `
+      <tr class="pick ${p.best ? 'best' : ''}" data-plan="${esc(p.id)}">
+        <td>${esc(p.name)}${p.best ? '<span class="tag ok">recommended</span>' : ''}</td>
+        <td class="n ${p.net_cash < 0 ? 'neg' : ''}">${p.net_cash ? eur(p.net_cash) : '—'}</td>
+        <td class="n">${eur(p.total_damage)}</td>
+        <td>${p.arrives_at ? esc(p.arrives_where) + ' ' + at(p.arrives_at) : '—'}</td>
+      </tr>`).join('') + `</tbody></table>
+    <div class="chips"><button class="btn key" id="do-it" disabled>Take this plan</button></div>`;
+
+  const el = bubble('Downstream', html);
+  let chosen = null;
+  el.querySelectorAll('tr[data-plan]').forEach(tr => tr.onclick = () => {
+    chosen = tr.dataset.plan;
+    el.querySelectorAll('tr[data-plan]').forEach(r =>
+      r.classList.toggle('sel', r.dataset.plan === chosen));
+    el.querySelector('#do-it').disabled = false;
+  });
+  el.querySelector('#do-it').onclick = () => takePlan(el.querySelector('#do-it'), chosen);
+  await loadTrips();
+}
+
+async function takePlan(button, planId){
+  button.disabled = true;
+  let done;
+  try {
+    done = await api('/api/act', {trip_id: RECOVERY.trip,
+      booking_id: RECOVERY.booking, plan_id: planId});
+  } catch (e) { button.disabled = false; return bubble('Downstream',
+    `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
+
+  // Sent and pending are shown apart on purpose. A system that blurs the two
+  // has started lying about the useful part.
+  let html = `Took <b>${esc(done.plan)}</b>. ${esc(done.summary)}`;
+  if (done.sent.length)
+    html += `<div class="note"><b>Done</b>${done.sent.map(d =>
+      `<div class="leg"><div>${esc(d.label)}<div class="m">via ${
+        esc(d.channels.join(', ') || 'no channel took it')}</div></div>
+        <span class="tag ok">sent</span></div>`).join('')}</div>`;
+  if (done.pending.length)
+    html += `<div class="note"><b>Waiting on you</b>${done.pending.map(d =>
+      `<div class="leg"><div>${esc(d.label)}${d.link
+        ? ` <a href="${esc(d.link)}" target="_blank" rel="noopener">open</a>` : ''}
+        <div class="m">${esc(d.note || '')}</div></div>
+        <span class="tag warn">${esc(d.lane)}</span></div>`).join('')}</div>`;
+  if (done.changed.length)
+    html += `<div class="note"><b>Your itinerary now</b>: ${
+      done.changed.map(esc).join('; ')}.</div>`;
+
+  bubble('Downstream', html);
+  await loadTrips();
+}
+
+$('#send').onclick = () => {
+  const text = $('#say').value.trim();
+  if (!text) return;
+  $('#say').value = '';
+  say(text);
+};
+$('#say').addEventListener('keydown', e => { if (e.key === 'Enter') $('#send').click(); });
+
+api('/health').then(h => {
+  bubble('Downstream',
+    `Tell me where you want to go and I'll book it — then I'll watch it, and when
+     something breaks I'll tell you what it costs and what to do about it.
+     <div class="note">You can book several trips. Break any of them from the panel
+     on the right.</div>
+     <div class="ports">ports <b>${esc(h.ports_mode)}</b> · model
+     <b>${esc(h.model)}</b> · storage <b>${esc(h.storage)}</b></div>`);
+  loadTrips();
+}).catch(e => bubble('Downstream', `<span style="color:var(--bad)">${esc(e.message)}</span>`));
+</script>
+</body>
+</html>

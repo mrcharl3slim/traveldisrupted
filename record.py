@@ -69,10 +69,56 @@ JOBS = {
               lambda: hotels.stays("Milan", "IT", SOON, LATER, CEST, limit=5)),
 }
 
-wanted = [a for a in sys.argv[1:] if not a.startswith("-")] or list(JOBS)
+# ---------------------------------------------------------------------------
+# ad hoc: record whatever route a demo is actually going to ask for
+#
+# The named jobs above are the scenario. A conversational front door is not a
+# scenario -- somebody types Singapore to Lisbon and replay has nothing, which
+# is honest and useless. These two let any route be captured without editing
+# this file, which is the difference between "the demo covers four cities" and
+# "the demo covers whatever you tell it to before you present".
+#
+#     DOWNSTREAM_PORTS=record python record.py fly SIN ZRH 2026-09-18
+#     DOWNSTREAM_PORTS=record python record.py stay Zurich CH 2026-09-18 2026-09-20
+# ---------------------------------------------------------------------------
+
+argv = [a for a in sys.argv[1:] if not a.startswith("-")]
+
+if argv and argv[0] == "fly":
+    if len(argv) != 4:
+        sys.exit("usage: record.py fly <FROM> <TO> <YYYY-MM-DD>")
+    _, origin, destination, day = argv
+    when = datetime.fromisoformat(day).replace(tzinfo=CEST)
+    try:
+        data = duffel.search(origin.upper(), destination.upper(), when)
+        print(f"  recorded  duffel  {origin.upper()} -> {destination.upper()} "
+              f"on {day}  ({_count(data)} offers)")
+    except Exception as exc:                            # noqa: BLE001
+        print(f"  FAILED    {type(exc).__name__}: {exc}")
+    raise SystemExit(0)
+
+if argv and argv[0] == "stay":
+    if len(argv) != 5:
+        sys.exit("usage: record.py stay <City> <CC> <CHECKIN> <CHECKOUT>")
+    _, city, country, checkin, checkout = argv
+    a = datetime.fromisoformat(checkin).replace(tzinfo=CEST)
+    b = datetime.fromisoformat(checkout).replace(tzinfo=CEST)
+    for label, fn in (
+        (f"catalogue {city}", lambda: hotels.catalogue(city, country.upper(), limit=5)),
+        (f"rates {city} {checkin}..{checkout}",
+         lambda: hotels.stays(city, country.upper(), a, b, CEST, limit=5)),
+    ):
+        try:
+            print(f"  recorded  liteapi  {label}  ({_count(fn())} results)")
+        except Exception as exc:                        # noqa: BLE001
+            print(f"  FAILED    {label}\n            {type(exc).__name__}: {exc}")
+    raise SystemExit(0)
+
+wanted = argv or list(JOBS)
 unknown = [w for w in wanted if w not in JOBS]
 if unknown:
-    sys.exit(f"unknown job(s) {unknown}. Available: {', '.join(JOBS)}")
+    sys.exit(f"unknown job(s) {unknown}. Available: {', '.join(JOBS)}, "
+             "plus `fly <FROM> <TO> <DATE>` and `stay <City> <CC> <IN> <OUT>`")
 
 for name in wanted:
     label, fn = JOBS[name]

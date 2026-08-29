@@ -31,7 +31,11 @@ from fastapi.responses import FileResponse                    # noqa: E402
 from pydantic import BaseModel                                # noqa: E402
 
 import _model                                                 # noqa: E402
+import act as act_mod                                         # noqa: E402
+import converse                                               # noqa: E402
 import flow                                                   # noqa: E402
+import places                                                 # noqa: E402
+import request as request_mod                                 # noqa: E402
 import monitor                                                # noqa: E402
 import notify                                                 # noqa: E402
 from builder import infeasible                                # noqa: E402
@@ -162,6 +166,34 @@ class Selection(BaseModel):
     flights: list[Leg]
     hotels: list[Stay] = []
     label: str = ""
+
+
+class Chat(BaseModel):
+    """One turn. The whole request travels with it, so nothing is held here.
+
+    A server that remembers half a booking in RAM loses it on the next deploy,
+    and a traveller who refreshes the page finds the agent has forgotten where
+    they were going. The state is small enough to send back and forth, and
+    sending it back and forth is what makes the conversation survive anything.
+    """
+
+    text: str = ""
+    state: dict = {}
+    answers: dict[str, str] = {}
+
+
+class Choice(BaseModel):
+    state: dict
+    flight_id: str
+    return_id: str = ""
+    hotel_id: str = ""
+    label: str = ""
+
+
+class Act(BaseModel):
+    trip_id: str
+    booking_id: str
+    plan_id: str
 
 
 class Cancellation(BaseModel):
@@ -522,6 +554,7 @@ def health() -> dict:
         "degraded": list(degraded),
         "shifted": list(shifted),
         "model": _model.label(),
+        "model_unavailable": _model.unavailable,
         "storage": "postgres" if store_module.store().durable else "memory (lost on restart)",
         "watch": {
             "running": os.environ.get("DOWNSTREAM_WATCH", "1") != "0",
@@ -639,6 +672,245 @@ def search_hotels(city: str, country: str = "IT", check_in: str = "",
     return {"city": city, "code": code, "stays": [_stay(h) for h in found]}
 
 
+def _req_out(req) -> dict:
+    return {
+        "origin": req.origin, "origin_label": places.label(req.origin),
+        "destination": req.destination,
+        "destination_label": places.label(req.destination),
+        "depart": req.depart.isoformat() if req.depart else None,
+        "ret": req.ret.isoformat() if req.ret else None,
+        "one_way": req.one_way, "travellers": req.travellers,
+        "hotel": req.hotel, "hotel_area": req.hotel_area,
+        "preference": req.preference, "summary": req.summary(),
+        "ready": req.ready,
+    }
+
+
+def _req_in(raw: dict):
+    """A request off the wire. Unreadable fields are treated as unanswered.
+
+    Never trusted into a search without re-deriving `gaps` from it, so a
+    tampered payload cannot skip a question -- it can only lie about answers it
+    then has to live with.
+    """
+    from datetime import date as _date
+
+    def when(value):
+        try:
+            return _date.fromisoformat(str(value)[:10])
+        except (TypeError, ValueError):
+            return None
+
+    def place(value) -> str:
+        found = places.find(str(value or ""))
+        return found.code if found else ""
+
+    return request_mod.Request(
+        origin=place(raw.get("origin")), destination=place(raw.get("destination")),
+        depart=when(raw.get("depart")), ret=when(raw.get("ret")),
+        one_way=raw.get("one_way") if isinstance(raw.get("one_way"), bool) else None,
+        travellers=max(1, min(int(raw.get("travellers") or 1), 9)),
+        hotel=raw.get("hotel") if isinstance(raw.get("hotel"), bool) else None,
+        hotel_area=str(raw.get("hotel_area") or "")[:60],
+        preference=(str(raw.get("preference") or "").lower()
+                    if str(raw.get("preference") or "").lower()
+                    in request_mod.PREFERENCES else ""),
+        raw=str(raw.get("raw") or "")[:2000],
+    )
+
+
+@app.post("/api/chat")
+def chat(body: Chat) -> dict:
+    """One exchange with the agent.
+
+    Answers are applied before the graph runs, so a turn that answers the last
+    open question searches in the same round trip rather than making the
+    traveller say "ok, now go".
+    """
+    from base import PortError
+
+    req = _req_in(body.state) if body.state else None
+    for field_name, value in (body.answers or {}).items():
+        req = request_mod.answer(req or request_mod.Request(), field_name, value)
+
+    try:
+        state = converse.turn(body.text, req, model=_model.get_model())
+    except PortError as exc:
+        raise HTTPException(503, str(exc)) from exc
+
+    out = state["req"]
+    asks = [{"field": a.field, "question": a.question,
+             "options": list(a.options), "why": a.why, "optional": a.optional}
+            for a in (state.get("asks") or [])]
+
+    return {
+        "reply": state.get("reply", ""),
+        "kind": state.get("kind", "book"),
+        "state": {**_req_out(out), "raw": out.raw},
+        "asks": asks,
+        # Named so the page can show which systems were actually called. This
+        # is the moment it stops looking like a chatbot.
+        "ports": state.get("ports") or [],
+        "note": state.get("note", ""),
+        "flights": [_offer(o) for o in (state.get("flights") or [])],
+        "returns": [_offer(o) for o in (state.get("returns") or [])],
+        "stays": [_stay(h) for h in (state.get("stays") or [])],
+    }
+
+
+@app.post("/api/chat/choose")
+def choose(body: Choice) -> dict:
+    """The chosen options become an itinerary, stored under its own id.
+
+    Re-searched rather than held: the offers were never kept on the server, so
+    picking one asks the provider again and takes the fare it quotes now. That
+    is slower and it is the only version that cannot sell a price that has
+    expired.
+    """
+    from base import PortError
+
+    req = _req_in(body.state)
+    if not req.ready:
+        raise HTTPException(400, "that request is not complete enough to book")
+
+    zone_out, zone_back = _zone_for(req.origin), _zone_for(req.destination)
+    try:
+        outbound = flow.search_flights(req.origin, req.destination,
+                                       _day(req.depart.isoformat(), zone_out))
+        picked = [o for o in outbound if o.id == body.flight_id]
+        if not picked:
+            raise HTTPException(409, "that fare is no longer in the search — "
+                                     "search again and pick from current prices")
+        if body.return_id and req.ret:
+            back = flow.search_flights(req.destination, req.origin,
+                                       _day(req.ret.isoformat(), zone_back))
+            found = [o for o in back if o.id == body.return_id]
+            if not found:
+                raise HTTPException(409, "that return fare is no longer available")
+            picked.extend(found)
+
+        stays = []
+        if body.hotel_id and req.hotel:
+            place = places.by_code(req.destination)
+            checkout = req.ret or req.depart + timedelta(days=1)
+            found = flow.search_hotels(
+                place.hotel_city, place.country,
+                _day(req.depart.isoformat(), zone_back),
+                _day(checkout.isoformat(), zone_back), code=req.destination)
+            stays = [h for h in found if h["id"] == body.hotel_id]
+            if not stays:
+                raise HTTPException(409, "that rate is no longer available")
+    except PortError as exc:
+        raise HTTPException(503, str(exc)) from exc
+
+    assembled, _ = flow.select(picked, stays)
+    saved = store_module.store().save(
+        OWNER,
+        {"bookings": ingest.to_dicts(assembled.bookings),
+         # The preference travels with the trip. When this itinerary breaks in
+         # a week, nobody has to ask the traveller what they cared about at the
+         # moment their flight is cancelled.
+         "preference": req.preference,
+         "request": _req_out(req)},
+        body.label or req.summary())
+
+    trip = _load(saved.id)
+    return {"trip_id": saved.id, "label": saved.label,
+            "problems": infeasible(trip),
+            "preference": req.preference,
+            "total": round(sum(b.price for b in trip.bookings), 2),
+            "bookings": _bookings_out(trip)}
+
+
+@app.get("/api/itineraries")
+def itineraries() -> dict:
+    """Everything this traveller has booked, and which of them are broken."""
+    rows = []
+    for saved in store_module.store().list(OWNER, limit=25):
+        try:
+            trip = _load(saved.id)
+        except HTTPException:
+            continue
+        disruption = flow.from_dict(saved.payload.get("disruption"))
+        rows.append({
+            "trip_id": saved.id,
+            "label": saved.label,
+            "created": saved.created.isoformat(),
+            "preference": saved.payload.get("preference", ""),
+            "total": round(sum(b.price for b in trip.bookings), 2),
+            "currency": trip.in_order()[0].currency if trip.bookings else "EUR",
+            "starts": _when(trip.in_order()[0].start) if trip.bookings else None,
+            "legs": len(trip.bookings),
+            "disrupted": disruption is not None,
+            "disrupted_booking": disruption.booking_id if disruption else "",
+            "bookings": _bookings_out(trip),
+        })
+    return {"itineraries": rows}
+
+
+@app.post("/api/act")
+def act(body: Act) -> dict:
+    """Take the plan. This is where the lanes stop being labels.
+
+    AUTO actions are performed, TAP and CALL are handed over, and the stored
+    itinerary is rewritten to the trip the traveller now has. What was done and
+    what is still waiting on them are reported separately, because a system
+    that blurs those two has started lying about the useful part.
+    """
+    from base import PortError
+
+    saved = store_module.store().get(body.trip_id)
+    if saved is None:
+        raise HTTPException(404, "no trip with that id")
+    trip = _load(body.trip_id)
+    preference = saved.payload.get("preference", "")
+
+    try:
+        recovery = flow.replan(trip, body.booking_id, preference=preference)
+    except (PortError, KeyError) as exc:
+        raise HTTPException(503 if isinstance(exc, PortError) else 404, str(exc))
+
+    plan = next((p for p in recovery.plans if p.id == body.plan_id), None)
+    if plan is None:
+        raise HTTPException(404, "no such plan on this disruption")
+
+    lines: list[str] = []
+    done = act_mod.perform(plan, trip, body.trip_id, log=lines.append)
+    offer = next((o for o in recovery.offers if o.id == plan.id), None)
+    updated, changed = act_mod.apply(plan, trip, recovery.disruption, offer)
+
+    payload = dict(saved.payload)
+    payload["bookings"] = ingest.to_dicts(updated.bookings)
+    payload["acted"] = {"at": datetime.now(timezone.utc).isoformat(),
+                        "plan": plan.name, "changed": changed}
+    # The disruption is resolved: this itinerary is no longer the broken one,
+    # so the watch stops counting down deadlines that have been dealt with.
+    payload.pop("disruption", None)
+    payload.pop("watermark", None)
+    store_module.store().update(body.trip_id, payload)
+
+    return {
+        "trip_id": body.trip_id,
+        "plan": plan.name,
+        "summary": act_mod.summarise(done, changed),
+        "sent": [d.__dict__ for d in done if d.state == "sent"],
+        "pending": [d.__dict__ for d in done if d.state == "pending"],
+        "changed": changed,
+        "log": lines,
+        "bookings": _bookings_out(_load(body.trip_id)),
+    }
+
+
+def _bookings_out(trip: Trip) -> list[dict]:
+    return [{"id": b.id, "title": b.title, "provider": b.provider,
+             "kind": b.kind.value, "where": b.where,
+             "starts": _when(b.start), "ends": _when(b.end),
+             "must_arrive_by": _when(b.must_arrive_by),
+             "price": b.price, "currency": b.currency, "pending": b.pending,
+             "ticket_group": b.ticket_group, "policy": b.policy.source}
+            for b in trip.in_order()]
+
+
 @app.post("/api/select")
 def select(body: Selection) -> dict:
     """Chosen offers -> a stored trip, plus every reason it could not be taken.
@@ -704,14 +976,7 @@ def select(body: Selection) -> dict:
         "durable": store_module.store().durable,
         "problems": problems,
         "total": round(sum(b.price for b in trip.bookings), 2),
-        "bookings": [{"id": b.id, "title": b.title, "provider": b.provider,
-                      "kind": b.kind.value, "where": b.where,
-                      "starts": _when(b.start), "ends": _when(b.end),
-                      "must_arrive_by": _when(b.must_arrive_by),
-                      "price": b.price, "currency": b.currency,
-                      "ticket_group": b.ticket_group,
-                      "policy": b.policy.source}
-                     for b in trip.in_order()],
+        "bookings": _bookings_out(trip),
     }
 
 
@@ -731,8 +996,10 @@ def cancel(body: Cancellation) -> dict:
     except KeyError as exc:
         raise HTTPException(404, "no booking with that id on this trip") from exc
 
+    saved = store_module.store().get(body.trip_id)
     try:
-        recovery = flow.replan(trip, body.booking_id)
+        recovery = flow.replan(trip, body.booking_id,
+                               preference=saved.payload.get("preference", ""))
     except PortError as exc:
         raise HTTPException(503, str(exc)) from exc
 
@@ -740,7 +1007,6 @@ def cancel(body: Cancellation) -> dict:
     # that started it was closed. Live status is a query and can be asked again;
     # a traveller pressing "cancelled" is an event, and an unrecorded event did
     # not happen.
-    saved = store_module.store().get(body.trip_id)
     stored = dict(saved.payload)
     stored["disruption"] = flow.to_dict(recovery.disruption)
     stored.pop("watermark", None)      # a new disruption starts a new clock
@@ -752,6 +1018,8 @@ def cancel(body: Cancellation) -> dict:
                           body.trip_id, gap=recovery.gap, injected=True)
     payload["searched"] = [_offer(o) for o in recovery.offers]
     payload["saved"] = recovery.saved
+    payload["preference"] = recovery.preference
+    payload["warning"] = recovery.warning
     return payload
 
 
@@ -784,6 +1052,18 @@ def state(base: str = "today", trip: str = "") -> dict:
 
 @app.get("/")
 def index() -> FileResponse:
+    """The conversational front door, and now the default.
+
+    The two pages behind it are kept rather than replaced. `/book` is the same
+    engine with a form, which is faster to drive when demonstrating a specific
+    fare, and `/demo` is the scripted delay that the tests assert to the euro.
+    A conversation is the better front door and a worse regression test.
+    """
+    return FileResponse(STATIC / "agent.html")
+
+
+@app.get("/demo")
+def demo() -> FileResponse:
     return FileResponse(STATIC / "index.html")
 
 

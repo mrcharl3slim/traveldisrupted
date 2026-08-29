@@ -173,6 +173,7 @@ def to_bookings(raw: dict) -> tuple[list[Booking], list[str], dict[str, str]]:
             fixed_slot=bool(item.get("fixed_slot")),
             hard_deadline=_dt(item.get("hard_deadline")),
             mitigation=item.get("mitigation") or None,
+            pending=bool(item.get("pending")),
             # Windows arrive already resolved when reading a stored trip, and
             # empty when reading a fresh extraction — `resolve` fills those in
             # against each booking's own times. A Policy with no windows means
@@ -292,6 +293,7 @@ def to_dicts(bookings: list[Booking]) -> list[dict]:
         "fixed_slot": b.fixed_slot,
         "hard_deadline": b.hard_deadline.isoformat() if b.hard_deadline else None,
         "mitigation": b.mitigation,
+        "pending": b.pending,
         "fare_rules": b.policy.source if b.policy else "",
         # Resolved windows travel with the trip. Without them a stored trip has
         # no deadlines and no recoverable value, so the engine reports every

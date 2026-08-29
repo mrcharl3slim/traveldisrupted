@@ -54,8 +54,41 @@ def available() -> bool:
     return PROVIDER in ("bedrock", "anthropic", "groq")
 
 
+#: Why the model is unavailable, when it is. Surfaced by /health rather than
+#: raised: a missing wheel or an expired token must degrade the phrasing, not
+#: the arithmetic.
+unavailable: str = ""
+
+_CACHE: dict[float, object] = {}
+
+
 def get_model(temperature: float = 0.0):
-    """A LangChain chat model, or None when we are running on arithmetic."""
+    """A LangChain chat model, or None when we are running on arithmetic.
+
+    Built once and kept. A conversational front door calls this on every turn,
+    and constructing a fresh boto3 client per keystroke spends more time on
+    credential resolution than on thinking.
+
+    Never raises. The provider SDK may not be installed, the region may not
+    have the model enabled, the credentials may have expired at 2 a.m. -- all
+    of which are reasons to answer with a templated sentence, and none of which
+    are reasons for a traveller's booking to return a 500. The reason is kept
+    in `unavailable` so /health can say what happened instead of pretending the
+    system was always meant to run this way.
+    """
+    global unavailable
+    if temperature in _CACHE:
+        return _CACHE[temperature]
+    try:
+        model = _build(temperature)
+    except Exception as exc:                            # noqa: BLE001
+        unavailable = f"{PROVIDER}: {type(exc).__name__}: {exc}"[:200]
+        model = None
+    _CACHE[temperature] = model
+    return model
+
+
+def _build(temperature: float):
     if PROVIDER == "bedrock":
         import boto3
         from botocore.config import Config

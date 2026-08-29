@@ -8,7 +8,7 @@ python serve.py                   # the web app, first free port from 8000
 python cli.py                     # the same numbers, in a terminal
 python cli.py --base written      # the October scenario, as the tests assert it
 python mcp_server.py              # the engine as MCP tools, over stdio
-python -m pytest tests/ -q        # 104 tests, no keys, no network
+python -m pytest tests/ -q        # 132 tests, no keys, no network
 ```
 
 Runs in **replay** by default: every API response is a committed fixture, so
@@ -60,6 +60,42 @@ Times are formatted server-side in the trip's own timezone. Letting the browser 
 a Zurich arrival in the viewer's zone, which is a different flight as far as the traveller is
 concerned.
 
+
+## Telling it what you want
+
+`/` is the front door: a sentence, not a form.
+
+    "book me a flight from singapore to london from 1 to 7 september"
+
+`converse.py` is a LangGraph — read, classify, fill, ask, route, search, offer —
+and every node except the model call is a pure function of the state. It asks
+only what changes the answer: a hotel decides whether LiteAPI is called at all,
+and "cheapest, fastest or direct" orders the options now *and* orders the
+recovery plans if this trip breaks in a week. Seat preference changes nothing
+here, so it is not asked, however conversational it would sound. Every question
+carries the reason it is being asked, on screen.
+
+Parsing runs deterministically first — cities, dates, party size, the words
+"direct" and "cheapest" — and whatever it resolves is final. The model is asked
+only about what is still blank, which means a model having an imaginative day
+cannot move a date the traveller stated plainly, and the whole thing still runs
+with `LLM_PROVIDER=none`.
+
+The page names the providers it called. Book as many itineraries as you like,
+then break any one of them from the panel and take a plan.
+
+## Acting on a plan
+
+`act.py` is the part that makes it adaptation rather than notification.
+
+- **AUTO** is performed. The message is sent, and the result records which
+  channels actually took it — possibly none, which is shown rather than hidden.
+- **TAP** and **CALL** are handed over with a link and marked pending. Nothing
+  is bought: Duffel's test mode cannot take money and we would not use it if it
+  could.
+- **The itinerary is rewritten.** The cancelled leg goes, the replacement
+  arrives flagged `pending`, and that flag survives storage — a real booking in
+  the plan and an intention in the record are not allowed to look alike.
 
 ## Buying a trip, then breaking it
 

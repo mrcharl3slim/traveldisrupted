@@ -33,7 +33,7 @@ from base import PortError
 from builder import assemble, infeasible
 from domain import Disruption, Trip
 from graph import Impact, propagate
-from plan import Gap, Plan, generate, recovery_gap
+from plan import Gap, Plan, breaks_preference, generate, recovery_gap
 
 #: A recovery search asks about the day the traveller is stranded and, when the
 #: deadline falls after midnight, the next one too. Any wider and the engine is
@@ -187,6 +187,9 @@ class Recovery:
     gap: Gap | None
     offers: list
     plans: list
+    preference: str = ""
+    #: Set when the recommended plan is not the kind of trip they asked for.
+    warning: str = ""
 
     @property
     def best(self):
@@ -202,16 +205,26 @@ class Recovery:
 
 
 def replan(trip: Trip, booking_id: str, at: datetime | None = None,
-           now: datetime | None = None) -> Recovery:
-    """Cancel a leg and answer the whole question in one call."""
+           now: datetime | None = None, preference: str = "") -> Recovery:
+    """Cancel a leg and answer the whole question in one call.
+
+    ``preference`` comes off the stored itinerary, which is where the traveller
+    left it when they booked. Asking again at the moment their flight is
+    cancelled would be a strange time to take a survey.
+    """
     disruption = cancel(trip, booking_id, at)
     now = now or disruption.new_end
     gap = recovery_gap(trip, disruption, now)
     offers = replacements(trip, disruption, gap)
+    plans = generate(trip, disruption, now, offers, preference)
     return Recovery(
         disruption=disruption,
         impact=propagate(trip, disruption, now),
         gap=gap,
         offers=offers,
-        plans=generate(trip, disruption, now, offers),
+        plans=plans,
+        preference=preference,
+        warning=("the only plan that saves this trip has a connection, and you "
+                 "asked for direct flights"
+                 if plans and breaks_preference(plans[0], preference) else ""),
     )

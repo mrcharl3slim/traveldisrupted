@@ -61,6 +61,14 @@ class Alert:
         Derived from the deadline rather than from position in a list: the
         schedule is rebuilt on every tick, and an index would renumber itself
         the moment a window closed and the alert behind it would fire twice.
+
+        TRIP-LOCAL, and it has to be qualified before it is used anywhere else.
+        Booking ids come from the title when a trip is read back, so two
+        itineraries containing the same hotel on the same night produce the
+        same key -- correctly, because they are two separate things at stake,
+        and confusingly for anything that dedupes across trips. The watermark
+        is stored per trip, so firing is right; a log or a cache keyed on this
+        alone would conflate them.
         """
         return f"{self.booking_id}|{self.closes.isoformat()}|{self.kind}|{self.lead}"
 

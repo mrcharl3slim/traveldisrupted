@@ -207,14 +207,20 @@ def test_a_sweep_fires_each_alert_once(client, booked, monkeypatch):
     # test is patience does not get tested.
     tick = datetime.fromisoformat(schedule[0]["at"]["iso"]) + timedelta(minutes=1)
 
+    # Qualified by trip: an alert key is unique within an itinerary and not
+    # across them, because booking ids are derived from titles and two trips
+    # can hold the same hotel on the same night. Those are two things at stake,
+    # not one alert sent twice.
     sent = []
     monkeypatch.setattr(app_module.notify, "deliver",
-                        lambda alert, trip_id="", **kw: sent.append(alert.key) or ["log"])
+                        lambda alert, trip_id="", **kw:
+                        sent.append((trip_id, alert.key)) or ["log"])
     first = app_module.sweep(now=tick)
     second = app_module.sweep(now=tick)
     assert first > 0
     assert second == 0
     assert len(sent) == len(set(sent))
+    assert any(t == booked["trip_id"] for t, _ in sent)
 
 
 def test_an_unreadable_disruption_does_not_end_the_watch(client, booked):

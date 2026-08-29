@@ -1,0 +1,324 @@
+"""The conversation, as a graph.
+
+    read -> classify -> [confirmation] ingest -> done
+                     -> [request]      fill -> ask        (stop, wait for a human)
+                                            -> route -> search -> offer
+
+WHY A GRAPH AND NOT A PROMPT LOOP. Every node here is a pure function of the
+state except one, and the one is fenced. `read` parses, `fill` decides what is
+missing, `route` picks the providers, `search` calls them, `offer` ranks what
+came back. A single prompt could do all of that and would occasionally book
+Bangkok because the traveller mentioned it in passing. Separating them means
+each step is separately testable, separately traceable, and separately
+falsifiable -- and it means the whole conversation still runs with
+LLM_PROVIDER=none, just with less patience for unusual phrasing.
+
+WHY IT RESTARTS EVERY TURN. HTTP has no memory and neither does this. The state
+is serialised to the store between turns and the graph is re-entered from the
+top, which sounds wasteful and is the reason a refresh, a second tab or a
+process restart cannot lose a half-finished booking. Parsing is cheap;
+re-asking a question the traveller already answered is not.
+
+WHAT IT REFUSES TO DO. It never fills a slot to avoid asking. An agent that
+guesses "probably no hotel" to keep the conversation moving has made a booking
+decision on the traveller's behalf, and the entire premise of this product is
+that unstated assumptions are what cost people money later.
+"""
+
+from __future__ import annotations
+
+from dataclasses import asdict, replace
+from datetime import date, datetime, timedelta
+from typing import Any, TypedDict
+
+from langgraph.graph import END, StateGraph
+
+import places
+import request as request_mod
+from builder import MIN_CONNECTION, onward_after
+
+#: How many options to put in front of a person. More than this is a search
+#: results page, and a search results page is the thing they were trying to
+#: avoid by typing a sentence.
+SHOW = 5
+
+
+class State(TypedDict, total=False):
+    text: str
+    today: date
+    model: Any
+    req: request_mod.Request
+    kind: str
+    asks: list
+    ports: list[str]
+    flights: list
+    returns: list
+    stays: list
+    note: str
+    missing: list[str]
+    reply: str
+
+
+# --------------------------------------------------------------------------
+# nodes
+# --------------------------------------------------------------------------
+
+
+def read(s: State) -> State:
+    """Text -> a Request, deterministically, then the model on the blanks."""
+    base = s.get("req") or request_mod.Request()
+    fresh = request_mod.parse(s.get("text", ""), s.get("today"))
+
+    # A follow-up sentence adds to what is already known rather than replacing
+    # it. "actually make it the 3rd" must not wipe the destination.
+    merged = replace(
+        base,
+        origin=base.origin or fresh.origin,
+        destination=base.destination or fresh.destination,
+        depart=base.depart or fresh.depart,
+        ret=base.ret or fresh.ret,
+        one_way=base.one_way if base.one_way is not None else fresh.one_way,
+        travellers=max(base.travellers, fresh.travellers),
+        hotel=base.hotel if base.hotel is not None else fresh.hotel,
+        preference=base.preference or fresh.preference,
+        raw=s.get("text", "") or base.raw,
+    )
+    return {"req": request_mod.enrich(merged, s.get("model"), s.get("today"))}
+
+
+def classify(s: State) -> State:
+    """A booking request, or a confirmation someone forwarded in.
+
+    Told apart by shape, not by asking a model: a confirmation carries a
+    booking reference, a fare rule, or the word "confirmed" next to a price. A
+    request is a sentence about the future. Getting this wrong in the safe
+    direction -- treating a confirmation as a request -- asks a question, which
+    a human can correct in one word.
+    """
+    text = s.get("text", "")
+    low = text.lower()
+    marks = sum(1 for m in (
+        "booking reference", "confirmation number", "e-ticket", "pnr",
+        "your booking", "booking confirmed", "check-in", "check in",
+        "non-refundable", "fare rules", "total paid", "order number",
+    ) if m in low)
+    long_enough = len(text) > 220 and text.count("\n") >= 3
+    return {"kind": "confirmation" if (marks >= 2 and long_enough) else "book"}
+
+
+def branch(s: State) -> str:
+    return "ingest" if s.get("kind") == "confirmation" else "fill"
+
+
+def fill(s: State) -> State:
+    return {"asks": s["req"].gaps()}
+
+
+def needs_answers(s: State) -> str:
+    """Optional gaps never stop a search.
+
+    The distinction matters more than it looks: "anywhere in particular to
+    stay?" is worth offering and not worth blocking on, and an agent that
+    treats every unanswered question as a blocker is an interrogation.
+    """
+    return "ask" if [a for a in s["asks"] if not a.optional] else "route"
+
+
+def ask(s: State) -> State:
+    blocking = [a for a in s["asks"] if not a.optional]
+    first = blocking[0]
+    return {"reply": first.question}
+
+
+def route(s: State) -> State:
+    """Which providers this request actually needs.
+
+    Named in the state so the page can show it. "Searching Duffel for flights
+    and LiteAPI for stays" is the moment the thing stops looking like a chatbot
+    and starts looking like something with its hands on real systems -- and it
+    is also the honest place to say that rail has no fares and hotels are not
+    being paid for.
+    """
+    req = s["req"]
+    ports = ["duffel"]
+    if not req.one_way and req.ret:
+        ports.append("duffel:return")
+    if req.hotel:
+        ports.append("liteapi")
+    return {"ports": ports}
+
+
+def search(s: State) -> State:
+    """Call them. A provider that comes back empty is a fact, not an error."""
+    import flow
+    from base import PortError
+
+    req = s["req"]
+    zone = _zone(req.origin)
+    out: State = {"flights": [], "returns": [], "stays": [], "note": ""}
+    notes: list[str] = []
+
+    try:
+        out["flights"] = flow.search_flights(
+            req.origin, req.destination, _noon(req.depart, _zone(req.origin)))
+    except PortError as exc:
+        notes.append(str(exc))
+
+    if req.ret and not req.one_way:
+        try:
+            out["returns"] = flow.search_flights(
+                req.destination, req.origin, _noon(req.ret, _zone(req.destination)))
+        except PortError as exc:
+            notes.append(str(exc))
+
+    if req.hotel:
+        place = places.by_code(req.destination)
+        checkout = req.ret or (req.depart + timedelta(days=1))
+        try:
+            out["stays"] = flow.search_hotels(
+                place.hotel_city, place.country,
+                _noon(req.depart, _zone(req.destination)),
+                _noon(checkout, _zone(req.destination)),
+                code=req.destination)
+        except PortError as exc:
+            notes.append(str(exc))
+
+    # Say which leg came back empty and why, in words a traveller can act on.
+    # The port's own message names a fixture path and a shell command, which is
+    # the right thing to tell a developer and the wrong thing to put in a chat.
+    out["note"] = " · ".join(notes)
+    out["missing"] = [n.split(" at ")[-1].split(".json")[0].split("/")[-1]
+                      for n in notes if "no recording" in n]
+    return out
+
+
+def offer(s: State) -> State:
+    """Rank by what the traveller said mattered, and say what was ranked."""
+    req = s["req"]
+    return {
+        "flights": rank(s.get("flights") or [], req.preference)[:SHOW],
+        "returns": rank(s.get("returns") or [], req.preference)[:SHOW],
+        "stays": (s.get("stays") or [])[:SHOW],
+        "reply": _summarise(s),
+    }
+
+
+# --------------------------------------------------------------------------
+# ranking -- the preference, honoured
+# --------------------------------------------------------------------------
+
+
+def stops(offer_) -> int:
+    """Segments minus one, read off the label the port already built."""
+    label = getattr(offer_, "label", "")
+    if " via " in label:
+        return 1
+    marker = label.rsplit(", ", 1)[-1]
+    if marker.endswith("stops"):
+        try:
+            return int(marker.split()[0])
+        except ValueError:
+            return 0
+    return 0
+
+
+def minutes(offer_) -> int:
+    return int((offer_.arrive - offer_.depart).total_seconds() // 60)
+
+
+def rank(offers: list, preference: str) -> list:
+    """One preference, three orderings, no thumb on any of them.
+
+    "direct" is a preference and not a filter: a traveller who wants a direct
+    flight and is shown nothing because none exists has been failed by the
+    software, not by the airlines. Direct ones come first and the rest follow,
+    labelled.
+    """
+    if preference == "fastest":
+        return sorted(offers, key=lambda o: (minutes(o), o.price))
+    if preference == "direct":
+        return sorted(offers, key=lambda o: (stops(o), o.price, minutes(o)))
+    return sorted(offers, key=lambda o: (o.price, minutes(o)))
+
+
+# --------------------------------------------------------------------------
+# helpers
+# --------------------------------------------------------------------------
+
+
+def _zone(code: str):
+    from zoneinfo import ZoneInfo
+
+    place = places.by_code(code)
+    try:
+        return ZoneInfo(place.zone) if place else ZoneInfo("UTC")
+    except Exception:                                   # noqa: BLE001
+        return ZoneInfo("UTC")
+
+
+def _noon(day: date, zone) -> datetime:
+    """Midday, so no offset error can move a search to the day before."""
+    return datetime(day.year, day.month, day.day, 12, 0, tzinfo=zone)
+
+
+def _summarise(s: State) -> str:
+    req = s["req"]
+    counts = []
+    if s.get("flights"):
+        counts.append(f"{len(s['flights'])} outbound")
+    if s.get("returns"):
+        counts.append(f"{len(s['returns'])} return")
+    if s.get("stays"):
+        counts.append(f"{len(s['stays'])} stays")
+    if not counts:
+        if s.get("missing"):
+            return ("I have no recorded inventory for that route yet. In "
+                    "replay mode I can only offer what has been captured — "
+                    "record it, or switch the ports to live.")
+        return ("Nothing came back for that. "
+                + (s.get("note") or "Try a different date or airport."))
+    order = {"cheapest": "cheapest first", "fastest": "shortest first",
+             "direct": "direct first"}.get(req.preference, "cheapest first")
+    return f"{', '.join(counts)} — {order}."
+
+
+# --------------------------------------------------------------------------
+# the graph
+# --------------------------------------------------------------------------
+
+
+def build():
+    g = StateGraph(State)
+    g.add_node("read", read)
+    g.add_node("classify", classify)
+    g.add_node("fill", fill)
+    g.add_node("ask", ask)
+    g.add_node("route", route)
+    g.add_node("search", search)
+    g.add_node("offer", offer)
+    g.add_node("ingest", lambda s: {"reply": "That looks like a booking you "
+                                             "already have — I'll read it in."})
+
+    g.set_entry_point("read")
+    g.add_edge("read", "classify")
+    g.add_conditional_edges("classify", branch, {"ingest": "ingest", "fill": "fill"})
+    g.add_conditional_edges("fill", needs_answers, {"ask": "ask", "route": "route"})
+    g.add_edge("route", "search")
+    g.add_edge("search", "offer")
+    g.add_edge("offer", END)
+    g.add_edge("ask", END)
+    g.add_edge("ingest", END)
+    return g.compile()
+
+
+_GRAPH = None
+
+
+def turn(text: str, req: request_mod.Request | None = None,
+         model=None, today: date | None = None) -> State:
+    """One exchange. Re-entered from the top with the state so far."""
+    global _GRAPH
+    if _GRAPH is None:
+        _GRAPH = build()
+    return _GRAPH.invoke({"text": text, "req": req, "model": model,
+                          "today": today or date.today()})

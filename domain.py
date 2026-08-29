@@ -90,6 +90,13 @@ class Booking:
     # Set when missing the deadline can be defused by telling somebody, rather
     # than by spending money. This is what separates "at risk" from "lost".
     mitigation: str | None = None
+    #: True while this leg is an intention rather than a purchase -- a
+    #: replacement the traveller approved but has not yet paid for in the
+    #: provider's own checkout. It has to survive storage: a recovery plan that
+    #: writes a flight into the itinerary and lets it read as booked has
+    #: replaced one silent failure with another, and the traveller finds out at
+    #: the gate.
+    pending: bool = False
 
     @property
     def where(self) -> str:
