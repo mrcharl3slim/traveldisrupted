@@ -186,7 +186,11 @@ def test_a_follow_up_adds_rather_than_replaces():
 
 def test_the_providers_it_picks_follow_from_the_request():
     r = parse("one way flight zurich to milan on 18 september, cheapest")
-    assert converse.route({"req": r})["ports"] == ["duffel"]
+    # Rail joins it unasked wherever there is a station at each end. Not a
+    # question: whether a train runs is the timetable's answer, and "train or
+    # plane?" put to somebody flying Singapore to Bangkok is a question about
+    # something that does not exist.
+    assert converse.route({"req": r})["ports"] == ["duffel", "rail"]
     r = rq.answer(r, "hotel", "yes", TODAY)
     assert "liteapi" in converse.route({"req": r})["ports"]
 
@@ -317,6 +321,36 @@ def test_bookkeeping_is_not_mistaken_for_an_answer():
     from dataclasses import replace as _replace
     assert _replace(r, raw="something else").settled == r.settled
     assert _replace(r, preference="direct").settled != r.settled
+
+
+def test_rail_is_asked_only_where_there_is_a_station_at_each_end():
+    """And never asked ABOUT. `converse` asks what changes the answer, and
+    whether a train runs between two cities is the timetable's answer rather
+    than the traveller's preference -- so "train or plane?" put to somebody
+    flying Singapore to Bangkok is a question about something that does not
+    exist. Where trains run they appear in the same list; where they do not,
+    nothing is asked and nothing is shown."""
+    milan = parse("one way zurich to milan on 18 september, cheapest")
+    assert "rail" in converse.route({"req": milan})["ports"]
+
+    bangkok = parse("one way singapore to bangkok on 18 september, cheapest")
+    assert "rail" not in converse.route({"req": bangkok})["ports"]
+    assert not any(a.field == "mode" for a in bangkok.gaps()), "asked anyway"
+
+
+def test_a_train_that_changes_is_not_a_direct_service():
+    """"Direct" ranked every connecting train above every direct flight, which
+    is the preference honoured backwards. The rail label says where the change
+    is in its own words rather than in the airline's."""
+    class Leg:
+        def __init__(self, label):
+            self.label = label
+
+    assert converse.stops(Leg("EC 09:33 - Zürich HB to Milano Centrale")) == 0
+    assert converse.stops(
+        Leg("EC 09:33 - Zürich HB to Milano Centrale, change at Chiasso (36 min)")) == 1
+    assert converse.stops(Leg("LH 1628 - ZRH to MXP")) == 0
+    assert converse.stops(Leg("JU 0333 - ZRH to MXP via BEG")) == 1
 
 
 class Echoes:

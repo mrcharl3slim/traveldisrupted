@@ -93,6 +93,25 @@ recovery plans if this trip breaks in a week. Seat preference changes nothing
 here, so it is not asked, however conversational it would sound. Every question
 carries the reason it is being asked, on screen.
 
+**Trains are searched, never asked about.** Where there is a station at each end
+the timetable is called alongside Duffel and the trains appear in the same list
+as the flights, ranked by the same preference. It is not a question, because the
+same rule decides: whether a train runs between two cities is the timetable's
+answer, not the traveller's preference, and "train or plane?" put to somebody
+flying Singapore to Bangkok is a question about something that does not exist.
+Zurich to Milan under *cheapest* now opens with four trains at EUR 72 above
+every fare; under *fastest* a 55-minute flight beats a 3h44 train, and under
+*direct* the connecting train correctly sorts below the direct flights.
+
+The chosen leg carries its mode back, because the server re-resolves it and a
+train asked of Duffel comes back empty — which reads as a withdrawn fare rather
+than as a question put to the wrong shop. **The mode is a hint and the key is
+the truth**: given a key the named provider does not have, the other is asked
+before anything is declared gone. That is what a client predating trains
+produces — it picks the cheapest option, the cheapest option is a train, it
+names no mode because it has never heard of one, and the traveller was told an
+airline withdrew something no airline ever sold.
+
 Parsing runs deterministically first — cities, dates, party size, the words
 "direct" and "cheapest" — and whatever it resolves is final. The model is asked
 only about what is still blank, which means a model having an imaginative day

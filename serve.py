@@ -221,6 +221,12 @@ class Choice(BaseModel):
     label: str = ""
     flight_id: str = ""          # deprecated; ignored when a key is supplied
     return_id: str = ""
+    #: How each leg travels. The chosen option has to be re-resolved through
+    #: the provider that can find it, and a train asked of Duffel comes back
+    #: empty -- which reads as a fare the airline has withdrawn rather than as
+    #: a question put to the wrong shop. Defaults keep an older client working.
+    flight_mode: str = "flight"
+    return_mode: str = "flight"
 
 
 class Act(BaseModel):
@@ -1194,8 +1200,10 @@ def choose(body: Choice) -> dict:
     zone_out, zone_back = _zone_for(req.origin), _zone_for(req.destination)
     repriced: list[dict] = []
     try:
-        outbound = flow.search_flights(req.origin, req.destination,
-                                       _day(req.depart.isoformat(), zone_out))
+        outbound = flow.search_leg(req.origin, req.destination,
+                                   _day(req.depart.isoformat(), zone_out),
+                                   body.flight_mode,
+                                   key=body.flight_key or body.flight_id)
         chosen, moved = _rematch(outbound, body.flight_key or body.flight_id,
                                  body.flight_price, "fare")
         picked = [chosen]
@@ -1204,8 +1212,10 @@ def choose(body: Choice) -> dict:
                              "now": chosen.price, "moved": moved})
 
         if (body.return_key or body.return_id) and req.ret:
-            back = flow.search_flights(req.destination, req.origin,
-                                       _day(req.ret.isoformat(), zone_back))
+            back = flow.search_leg(req.destination, req.origin,
+                                   _day(req.ret.isoformat(), zone_back),
+                                   body.return_mode,
+                                   key=body.return_key or body.return_id)
             found, moved = _rematch(back, body.return_key or body.return_id,
                                     body.return_price, "return fare")
             picked.append(found)
@@ -1380,12 +1390,9 @@ def select(body: Selection) -> dict:
             # is minted from a departure minute and a flight id from Duffel's
             # own search, so asking the wrong provider finds nothing and reports
             # it as inventory that has moved on.
-            found = (flow.search_rail(leg.origin.upper(), leg.destination.upper(),
-                                      _day(leg.on, zone))
-                     if leg.mode == "rail" else
-                     flow.search_flights(leg.origin.upper(),
-                                         leg.destination.upper(),
-                                         _day(leg.on, zone)))
+            found = flow.search_leg(leg.origin.upper(), leg.destination.upper(),
+                                    _day(leg.on, zone), leg.mode,
+                                    key=leg.offer_key or leg.offer_id)
             offer = (next((o for o in found if o.key == leg.offer_key), None)
                      if leg.offer_key else None)
             offer = offer or next((o for o in found if o.id == leg.offer_id), None)

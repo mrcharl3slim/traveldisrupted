@@ -301,9 +301,12 @@ function offerTable(kind, title, rows){
   return `<table><thead><tr><th>${esc(title)}</th><th>Departs</th><th>Arrives</th>
     <th class="n">Fare</th></tr></thead><tbody>` + rows.map(o => `
     <tr class="pick" data-kind="${kind}" data-id="${esc(o.id)}"
-        data-key="${esc(o.key)}" data-price="${o.price}">
-      <td>${esc(o.label)}<div class="m">${esc(o.carrier)}${
-        o.refundable ? ' · refundable' : ' · non-refundable'}</div></td>
+        data-key="${esc(o.key)}" data-price="${o.price}"
+        data-mode="${esc(o.mode || 'flight')}">
+      <td>${o.mode === 'rail' ? '<span class="tag">train</span> ' : ''}${esc(o.label)}
+        <div class="m">${esc(o.carrier)}${
+        o.mode === 'rail' ? ' · fare estimated, no API sells this ticket'
+        : o.refundable ? ' · refundable' : ' · non-refundable'}</div></td>
       <td>${at(o.depart)}</td>
       <td>${at(o.arrive)}${o.overnight ? '<div class="m">next day</div>' : ''}</td>
       <td class="n">${eur(o.price)}${o.quoted ? `<div class="m">${esc(o.quoted)}</div>` : ''}</td>
@@ -327,6 +330,7 @@ function wireOffers(el){
     const kind = tr.dataset.kind;
     const same = PICK[kind] && PICK[kind].id === tr.dataset.id;
     PICK[kind] = same ? null : {id: tr.dataset.id, key: tr.dataset.key,
+                                mode: tr.dataset.mode || 'flight',
                                 price: parseFloat(tr.dataset.price || 0)};
     el.querySelectorAll(`tr[data-kind="${kind}"]`).forEach(r =>
       r.classList.toggle('sel', PICK[kind] && r.dataset.id === PICK[kind].id));
@@ -344,8 +348,10 @@ async function confirm(button){
     saved = await api('/api/chat/choose', {
       state: STATE,
       flight_key: PICK.flight.key, flight_price: PICK.flight.price,
+      flight_mode: PICK.flight.mode || 'flight',
       return_key: PICK.ret ? PICK.ret.key : '',
       return_price: PICK.ret ? PICK.ret.price : 0,
+      return_mode: PICK.ret ? (PICK.ret.mode || 'flight') : 'flight',
       hotel_id: PICK.hotel ? PICK.hotel.id : ''});
   } catch (e) { button.disabled = false; return bubble('Downstream',
     `<span style="color:var(--bad)">${esc(e.message)}</span>`); }

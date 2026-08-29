@@ -131,6 +131,37 @@ def search_hotels(city: str, country: str, check_in: datetime,
                              check_in.tzinfo, limit=limit, code=code)
 
 
+def search_leg(origin: str, destination: str, day: datetime,
+               mode: str = "flight", after: datetime | None = None,
+               key: str = "") -> list:
+    """One leg, whichever way it travels.
+
+    The one place that knows a train is found by asking a timetable and a
+    flight by asking Duffel. Every caller that re-resolves a chosen leg needs
+    that mapping and none of them should own a copy.
+
+    THE MODE IS A HINT AND THE KEY IS THE TRUTH. Given a key that the named
+    mode does not have, the other provider is asked before the option is
+    declared gone. "That fare is no longer being sold" is a serious sentence
+    and asking the wrong shop is not evidence for it -- which is exactly what a
+    client that predates trains produces: it picks the cheapest option, the
+    cheapest option is now a train, it names no mode because it has never
+    heard of one, and the traveller is told the airline withdrew something no
+    airline ever sold.
+    """
+    def one(m: str) -> list:
+        if m == "rail":
+            return [o for o in search_rail(origin, destination, day)
+                    if after is None or o.depart >= after]
+        return search_flights(origin, destination, day, after=after)
+
+    first = one("rail" if mode == "rail" else "flight")
+    if not key or any(key in (o.key, o.id) for o in first):
+        return first
+    other = one("flight" if mode == "rail" else "rail")
+    return other if any(key in (o.key, o.id) for o in other) else first
+
+
 def select(legs: list, hotels: list[dict]) -> tuple[Trip, list[str]]:
     """Chosen offers -> a trip, plus every reason it could not be taken.
 

@@ -205,6 +205,18 @@ def ask(s: State) -> State:
     return out
 
 
+def _railable(origin: str, destination: str) -> bool:
+    """Is there a station at each end worth asking the timetable about?
+
+    A cheap test on purpose. It answers "is rail conceivable here", not "does a
+    train run", because the second is what the search is for -- and an empty
+    result is an ordinary answer that costs one concurrent request.
+    """
+    a, b = places.by_code(origin), places.by_code(destination)
+    return bool(a and b and a.station and b.station
+                and a.station_code != b.station_code)
+
+
 def route(s: State) -> State:
     """Which providers this request actually needs.
 
@@ -218,6 +230,16 @@ def route(s: State) -> State:
     ports = ["duffel"]
     if not req.one_way and req.ret:
         ports.append("duffel:return")
+    # Rail is asked wherever there is a station at each end, and it is NOT a
+    # question. `converse` asks only what changes the answer, and whether a
+    # train exists between two cities is the timetable's answer rather than the
+    # traveller's preference -- so "train or plane?" would be a question about
+    # something that may not exist, put to somebody flying Singapore to
+    # Bangkok. Where trains do run they appear in the same list as the flights
+    # and the traveller picks one; where they do not, nothing is asked and
+    # nothing is shown.
+    if _railable(req.origin, req.destination):
+        ports.append("rail")
     if req.hotel:
         ports.append("liteapi")
     return {"ports": ports}
@@ -268,6 +290,13 @@ def search(s: State) -> State:
              lambda: flow.search_flights(req.origin, req.destination,
                                          _noon(req.depart, _zone(req.origin))))]
 
+    if _railable(req.origin, req.destination):
+        jobs.append(("rail_out",
+                     f"no trains recorded from {places.label(req.origin)} to "
+                     f"{places.label(req.destination)} on {req.depart:%d %b}",
+                     lambda: flow.search_rail(req.origin, req.destination,
+                                              _noon(req.depart, _zone(req.origin)))))
+
     if req.ret and not req.one_way:
         jobs.append(("return",
                      f"no inventory recorded for the return, "
@@ -276,6 +305,14 @@ def search(s: State) -> State:
                      lambda: flow.search_flights(
                          req.destination, req.origin,
                          _noon(req.ret, _zone(req.destination)))))
+        if _railable(req.destination, req.origin):
+            jobs.append(("rail_back",
+                         f"no trains recorded for the return, "
+                         f"{places.label(req.destination)} to "
+                         f"{places.label(req.origin)} on {req.ret:%d %b}",
+                         lambda: flow.search_rail(
+                             req.destination, req.origin,
+                             _noon(req.ret, _zone(req.destination)))))
 
     if req.hotel:
         place = places.by_code(req.destination)
@@ -293,9 +330,15 @@ def search(s: State) -> State:
     with ThreadPoolExecutor(max_workers=len(jobs)) as pool:
         futures = {pool.submit(attempt, what, human, call): what
                    for what, human, call in jobs}
+        # Trains join the flights rather than getting a table of their own. A
+        # traveller choosing between Zurich and Milan is choosing a way of
+        # being in Milan by four o'clock, and splitting that into two lists
+        # asks them to compare across a page break.
+        where = {"outbound": "flights", "rail_out": "flights",
+                 "return": "returns", "rail_back": "returns", "stays": "stays"}
         for future in futures:
-            out[{"outbound": "flights", "return": "returns",
-                 "stays": "stays"}[futures[future]]] = future.result()
+            out[where[futures[future]]] = (out[where[futures[future]]]
+                                           + future.result())
 
     out["note"] = " · ".join(plain)
     out["detail"] = " · ".join(raw)
@@ -321,7 +364,11 @@ def offer(s: State) -> State:
 def stops(offer_) -> int:
     """Segments minus one, read off the label the port already built."""
     label = getattr(offer_, "label", "")
-    if " via " in label:
+    if " via " in label or ", change at " in label:
+        # A train that changes at Chiasso is not a direct service, and the rail
+        # label says so in its own words rather than in the airline's. Without
+        # this, "direct" ranked every connecting train above every direct
+        # flight, which is the preference being honoured backwards.
         return 1
     marker = label.rsplit(", ", 1)[-1]
     if marker.endswith("stops"):
@@ -373,11 +420,18 @@ def _noon(day: date, zone) -> datetime:
 
 def _summarise(s: State) -> str:
     req = s["req"]
+    def by_mode(rows: list, noun: str) -> str:
+        """Say how many are trains. They are in the same list because they are
+        the same choice, and a traveller scanning fares still wants to know
+        which of these things is a railway before they read the times."""
+        trains = sum(1 for o in rows if getattr(o, "mode", "flight") == "rail")
+        return f"{len(rows)} {noun}" + (f" ({trains} by train)" if trains else "")
+
     counts = []
     if s.get("flights"):
-        counts.append(f"{len(s['flights'])} outbound")
+        counts.append(by_mode(s["flights"], "outbound"))
     if s.get("returns"):
-        counts.append(f"{len(s['returns'])} return")
+        counts.append(by_mode(s["returns"], "return"))
     if s.get("stays"):
         counts.append(f"{len(s['stays'])} stays")
     if not counts:

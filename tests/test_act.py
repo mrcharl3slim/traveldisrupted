@@ -46,11 +46,38 @@ def book(client, text="one way flight zurich to milan on 18 september "
     else:
         pytest.fail(f"still asking after 10 turns: {turn['asks'][0]['field']}")
     assert turn["flights"], turn.get("note")
+
+    # A FLIGHT specifically, not simply the first option. Zurich to Milan is
+    # served by both now, and under "cheapest" the EUR 72 train sorts above
+    # every fare -- which is the agent working, and leaves these tests, which
+    # are about cancelling and rebooking a flight, with no flight in the trip.
+    leg = next(o for o in turn["flights"] if o.get("mode", "flight") == "flight")
     return client.post("/api/chat/choose", json={
         "state": turn["state"],
-        "flight_key": turn["flights"][0]["key"],
-        "flight_price": turn["flights"][0]["price"],
+        "flight_key": leg["key"],
+        "flight_price": leg["price"],
+        "flight_mode": leg.get("mode", "flight"),
         "hotel_id": turn["stays"][0]["id"] if turn["stays"] else ""}).json()
+
+
+def walk(client, text: str) -> dict:
+    """Answer whatever it asks until it searches. The chip answers are the same
+    ones `book` uses; this stops before choosing so a test can see the options
+    themselves rather than the trip they became."""
+    answers = {"hotel": "no", "preference": "cheapest", "ret": "one way",
+               "hotel_dates": "the whole trip", "depart": "18 september",
+               "origin": "zurich", "destination": "milan",
+               "confirm": "yes, search it"}
+    turn = client.post("/api/chat", json={"text": text}).json()
+    for _ in range(10):
+        if not turn["asks"] or turn["state"]["ready"]:
+            break
+        field = turn["asks"][0]["field"]
+        assert field in answers, f"nothing to answer {field!r} with"
+        turn = client.post("/api/chat", json={
+            "state": turn["state"], "answers": {field: answers[field]}}).json()
+    assert turn["flights"], turn.get("note")
+    return turn
 
 
 @pytest.fixture
@@ -73,6 +100,53 @@ def test_the_preference_is_stored_with_the_trip(client, booked):
     recovery = client.post("/api/cancel", json={
         "trip_id": booked["trip_id"], "booking_id": leg["id"]}).json()
     assert recovery["preference"] == "cheapest"
+
+
+def test_the_agent_offers_trains_where_trains_run(client):
+    """Rail was buyable at /book and invisible in the conversation, which is
+    the front door. One list, because a traveller choosing between Zurich and
+    Milan is choosing a way of being in Milan by four o'clock -- splitting that
+    into two tables asks them to compare across a page break."""
+    turn = walk(client, "one way zurich to milan on 18 september, cheapest, no hotel")
+    assert "rail" in turn["ports"]
+    modes = {o.get("mode", "flight") for o in turn["flights"]}
+    assert modes == {"flight", "rail"}, "one list, both modes"
+    assert turn["flights"][0]["mode"] == "rail", "the train is the cheapest way"
+    assert "by train" in turn["reply"]
+
+
+def test_a_route_with_no_trains_is_never_asked_about_them(client):
+    """Nothing is asked and no provider is named. A question about something
+    that does not exist is worse than no question."""
+    turn = walk(client, "one way singapore to zurich on 18 september, cheapest, no hotel")
+    assert "rail" not in turn["ports"]
+    assert all(o.get("mode", "flight") == "flight" for o in turn["flights"])
+
+
+def test_a_train_chosen_in_the_conversation_becomes_the_trip(client):
+    turn = walk(client, "one way zurich to milan on 18 september, cheapest, no hotel")
+    train = next(o for o in turn["flights"] if o["mode"] == "rail")
+    saved = client.post("/api/chat/choose", json={
+        "state": turn["state"], "flight_key": train["key"],
+        "flight_price": train["price"], "flight_mode": "rail"}).json()
+
+    assert [b["kind"] for b in saved["bookings"]] == ["rail"]
+    assert saved["bookings"][0]["price"] == train["price"]
+
+
+def test_a_client_that_never_heard_of_trains_is_not_told_the_fare_was_withdrawn(client):
+    """The mode is a hint and the key is the truth. An older page picks the
+    cheapest option, the cheapest option is now a train, it names no mode
+    because it has never heard of one -- and the traveller was told an airline
+    withdrew something no airline ever sold."""
+    turn = walk(client, "one way zurich to milan on 18 september, cheapest, no hotel")
+    train = next(o for o in turn["flights"] if o["mode"] == "rail")
+
+    saved = client.post("/api/chat/choose", json={
+        "state": turn["state"], "flight_key": train["key"],
+        "flight_price": train["price"]})          # no flight_mode at all
+    assert saved.status_code == 200, saved.text
+    assert saved.json()["bookings"][0]["kind"] == "rail"
 
 
 def test_several_itineraries_coexist(client):
