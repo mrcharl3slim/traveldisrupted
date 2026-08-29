@@ -72,8 +72,13 @@ class Request:
     travellers: int = 1
     hotel: bool | None = None           # None = nobody has said yet
     hotel_area: str = ""
-    #: Nights, when the trip has no return date to derive them from.
-    stay_nights: int = 0
+    #: The room's own nights. Asked rather than derived: arriving on the 18th
+    #: does not mean checking in on the 18th -- a red-eye lands at 06:00 and
+    #: the room is wanted from the night before, and a traveller staying with
+    #: family for the first two nights wants three of the five. Deriving it
+    #: from the flights is right often enough to be trusted and wrong quietly.
+    hotel_in: date | None = None
+    hotel_out: date | None = None
     preference: str = ""
     confirmed: bool = False
     raw: str = ""
@@ -112,16 +117,18 @@ class Request:
                            why="it decides whether a stay is searched at all — "
                                "and a room is usually the thing a delayed "
                                "flight actually costs you"))
-        if self.hotel and self.ret is None and not self.stay_nights:
+        if self.hotel and not (self.hotel_in and self.hotel_out):
             # Immediately after "do you want a hotel", because it is the same
-            # subject. Asked rather than assumed: the room has to cover the
-            # trip, a one-way flight says nothing about how long the trip is,
-            # and the old default of one night quietly booked a single night
-            # for a fortnight's stay. A hotel is the largest number on most
-            # itineraries and the easiest to get silently wrong.
-            out.append(Ask("stay_nights", "How many nights do you need?",
-                           why="the room should cover the whole trip, and a "
-                               "one-way flight does not say how long that is"))
+            # subject. The whole trip is offered as a chip so the common answer
+            # is one tap, and typing a different range is still one sentence.
+            span = self.trip_span
+            out.append(Ask("hotel_dates", "Which nights do you need the room?",
+                           options=((f"{span[0]:%d %b} – {span[1]:%d %b} "
+                                     "(the whole trip)",) if span else ()),
+                           why="a hotel is the largest number on most "
+                               "itineraries and the easiest to get quietly "
+                               "wrong — a red-eye lands at 06:00 and the room "
+                               "is wanted from the night before"))
         if not self.preference:
             out.append(Ask("preference", "What matters most on this trip?",
                            options=PREFERENCES,
@@ -168,11 +175,14 @@ class Request:
                               else "one way" if self.one_way else "—")})
         if self.travellers > 1:
             out.append({"label": "Travellers", "value": str(self.travellers)})
-        out.append({"label": "Hotel",
-                    "value": (f"{self.nights} night"
-                              + ("s" if self.nights != 1 else "")
-                              if self.hotel else "not needed"),
-                    "note": (places.label(self.destination) if self.hotel else "")})
+        if self.hotel and self.check_in and self.check_out:
+            out.append({"label": "Hotel",
+                        "value": (f"{self.check_in:%d %b} – {self.check_out:%d %b}"
+                                  f" · {self.nights} night"
+                                  + ("s" if self.nights != 1 else "")),
+                        "note": places.label(self.destination)})
+        else:
+            out.append({"label": "Hotel", "value": "not needed"})
         out.append({"label": "Sort by", "value": self.preference or "cheapest"})
         return out
 
@@ -188,23 +198,35 @@ class Request:
         """
         return (self.origin, self.destination, self.depart, self.ret,
                 self.one_way, self.travellers, self.hotel, self.hotel_area,
-                self.stay_nights, self.preference, self.confirmed)
+                self.hotel_in, self.hotel_out, self.preference, self.confirmed)
+
+    @property
+    def trip_span(self) -> tuple | None:
+        """The nights the trip itself covers, when they are known."""
+        from datetime import timedelta as _td
+
+        if not self.depart:
+            return None
+        return self.depart, (self.ret or self.depart + _td(days=1))
 
     @property
     def nights(self) -> int:
-        """The whole trip, never a default.
-
-        A return date settles it. Without one the traveller was asked, and
-        `gaps` will not let a search run until they have answered.
-        """
+        if self.hotel_in and self.hotel_out:
+            return max(1, (self.hotel_out - self.hotel_in).days)
         if self.depart and self.ret:
             return max(1, (self.ret - self.depart).days)
-        return max(1, self.stay_nights)
+        return 1
+
+    @property
+    def check_in(self):
+        return self.hotel_in or self.depart
 
     @property
     def check_out(self):
         from datetime import timedelta as _td
 
+        if self.hotel_out:
+            return self.hotel_out
         if not self.depart:
             return None
         return self.ret or (self.depart + _td(days=self.nights))
@@ -240,6 +262,18 @@ _DATE_MONTH_FIRST = re.compile(
     re.I)
 _ISO = re.compile(r"(?<!\d)(\d{4})-(\d{2})-(\d{2})(?!\d)")
 _PEOPLE = re.compile(r"(\d+)\s*(?:adults?|people|persons?|pax|travell?ers?)", re.I)
+
+#: Saying no to "have I got this right?" is an ANSWER. It settles nothing, so
+#: the slot stays open -- but it is understood, and treating it as gibberish
+#: produced the worst line in the product: tapping "no, let me change it" and
+#: being told "Sorry, I couldn't make that out."
+DECLINE = re.compile(r"\s*(n|no|nope|nah|not quite|wrong|change|fix|edit|"
+                     r"let me)\b", re.I)
+
+
+def declined(value: str) -> bool:
+    return bool(DECLINE.match(value or ""))
+
 
 #: Days with no month, which is how a person corrects a date they are looking
 #: at: "actually the 19th to the 22nd". Only ordinals or a leading "the" count
@@ -386,6 +420,10 @@ def parse(text: str, today: date | None = None,
 
     nights = re.search(r"(\d+)\s*nights?\b", low)
     people = _PEOPLE.search(low)
+    stay_in = stay_out = None
+    if nights and depart:
+        stay_in = depart
+        stay_out = depart + timedelta(days=max(1, min(int(nights.group(1)), 60)))
     travellers = int(people.group(1)) if people else 1
 
     # "one way" said out loud beats a second date found in the sentence. A
@@ -394,8 +432,17 @@ def parse(text: str, today: date | None = None,
     # return silently books a leg nobody asked for.
     if re.search(r"\bone[-\s]?way\b", low):
         one_way, ret = True, None
+    elif ret is not None:
+        one_way = False
+    elif re.search(r"\b(coming back|come back|returning|round[-\s]?trip|"
+                   r"two[-\s]?way|both ways|and back)\b", low):
+        # Said in the opening sentence and previously ignored, so the agent
+        # asked "coming back, or one way?" to somebody who had just answered
+        # it. A question you have already been told the answer to is the
+        # fastest way to look like a form.
+        one_way = False
     else:
-        one_way = False if ret is not None else None
+        one_way = None
 
     return Request(
         kind="book",
@@ -403,7 +450,7 @@ def parse(text: str, today: date | None = None,
         depart=depart, ret=ret, one_way=one_way,
         travellers=max(1, min(travellers, 9)),
         hotel=hotel, preference=preference, raw=text,
-        stay_nights=int(nights.group(1)) if nights else 0,
+        hotel_in=stay_in, hotel_out=stay_out,
     )
 
 
@@ -557,10 +604,23 @@ def answer(base: Request, field_name: str, value: str,
         if re.match(r"any|no|whatever|don'?t mind", value, re.I):
             return replace(base, hotel_area="anywhere", filled=filled)
         return replace(base, hotel_area=value[:60], filled=filled)
-    if field_name == "stay_nights":
-        digits = re.search(r"\d+", value)
-        return (replace(base, stay_nights=max(1, min(int(digits.group()), 60)),
-                        filled=filled) if digits else base)
+    if field_name == "hotel_dates":
+        span = base.trip_span
+        if span and re.search(r"whole trip|same|all of it|entire|yes", value, re.I):
+            return replace(base, hotel_in=span[0], hotel_out=span[1], filled=filled)
+        start, end = _dates(value.lower(), today, base.depart)
+        if start and end:
+            return replace(base, hotel_in=start, hotel_out=end, filled=filled)
+        nights = re.search(r"(\d+)\s*nights?", value, re.I)
+        if nights and base.depart:
+            from datetime import timedelta as _td
+
+            count = max(1, min(int(nights.group(1)), 60))
+            return replace(base, hotel_in=base.depart,
+                           hotel_out=base.depart + _td(days=count), filled=filled)
+        # A single date is half an answer, and half an answer stored is a
+        # checkout somebody never chose.
+        return base
     if field_name == "confirm":
         if re.match(r"\s*(y|yes|yeah|yep|correct|right|ok|okay|search|go)",
                     value, re.I):

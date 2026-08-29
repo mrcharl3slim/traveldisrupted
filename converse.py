@@ -270,7 +270,7 @@ def search(s: State) -> State:
                      f"no stays recorded in {place.hotel_city} for those nights",
                      lambda: flow.search_hotels(
                          place.hotel_city, place.country,
-                         _noon(req.depart, _zone(req.destination)),
+                         _noon(req.check_in, _zone(req.destination)),
                          _noon(checkout, _zone(req.destination)),
                          code=req.destination)))
 

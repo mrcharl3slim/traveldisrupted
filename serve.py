@@ -718,8 +718,9 @@ def _req_out(req) -> dict:
         "ret": req.ret.isoformat() if req.ret else None,
         "one_way": req.one_way, "travellers": req.travellers,
         "hotel": req.hotel, "hotel_area": req.hotel_area,
-        "confirmed": req.confirmed,
-        "stay_nights": req.stay_nights, "nights": req.nights,
+        "confirmed": req.confirmed, "nights": req.nights,
+        "hotel_in": req.hotel_in.isoformat() if req.hotel_in else None,
+        "hotel_out": req.hotel_out.isoformat() if req.hotel_out else None,
         "preference": req.preference, "summary": req.summary(),
         "ready": req.ready,
     }
@@ -751,7 +752,7 @@ def _req_in(raw: dict):
         travellers=max(1, min(int(raw.get("travellers") or 1), 9)),
         hotel=raw.get("hotel") if isinstance(raw.get("hotel"), bool) else None,
         hotel_area=str(raw.get("hotel_area") or "")[:60],
-        stay_nights=max(0, min(int(raw.get("stay_nights") or 0), 60)),
+        hotel_in=when(raw.get("hotel_in")), hotel_out=when(raw.get("hotel_out")),
         confirmed=bool(raw.get("confirmed")),
         preference=(str(raw.get("preference") or "").lower()
                     if str(raw.get("preference") or "").lower()
@@ -929,8 +930,14 @@ def _appointment_turn(body: Chat) -> dict:
            "flights": [], "returns": [], "stays": []}
 
     if asks:
-        reply = asks[0]["question"]
-        if (unread and asks[0]["field"] in unread) or (
+        first = pending or asks[0]
+        reply = first["question"]
+        said = (body.answers or {}).get(first["field"], "") or body.text
+        if first["field"] == "confirm" and request_mod.declined(said):
+            return {**out, "unread": [u for u in unread if u != "confirm"],
+                    "reply": "What should I change? Tell me the bit that is "
+                             "wrong — \"actually 3pm\", \"it's in Milan\"."}
+        if (unread and first["field"] in unread) or (
                 body.text.strip() and base is not None
                 and settled.settled == started_at):
             reply = f"Sorry — I couldn't make that out. {reply}"
@@ -1066,6 +1073,17 @@ def chat(body: Chat) -> dict:
 
     pending = next((a for a in asks if not a["optional"]), None)
     reply = state.get("reply", "")
+
+    # "No, let me change it" is understood. It settles nothing, so the question
+    # stays open, and reporting that as "I couldn't make that out" told the
+    # traveller their own button was gibberish.
+    if (pending and pending["field"] == "confirm"
+            and request_mod.declined((body.answers or {}).get("confirm", "")
+                                     or body.text)):
+        unread = [u for u in unread if u != "confirm"]
+        return {**_chat_payload(state, out, asks, pending, unread),
+                "reply": "What should I change? Tell me the bit that is wrong "
+                         "— \"actually the 19th\", \"from Zurich, not Milan\"."}
     # Nothing moved and something is still being asked: whatever the traveller
     # just said, this system did not understand it. Saying so beats asking the
     # same question with a straight face.
@@ -1074,8 +1092,11 @@ def chat(body: Chat) -> dict:
     if stuck or (unread and asks and asks[0]["field"] in unread):
         reply = f"Sorry — I couldn't make that out. {reply}"
 
+    return {**_chat_payload(state, out, asks, pending, unread), "reply": reply}
+
+
+def _chat_payload(state, out, asks, pending, unread) -> dict:
     return {
-        "reply": reply,
         "unread": unread,
         # Shown only at the moment it is asked about. A summary card on every
         # turn is wallpaper; one card, at the point where everything after it
@@ -1140,7 +1161,7 @@ def choose(body: Choice) -> dict:
             checkout = req.check_out
             found = flow.search_hotels(
                 place.hotel_city, place.country,
-                _day(req.depart.isoformat(), zone_back),
+                _day(req.check_in.isoformat(), zone_back),
                 _day(checkout.isoformat(), zone_back), code=req.destination)
             stays = [h for h in found if h["id"] == body.hotel_id]
             if not stays:

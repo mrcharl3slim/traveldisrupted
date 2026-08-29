@@ -27,7 +27,7 @@ def book(client, text="one way flight zurich to milan on 18 september "
     """A trip bought through the agent, the way a traveller buys one."""
     turn = client.post("/api/chat", json={"text": text}).json()
     answers = {"hotel": "yes", "preference": "cheapest", "ret": "one way",
-               "stay_nights": "2", "depart": "18 september",
+               "hotel_dates": "the whole trip", "depart": "18 september",
                "origin": "zurich", "destination": "milan",
                # The last gate: nothing is searched until the traveller has
                # looked at what was recorded and said yes.
@@ -320,6 +320,19 @@ def test_an_unhandled_error_is_still_readable_json(client, monkeypatch):
 # --------------------------------------------------------------------------
 
 
+def confirmed_step(client, text: str) -> dict:
+    """Walk to the confirmation and stop there, with the card in hand."""
+    turn = client.post("/api/chat", json={"text": text}).json()
+    for _ in range(4):
+        pending = [a for a in turn.get("asks", []) if not a["optional"]]
+        if not pending or pending[0]["field"] == "confirm":
+            break
+        turn = client.post("/api/chat", json={
+            "state": turn["state"],
+            "answers": {pending[0]["field"]: "the whole trip"}}).json()
+    return turn
+
+
 def confirmed(client, text: str) -> dict:
     """Say it, agree it was heard right, and get the offers back."""
     turn = client.post("/api/chat", json={"text": text}).json()
@@ -453,3 +466,30 @@ def test_a_message_that_moves_things_along_is_not_apologised_for(client, booked)
         "state": turn["state"], "text": "19 september"}).json()
     assert not moved["reply"].lower().startswith("sorry")
     assert moved["state"]["day"] == "2026-09-19"
+
+
+def test_saying_no_to_the_confirmation_invites_a_correction(client):
+    """Over HTTP, where the traveller meets it: the chip the page itself
+    offered must not come back as "I couldn't make that out"."""
+    turn = confirmed_step(client, "zurich to milan 18 to 20 september "
+                                  "with a hotel, cheapest")
+    assert turn["confirm"], "no card to say no to"
+
+    said_no = client.post("/api/chat", json={
+        "state": turn["state"], "answers": {"confirm": "no, let me change it"}}).json()
+    assert "sorry" not in said_no["reply"].lower()
+    assert "change" in said_no["reply"].lower()
+    assert said_no["unread"] == []
+    assert said_no["confirm"], "took the card away instead of keeping it open"
+
+    fixed = client.post("/api/chat", json={
+        "state": said_no["state"], "text": "actually the 19th to the 22nd"}).json()
+    assert fixed["state"]["depart"] == "2026-09-19"
+
+
+def test_the_room_is_asked_about_before_anything_is_searched(client):
+    turn = client.post("/api/chat", json={
+        "text": "zurich to milan 18 to 20 september with a hotel, cheapest"}).json()
+    assert turn["asks"][0]["field"] == "hotel_dates"
+    assert turn["asks"][0]["options"], "asked without offering the obvious answer"
+    assert not turn["flights"], "searched before the room dates were settled"

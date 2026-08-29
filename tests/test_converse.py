@@ -106,20 +106,47 @@ def test_an_optional_question_never_blocks_a_search():
     assert all(a.optional for a in agreed.gaps())
 
 
-def test_a_room_covers_the_trip_rather_than_one_night():
-    """A one-way flight says nothing about how long the trip is, and the old
-    default booked a single night for a fortnight's stay without telling
-    anybody. A hotel is the largest number on most itineraries and the easiest
-    to get silently wrong."""
-    both_ways = parse("singapore to london 1 to 7 september with a hotel")
-    assert both_ways.nights == 6 and both_ways.check_out == date(2026, 9, 7)
+def test_the_room_gets_its_own_dates_rather_than_the_flights():
+    """Arriving on the 18th does not mean checking in on the 18th: a red-eye
+    lands at 06:00 and the room is wanted from the night before, and a
+    traveller staying with family for two nights wants three of the five.
+    Deriving it from the flights is right often enough to be trusted and wrong
+    quietly."""
+    r = parse("singapore to london 1 to 7 september with a hotel")
+    ask = next(a for a in r.gaps() if a.field == "hotel_dates")
+    assert "01 Sep – 07 Sep (the whole trip)" in ask.options, ask.options
+    assert not r.ready, "booked a room nobody chose the nights for"
 
-    one_way = parse("singapore to london on 1 september one way with a hotel")
-    assert "stay_nights" in {a.field for a in one_way.gaps()}, "guessed the length"
-    assert not one_way.ready
+    whole = rq.answer(r, "hotel_dates", "the whole trip", TODAY)
+    assert (whole.check_in, whole.check_out) == (date(2026, 9, 1), date(2026, 9, 7))
+    assert whole.nights == 6
 
-    told = rq.answer(one_way, "stay_nights", "5 nights", TODAY)
-    assert told.nights == 5 and told.check_out == date(2026, 9, 6)
+    part = rq.answer(r, "hotel_dates", "3 to 6 september", TODAY)
+    assert (part.check_in, part.check_out) == (date(2026, 9, 3), date(2026, 9, 6))
+    assert part.nights == 3
+
+
+def test_half_an_answer_about_the_room_is_not_stored():
+    """A single date is half an answer, and half an answer stored is a
+    checkout somebody never chose."""
+    r = parse("singapore to london 1 to 7 september with a hotel")
+    assert rq.answer(r, "hotel_dates", "the 3rd", TODAY) == r
+
+
+def test_nights_still_work_when_stated_outright():
+    r = parse("one way singapore to london on 1 september, hotel for 5 nights")
+    assert (r.check_in, r.check_out) == (date(2026, 9, 1), date(2026, 9, 6))
+    assert "hotel_dates" not in {a.field for a in r.gaps()}
+
+
+def test_saying_you_are_coming_back_in_the_opening_sentence_is_heard():
+    """Previously ignored, so the agent asked "coming back, or one way?" of
+    somebody who had just told it. A question you have already been answered is
+    the fastest way to look like a form."""
+    r = parse("flight singapore to zurich 18 september coming back")
+    assert r.one_way is False
+    fields = [a.field for a in r.gaps()]
+    assert "ret" not in fields and fields[0] == "ret_date"
 
 
 def test_an_unreadable_answer_leaves_the_slot_open():
@@ -346,7 +373,8 @@ def test_nothing_is_searched_until_it_has_been_agreed():
     """Dates and airports are the two things a sentence gets wrong most often
     and the two a traveller can check in a second — and every fare and every
     deadline after this point is worked out from them."""
-    r = parse("zurich to milan 18 to 20 september with a hotel, cheapest")
+    r = rq.answer(parse("zurich to milan 18 to 20 september with a hotel, "
+                        "cheapest"), "hotel_dates", "the whole trip", TODAY)
     assert not r.ready
     assert "confirm" in {a.field for a in r.gaps()}
     assert rq.answer(r, "confirm", "yes, search it", TODAY).ready
@@ -354,12 +382,13 @@ def test_nothing_is_searched_until_it_has_been_agreed():
 
 def test_the_card_spells_the_dates_out_in_full():
     """"18/09" and "09/18" are the same six characters and different days."""
-    r = parse("zurich to milan 18 to 20 september with a hotel, cheapest")
+    r = rq.answer(parse("zurich to milan 18 to 20 september with a hotel, "
+                        "cheapest"), "hotel_dates", "the whole trip", TODAY)
     rows = {row["label"]: row for row in r.card()}
     assert rows["Out"]["value"] == "Friday 18 September"
     assert rows["Back"]["value"] == "Sunday 20 September"
     assert rows["From"]["note"] == "ZRH" and rows["To"]["note"] == "MXP"
-    assert rows["Hotel"]["value"] == "2 nights"
+    assert rows["Hotel"]["value"] == "18 Sep – 20 Sep · 2 nights"
 
 
 def test_a_correction_at_the_confirmation_overwrites():
@@ -369,6 +398,7 @@ def test_a_correction_at_the_confirmation_overwrites():
     is to change something, and an additive merge would ignore them."""
     settled = converse.turn("zurich to milan 18 to 20 september with a hotel, "
                             "cheapest", today=TODAY)["req"]
+    settled = rq.answer(settled, "hotel_dates", "the whole trip", TODAY)
     assert [a.field for a in settled.gaps() if not a.optional] == ["confirm"]
 
     fixed = converse.turn("actually the 19th to the 22nd", settled,
@@ -389,7 +419,8 @@ def test_collecting_is_still_additive():
 def test_blocking_questions_come_before_optional_ones():
     """"Anywhere in particular to stay?" is a strange chip to offer under
     "have I got this right?"."""
-    r = parse("zurich to milan 18 to 20 september with a hotel, cheapest")
+    r = rq.answer(parse("zurich to milan 18 to 20 september with a hotel, "
+                        "cheapest"), "hotel_dates", "the whole trip", TODAY)
     fields = [a.field for a in r.gaps()]
     assert fields[0] == "confirm"
     assert all(a.optional for a in r.gaps()[1:])
@@ -400,6 +431,7 @@ def test_a_bare_day_is_read_against_the_month_on_the_card():
     are looking at. The month is the one already recorded."""
     settled = converse.turn("zurich to milan 18 to 20 september with a hotel, "
                             "cheapest", today=TODAY)["req"]
+    settled = rq.answer(settled, "hotel_dates", "the whole trip", TODAY)
     assert [a.field for a in settled.gaps() if not a.optional] == ["confirm"]
     fixed = converse.turn("actually the 19th to the 22nd", settled,
                           today=TODAY)["req"]
@@ -412,6 +444,21 @@ def test_a_bare_number_is_not_mistaken_for_a_date():
     leading "the" counts."""
     settled = converse.turn("zurich to milan 18 to 20 september with a hotel, "
                             "cheapest", today=TODAY)["req"]
+    settled = rq.answer(settled, "hotel_dates", "the whole trip", TODAY)
     same = converse.turn("2 adults", settled, today=TODAY)["req"]
     assert same.depart == date(2026, 9, 18)
     assert same.travellers == 2
+
+
+def test_declining_the_confirmation_is_an_answer_not_a_failure():
+    """The worst line in the product: tapping the system's own
+    "no, let me change it" button and being told "Sorry, I couldn't make that
+    out." It settles nothing, so the question stays open — but it is
+    understood, and saying otherwise calls the traveller's own button
+    gibberish."""
+    assert rq.declined("no, let me change it")
+    assert rq.declined("nope")
+    assert rq.declined("not quite")
+    assert rq.declined("change the dates")
+    assert not rq.declined("yes, search it")
+    assert not rq.declined("")

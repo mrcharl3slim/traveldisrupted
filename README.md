@@ -8,7 +8,7 @@ python serve.py                   # the web app, first free port from 8000
 python cli.py                     # the same numbers, in a terminal
 python cli.py --base written      # the October scenario, as the tests assert it
 python mcp_server.py              # the engine as MCP tools, over stdio
-python -m pytest tests/ -q        # 220 tests, no keys, no network
+python -m pytest tests/ -q        # 226 tests, no keys, no network
 ```
 
 `/health` reports `ports_mode`, `model_status` and `storage`, and the front page
@@ -134,6 +134,11 @@ The card spells dates out in full (`Friday 18 September`, because `18/09` and
 `09/18` are the same six characters and different days) and names the codes it
 resolved. For an appointment it also names **the city the time is in**.
 
+Saying **no** to it is an answer, not a failure to be understood. It settles
+nothing, so the question stays open — but reporting the page's own "no, let me
+change it" button as *"Sorry, I couldn't make that out"* told the traveller
+their own button was gibberish.
+
 A correction is not a new sentence. Collecting is additive, so "make it the
 3rd" cannot wipe the destination; but at the confirmation the only reason to
 type is to change something, so a stated field overwrites. `actually the 19th
@@ -169,6 +174,13 @@ nothing to miss. A EUR 0 meeting with the Milan team is the reason the trip
 exists. Missed commitments are **counted, never priced** — inventing a euro
 figure so the meeting could join the money total would be the engine making up
 the most important number on the page.
+
+The **room gets its own dates**, asked with the whole trip offered as one tap.
+Arriving on the 18th does not mean checking in on the 18th: a red-eye lands at
+06:00 and the room is wanted from the night before, and a traveller staying
+with family for two nights wants three of the five. Deriving it from the
+flights is right often enough to be trusted and wrong quietly. A single date is
+refused — half an answer stored is a checkout nobody chose.
 
 **The location is not colour, it is the clock.** "9am at the Ritz Carlton"
 means nine in the morning in New York, so an address the engine cannot place is
