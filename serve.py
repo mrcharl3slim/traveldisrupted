@@ -730,8 +730,33 @@ def chat(body: Chat) -> dict:
     from base import PortError
 
     req = _req_in(body.state) if body.state else None
+
+    # An answer that changed nothing was not understood. Tracking that is the
+    # difference between an agent and a loop: without it the next turn asks the
+    # identical question with no acknowledgement, and the traveller -- who has
+    # already answered it -- is left to guess which word was the problem.
+    unread: list[str] = []
     for field_name, value in (body.answers or {}).items():
-        req = request_mod.answer(req or request_mod.Request(), field_name, value)
+        before = req or request_mod.Request()
+        req = request_mod.answer(before, field_name, value)
+        if req == before:
+            unread.append(field_name)
+
+    # A typed reply to an open question is an ANSWER, not a new request.
+    #
+    # This is the bug that made the agent repeat itself. Tapping "coming back"
+    # sent an answer and worked; typing the same two words sent a message, and
+    # a message is parsed as a fresh booking request -- which contains no city
+    # and no date, so nothing merged, so the same question came back. The
+    # traveller had answered, correctly, twice, and been asked a third time.
+    #
+    # The open question is tried first and the text still goes to the graph, so
+    # "two way, and I need a hotel" settles both.
+    before_text = req
+    if body.text.strip() and req is not None:
+        pending = [a for a in req.gaps() if not a.optional]
+        if pending:
+            req = request_mod.answer(req, pending[0].field, body.text)
 
     try:
         state = converse.turn(body.text, req, model=_model.get_model())
@@ -743,8 +768,18 @@ def chat(body: Chat) -> dict:
              "options": list(a.options), "why": a.why, "optional": a.optional}
             for a in (state.get("asks") or [])]
 
+    reply = state.get("reply", "")
+    # Nothing moved and something is still being asked: whatever the traveller
+    # just said, this system did not understand it. Saying so beats asking the
+    # same question with a straight face.
+    stuck = (body.text.strip() and before_text is not None
+             and out.settled == before_text.settled and asks)
+    if stuck or (unread and asks and asks[0]["field"] in unread):
+        reply = f"Sorry — I couldn't make that out. {reply}"
+
     return {
-        "reply": state.get("reply", ""),
+        "reply": reply,
+        "unread": unread,
         "kind": state.get("kind", "book"),
         "state": {**_req_out(out), "raw": out.raw},
         "asks": asks,
@@ -752,6 +787,9 @@ def chat(body: Chat) -> dict:
         # is the moment it stops looking like a chatbot.
         "ports": state.get("ports") or [],
         "note": state.get("note", ""),
+        # The port's own words, for whoever is running this rather than for the
+        # person booking. Same failure, two audiences.
+        "detail": state.get("detail", ""),
         "flights": [_offer(o) for o in (state.get("flights") or [])],
         "returns": [_offer(o) for o in (state.get("returns") or [])],
         "stays": [_stay(h) for h in (state.get("stays") or [])],

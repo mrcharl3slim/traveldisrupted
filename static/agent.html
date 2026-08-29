@@ -203,7 +203,9 @@ async function say(text, answers){
     html += `<div class="chips"><button class="btn key" id="confirm" disabled>
              Save this itinerary</button></div>`;
   if (turn.note)
-    html += `<div class="banner bad">${esc(turn.note)}</div>`;
+    html += `<div class="banner warn">${esc(turn.note)}${turn.detail
+      ? ` <span style="opacity:.6">— replay mode; this is a recording that has
+         not been made, not a failure</span>` : ''}</div>`;
 
   const el = bubble('Downstream', html);
   el.querySelectorAll('.chip[data-field]').forEach(b =>

@@ -186,3 +186,89 @@ def test_each_preference_orders_by_the_thing_it_names():
     assert converse.rank(offers, "cheapest")[0].price == 75
     assert converse.rank(offers, "fastest")[0].price == 700
     assert converse.rank(offers, "")[0].price == 75          # cheapest by default
+
+
+# --------------------------------------------------------------------------
+# the loop
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("reply", ["two way", "coming back", "yes",
+                                   "round trip", "returning"])
+def test_saying_you_are_coming_back_is_an_answer(reply):
+    """The bug this exists to stop. "Coming back, or one way?" asks two things
+    -- whether there is a return and when it is -- and every one of these
+    answers settles the first without saying anything about the second. They
+    were all treated as unreadable, so the agent asked the same question again,
+    and again, to somebody who had already answered it."""
+    r = rq.parse("flight from singapore to london on 1 september", TODAY)
+    after = rq.answer(r, "ret", reply, TODAY)
+    assert after.one_way is False, f"{reply!r} was not understood"
+    assert after != r
+
+
+def test_the_follow_up_asks_the_part_that_is_still_missing():
+    """A different question, because the first one has been answered."""
+    r = rq.parse("flight from singapore to london on 1 september", TODAY)
+    r = rq.answer(r, "ret", "coming back", TODAY)
+    ask = r.gaps()[0]
+    assert ask.field == "ret_date"
+    assert "which day" in ask.question.lower()
+
+    r = rq.answer(r, "ret_date", "7 september", TODAY)
+    assert r.ret == date(2026, 9, 7)
+    assert "ret_date" not in {a.field for a in r.gaps()}
+
+
+def test_one_way_still_settles_it_outright():
+    r = rq.parse("flight from singapore to london on 1 september", TODAY)
+    for reply in ("one way", "no"):
+        after = rq.answer(r, "ret", reply, TODAY)
+        assert after.one_way is True and after.ret is None
+        assert "ret" not in {a.field for a in after.gaps()}
+        assert "ret_date" not in {a.field for a in after.gaps()}
+
+
+def test_a_date_answers_both_halves_at_once():
+    r = rq.parse("flight from singapore to london on 1 september", TODAY)
+    after = rq.answer(r, "ret", "7 september", TODAY)
+    assert after.ret == date(2026, 9, 7) and after.one_way is False
+    assert not [a for a in after.gaps() if a.field.startswith("ret")]
+
+
+def test_both_answers_are_offered_as_chips():
+    """A question with two answers and one button is a question that expects
+    you to type the other one."""
+    r = rq.parse("flight from singapore to london on 1 september", TODAY)
+    ask = next(a for a in r.gaps() if a.field == "ret")
+    assert set(ask.options) == {"coming back", "one way"}
+
+
+def test_no_question_can_repeat_without_saying_so():
+    """An answer that changed nothing was not understood. Asking again with no
+    acknowledgement leaves the traveller guessing which word was the problem."""
+    r = rq.parse("flight from singapore to london on 1 september", TODAY)
+    stuck = rq.answer(r, "ret", "sometime probably", TODAY)
+    assert stuck == r, "an unreadable answer must not be silently stored"
+
+
+def test_a_yes_no_slot_has_three_outcomes():
+    """Yes, no, and neither. A slot that treats everything-that-is-not-yes as
+    no stored "banana" as "no hotel" and told nobody -- a decision the
+    traveller did not make, made silently, which is the exact failure this
+    product exists to catch other people committing."""
+    r = rq.parse("one way flight zurich to milan on 18 september", TODAY)
+    assert rq.answer(r, "hotel", "yes please", TODAY).hotel is True
+    assert rq.answer(r, "hotel", "not this time", TODAY).hotel is False
+    assert rq.answer(r, "hotel", "banana", TODAY).hotel is None
+    assert rq.answer(r, "hotel", "banana", TODAY) == r, "stored a non-answer"
+
+
+def test_bookkeeping_is_not_mistaken_for_an_answer():
+    """`raw` changes on every turn because it holds whatever was last typed.
+    Comparing whole Requests to ask 'did that tell me anything?' answers yes to
+    'banana', and the acknowledgement never fires."""
+    r = rq.parse("one way flight zurich to milan on 18 september", TODAY)
+    from dataclasses import replace as _replace
+    assert _replace(r, raw="something else").settled == r.settled
+    assert _replace(r, preference="direct").settled != r.settled

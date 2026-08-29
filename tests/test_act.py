@@ -168,3 +168,52 @@ def test_an_expired_fare_is_refused_rather_than_substituted(client):
     response = client.post("/api/chat/choose", json={
         "state": turn["state"], "flight_id": "off_gone"})
     assert response.status_code == 409
+
+
+def test_an_unreadable_answer_is_acknowledged_not_repeated(client):
+    """Over HTTP, where the traveller actually meets it."""
+    turn = client.post("/api/chat", json={
+        "text": "flight from singapore to london on 1 september"}).json()
+    assert turn["asks"][0]["field"] == "ret"
+
+    stuck = client.post("/api/chat", json={
+        "state": turn["state"], "answers": {"ret": "sometime probably"}}).json()
+    assert stuck["unread"] == ["ret"]
+    assert stuck["reply"].lower().startswith("sorry")
+
+    moved = client.post("/api/chat", json={
+        "state": turn["state"], "answers": {"ret": "coming back"}}).json()
+    assert moved["unread"] == []
+    assert moved["asks"][0]["field"] == "ret_date"
+    assert moved["reply"] != turn["reply"], "asked the same question again"
+
+
+def test_a_typed_reply_answers_the_open_question(client):
+    """The bug a traveller actually hit. Tapping "coming back" sent an answer
+    and worked; TYPING the same two words sent a message, and a message was
+    parsed as a fresh booking request -- which has no city and no date, so
+    nothing merged and the same question came back. They had answered
+    correctly, twice, and were asked a third time."""
+    turn = client.post("/api/chat", json={
+        "text": "flight from singapore to london on 1 september"}).json()
+    assert turn["asks"][0]["field"] == "ret"
+
+    typed = client.post("/api/chat", json={
+        "state": turn["state"], "text": "two way"}).json()
+    assert typed["state"]["one_way"] is False
+    assert typed["asks"][0]["field"] == "ret_date"
+    assert typed["reply"] != turn["reply"]
+
+
+def test_typing_walks_the_whole_conversation(client):
+    """Chips are a shortcut, not the only path. Every question has to be
+    answerable by typing, because that is what a person does first."""
+    turn = client.post("/api/chat", json={
+        "text": "flight from zurich to milan on 18 september"}).json()
+    for said in ("one way", "yes", "cheapest"):
+        turn = client.post("/api/chat", json={
+            "state": turn["state"], "text": said}).json()
+    assert turn["state"]["ready"]
+    assert turn["flights"], "walked the whole conversation and searched nothing"
+    assert turn["state"]["preference"] == "cheapest"
+    assert turn["state"]["hotel"] is True

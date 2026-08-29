@@ -55,6 +55,7 @@ class State(TypedDict, total=False):
     returns: list
     stays: list
     note: str
+    detail: str
     missing: list[str]
     reply: str
 
@@ -154,41 +155,58 @@ def search(s: State) -> State:
     from base import PortError
 
     req = s["req"]
-    zone = _zone(req.origin)
-    out: State = {"flights": [], "returns": [], "stays": [], "note": ""}
-    notes: list[str] = []
+    out: State = {"flights": [], "returns": [], "stays": [],
+                  "note": "", "detail": "", "missing": []}
+    plain: list[str] = []
+    raw: list[str] = []
 
-    try:
-        out["flights"] = flow.search_flights(
-            req.origin, req.destination, _noon(req.depart, _zone(req.origin)))
-    except PortError as exc:
-        notes.append(str(exc))
+    def attempt(what: str, human: str, call):
+        """Run one provider call. An empty leg is a fact, not an exception.
+
+        Two messages come out of every failure. The port's own words name a
+        fixture path and a shell command -- exactly right for whoever is
+        running this, and exactly wrong in a chat window, where it reads as the
+        software falling over rather than as inventory it has not been given.
+        The traveller gets the sentence; the detail stays available.
+        """
+        try:
+            return call()
+        except PortError as exc:
+            raw.append(str(exc))
+            plain.append(human)
+            out["missing"].append(what)
+            return []
+
+    out["flights"] = attempt(
+        "outbound",
+        f"no inventory recorded for {places.label(req.origin)} to "
+        f"{places.label(req.destination)} on {req.depart:%d %b}",
+        lambda: flow.search_flights(req.origin, req.destination,
+                                    _noon(req.depart, _zone(req.origin))))
 
     if req.ret and not req.one_way:
-        try:
-            out["returns"] = flow.search_flights(
-                req.destination, req.origin, _noon(req.ret, _zone(req.destination)))
-        except PortError as exc:
-            notes.append(str(exc))
+        out["returns"] = attempt(
+            "return",
+            f"no inventory recorded for the return, "
+            f"{places.label(req.destination)} to {places.label(req.origin)} "
+            f"on {req.ret:%d %b}",
+            lambda: flow.search_flights(req.destination, req.origin,
+                                        _noon(req.ret, _zone(req.destination))))
 
     if req.hotel:
         place = places.by_code(req.destination)
         checkout = req.ret or (req.depart + timedelta(days=1))
-        try:
-            out["stays"] = flow.search_hotels(
+        out["stays"] = attempt(
+            "stays",
+            f"no stays recorded in {place.hotel_city} for those nights",
+            lambda: flow.search_hotels(
                 place.hotel_city, place.country,
                 _noon(req.depart, _zone(req.destination)),
                 _noon(checkout, _zone(req.destination)),
-                code=req.destination)
-        except PortError as exc:
-            notes.append(str(exc))
+                code=req.destination))
 
-    # Say which leg came back empty and why, in words a traveller can act on.
-    # The port's own message names a fixture path and a shell command, which is
-    # the right thing to tell a developer and the wrong thing to put in a chat.
-    out["note"] = " · ".join(notes)
-    out["missing"] = [n.split(" at ")[-1].split(".json")[0].split("/")[-1]
-                      for n in notes if "no recording" in n]
+    out["note"] = " · ".join(plain)
+    out["detail"] = " · ".join(raw)
     return out
 
 
@@ -272,9 +290,9 @@ def _summarise(s: State) -> str:
         counts.append(f"{len(s['stays'])} stays")
     if not counts:
         if s.get("missing"):
-            return ("I have no recorded inventory for that route yet. In "
-                    "replay mode I can only offer what has been captured — "
-                    "record it, or switch the ports to live.")
+            return ("I have nothing recorded for that route yet — in replay "
+                    "mode I can only offer inventory that has been captured. "
+                    "Try Zurich to Milan on 18 September, or record this one.")
         return ("Nothing came back for that. "
                 + (s.get("note") or "Try a different date or airport."))
     order = {"cheapest": "cheapest first", "fastest": "shortest first",

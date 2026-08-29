@@ -91,10 +91,18 @@ class Request:
                            why="fares and availability are per-date"))
         if self.depart is not None and self.ret is None and self.one_way is None:
             out.append(Ask("ret", "Coming back, or one way?",
-                           options=("one way",),
+                           options=("coming back", "one way"),
                            why="a return leg is a second search and a second "
                                "contract — and two contracts are why nobody "
                                "owes you the connection"))
+        if self.depart is not None and self.ret is None and self.one_way is False:
+            # A different question, because the first one has been answered.
+            # "Coming back, or one way?" asks two things -- whether there is a
+            # return and when it is -- and "coming back" settles only the
+            # first. Re-asking the original is how an agent gets stuck in a
+            # loop with somebody who has already told it the answer.
+            out.append(Ask("ret_date", "Which day are you coming back?",
+                           why="the return is its own search on its own date"))
         if self.hotel is None:
             out.append(Ask("hotel", "Do you want a hotel as well?",
                            options=("yes", "no"),
@@ -118,6 +126,20 @@ class Request:
     def ready(self) -> bool:
         """Enough to search. Optional gaps do not hold anything up."""
         return not [a for a in self.gaps() if not a.optional]
+
+    @property
+    def settled(self) -> tuple:
+        """Only the parts a traveller can answer.
+
+        `raw` and `filled` are bookkeeping -- `raw` changes on every turn
+        because it holds whatever was last typed. Comparing whole Requests to
+        ask "did that message tell me anything?" answers yes to "banana", which
+        is how an unreadable reply slips past the acknowledgement and the
+        question repeats with a straight face.
+        """
+        return (self.origin, self.destination, self.depart, self.ret,
+                self.one_way, self.travellers, self.hotel, self.hotel_area,
+                self.preference)
 
     @property
     def nights(self) -> int:
@@ -391,15 +413,35 @@ def answer(base: Request, field_name: str, value: str,
     if field_name == "depart":
         found, _ = _dates(value.lower(), today)
         return replace(base, depart=found, filled=filled) if found else base
-    if field_name == "ret":
-        if re.search(r"one[-\s]?way|no\b|nope", value, re.I):
+    if field_name in ("ret", "ret_date"):
+        # Three outcomes, not two. A date settles it; "one way" settles it the
+        # other way; and "coming back" / "two way" / "yes" settles WHETHER
+        # there is a return without saying when -- which is a real answer and
+        # has to be recorded, or the next turn asks the same question again.
+        if field_name == "ret" and re.search(
+                r"\bone[-\s]?way\b|^no\b|^nope\b", value, re.I):
             return replace(base, one_way=True, ret=None, filled=filled)
         found, second = _dates(value.lower(), today)
         found = second or found
-        return replace(base, ret=found, one_way=False, filled=filled) if found else base
+        if found:
+            return replace(base, ret=found, one_way=False, filled=filled)
+        if re.search(r"\b(coming back|come back|return(ing)?|round[-\s]?trip|"
+                     r"two[-\s]?way|both ways|yes|yeah|yep)\b", value, re.I):
+            return replace(base, one_way=False, ret=None, filled=filled)
+        return base
     if field_name == "hotel":
-        yes = bool(re.match(r"y|sure|please|ok", value, re.I))
-        return replace(base, hotel=yes, filled=filled)
+        # Yes, no, and neither -- three outcomes, because a yes/no slot that
+        # treats everything-that-is-not-yes as no is worse than one that asks
+        # again. "banana" became "no hotel" and the traveller was never told:
+        # a decision they did not make, stored silently, which is the exact
+        # failure this whole product exists to catch other people committing.
+        if re.match(r"\s*(y|yes|yeah|yep|sure|please|ok|okay|definitely)\b",
+                    value, re.I) or re.search(r"\b(hotel|room|stay|"
+                                              r"accommodation)\b", value, re.I):
+            return replace(base, hotel=True, filled=filled)
+        if re.match(r"\s*(n|no|nope|nah|don'?t|not?\b)", value, re.I):
+            return replace(base, hotel=False, filled=filled)
+        return base
     if field_name == "preference":
         low = value.lower()
         for option in PREFERENCES:

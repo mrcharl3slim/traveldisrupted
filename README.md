@@ -8,7 +8,7 @@ python serve.py                   # the web app, first free port from 8000
 python cli.py                     # the same numbers, in a terminal
 python cli.py --base written      # the October scenario, as the tests assert it
 python mcp_server.py              # the engine as MCP tools, over stdio
-python -m pytest tests/ -q        # 132 tests, no keys, no network
+python -m pytest tests/ -q        # 147 tests, no keys, no network
 ```
 
 Runs in **replay** by default: every API response is a committed fixture, so
