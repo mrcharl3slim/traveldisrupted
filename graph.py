@@ -45,17 +45,23 @@ class ReachModel:
     comparison means anything.
     """
 
-    def __init__(self, arrivals: dict[str, datetime], settled_from: datetime):
+    def __init__(self, arrivals: dict[str, datetime],
+                 settled_from: datetime | None):
         # Where the traveller demonstrably is, and from when.
         self.arrivals = arrivals
         # Past this moment the disruption has washed out and the itinerary
         # resumes as booked -- you get to tomorrow eventually, whatever
         # tonight looks like.
+        #
+        # None means it never washes out, and that is not a corner case: it is
+        # what a cancellation is. "Tomorrow resumes as booked" is a statement
+        # about a traveller who is late, and a traveller whose flight is not
+        # going is not late, they are somewhere else. See no_action_model.
         self.settled_from = settled_from
 
     def presence(self, place: str, by: datetime) -> datetime | None:
         """Earliest the traveller can stand in ``place``. None if never."""
-        if by >= self.settled_from:
+        if self.settled_from is not None and by >= self.settled_from:
             return by            # later days look after themselves
         best = None
         for held, since in self.arrivals.items():
@@ -90,11 +96,19 @@ def no_action_model(disruption: Disruption, trip: Trip) -> ReachModel:
         # origin, not late at the destination — so anything reachable only from
         # the destination is not reachable at all, and the plans have to search
         # from where the traveller actually is.
+        #
+        # And it never settles. Settling says the itinerary resumes as booked
+        # once the day is over, which is true of a delay and false of a
+        # cancellation: nothing carries this traveller to the destination
+        # overnight, so day two is exactly as out of reach as day one. Letting
+        # it settle reported an entire cancelled outbound as harmless — a
+        # 23:55 departure settles five minutes later, so the hotel, the
+        # meeting and the flight home all came back "reachable under this
+        # plan" and the recovery search found nothing to fix.
         where = affected.origin or affected.where
-        arrivals = {where: disruption.new_end}
-    else:
-        arrivals = {affected.destination or affected.where: disruption.new_end}
+        return ReachModel(arrivals={where: disruption.new_end}, settled_from=None)
 
+    arrivals = {affected.destination or affected.where: disruption.new_end}
     return ReachModel(arrivals=arrivals, settled_from=day_end + timedelta(minutes=1))
 
 

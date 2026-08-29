@@ -255,6 +255,13 @@ literal trip had hidden:
 - **One ledger for every plan, inaction included.** A room defusable by a phone
   call was free under "do nothing" and charged in full to every alternative, so
   the ranking compared two different ledgers.
+- **A cancellation never settles.** Doing nothing means the itinerary resumes as
+  booked once the day is over — true of a delay, and false of a flight that is
+  not going, because nothing carries that traveller to the destination
+  overnight. Anything downstream landing on a later day came back "reachable
+  under this plan": a Milan room guaranteed to 22:00 is 04:00 tomorrow in
+  Singapore, and a 23:55 departure settles five minutes after it is cancelled,
+  so a whole cancelled outbound reported *nothing downstream is out of reach*.
 
 The old scripted demo — one late flight, eleven bookings, EUR 282 — still runs
 at `/`, from the same fixtures, asserting the same numbers.

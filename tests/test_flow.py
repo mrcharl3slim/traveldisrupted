@@ -14,7 +14,8 @@ import pytest
 
 import flow
 from builder import assemble, infeasible, onward_after
-from domain import Kind
+from domain import Disruption, Kind
+from graph import Severity, no_action_model
 
 CEST = timezone(timedelta(hours=2))
 
@@ -101,6 +102,42 @@ def test_the_gap_is_derived_from_the_leg_that_was_cancelled(trip):
     assert recovery.gap is not None
     assert (recovery.gap.origin, recovery.gap.destination) == ("ZRH", "MXP")
     assert recovery.gap.by.hour == 22          # the room, not the check-in desk
+
+
+def test_cancelling_the_first_leg_strands_the_whole_itinerary(trip):
+    """A traveller whose outbound is cancelled has not gone anywhere, so
+    nothing later in the trip is reachable -- including the parts that fall on
+    the following day.
+
+    The room here is guaranteed until 22:00 in Milan, which is 04:00 the next
+    morning where the traveller is standing. That crossed the "later days look
+    after themselves" boundary, so EUR 445 of hotel came back "reachable under
+    this plan" while the flight that was supposed to deliver them to it was
+    critical two lines above. On a longer trip it swallowed everything: a
+    23:55 departure settles five minutes after it is cancelled, and the page
+    said there was nothing to fix.
+    """
+    leg = trip.in_order()[0]
+    recovery = flow.replan(trip, leg.id)
+
+    downstream = [n for n in recovery.impact.nodes if n.booking.id != leg.id]
+    assert downstream, "the fixture trip has nothing after its first leg"
+    assert all(n.severity is not Severity.SAFE for n in downstream)
+    assert recovery.impact.do_nothing_cost + recovery.impact.at_risk_value > 0
+    assert recovery.gap is not None
+
+
+def test_a_delay_still_lets_the_itinerary_resume_the_next_day(trip):
+    """The other half of the same rule, so the fix above cannot be read as
+    "cancellations are just delays with a bigger number". A late arrival is
+    still an arrival: tomorrow happens, and claiming otherwise would inflate
+    every headline in the product."""
+    leg = trip.in_order()[0]
+    late = Disruption(leg.id, leg.end + timedelta(hours=4), "late inbound", 0.9)
+
+    assert no_action_model(late, trip).settled_from is not None
+    tomorrow = late.new_end + timedelta(days=1)
+    assert no_action_model(late, trip).presence("MXP", tomorrow) == tomorrow
 
 
 def test_the_cancelled_flight_is_not_offered_back(trip):

@@ -39,6 +39,29 @@ def test_a_delay_still_lands_them_where_they_were_going():
     assert "ZRH" in model.arrivals
 
 
+def test_a_cancellation_never_settles():
+    """"The itinerary resumes as booked once today is over" is a statement
+    about a traveller who is late. One whose flight is not going is not late,
+    they are in another country, and no amount of tomorrow moves them.
+
+    Letting a cancellation settle was the bug that made a cancelled outbound
+    look free: everything downstream fell on a later day, came back "reachable
+    under this plan", and the recovery search found nothing to fix.
+    """
+    assert no_action_model(CANCELLED, TRIP).settled_from is None
+    assert no_action_model(DELAYED, TRIP).settled_from is not None
+
+
+def test_a_cancellation_does_not_reach_the_destination_by_waiting():
+    """The rule above, in the terms the graph actually asks it in. There is no
+    ground route from Singapore to Milan, and a week of patience does not
+    build one."""
+    model = no_action_model(CANCELLED, TRIP)
+    next_week = CANCELLED.new_end + timedelta(days=7)
+    assert model.presence("MXP", next_week) is None
+    assert model.presence("SIN", next_week) == CANCELLED.new_end
+
+
 def test_a_cancellation_has_no_delay_to_report():
     """Modelling it as a very long delay would put an arrival time on a flight
     that is not going anywhere."""
