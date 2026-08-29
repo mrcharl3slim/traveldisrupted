@@ -137,6 +137,42 @@ def test_a_delayed_leg_says_so_on_the_itinerary(client):
     assert all(b["disruption"] is None for b in row["bookings"] if b["id"] != leg["id"])
 
 
+def test_a_delay_survives_the_page_being_refreshed(client):
+    """It was drawn from the last disruption response, which is a fact about
+    one browser tab rather than about the trip -- so the label and the new time
+    vanished on a refresh while the disruption sat in storage the whole time.
+
+    A refresh is exactly this: nothing in hand but a trip id, and everything
+    that has to be shown fetched again."""
+    booked = book(client)
+    leg = [b for b in booked["bookings"] if b["kind"] == "flight"][0]
+    answered = client.post("/api/delay", json={
+        "trip_id": booked["trip_id"], "booking_id": leg["id"],
+        "minutes": 195}).json()
+
+    # One source: what the disruption endpoint hands back and what the page
+    # fetches on reload have to be the same rows, or they will drift.
+    reloaded = next(t for t in client.get("/api/itineraries").json()["itineraries"]
+                    if t["trip_id"] == booked["trip_id"])
+    assert answered["bookings"] == reloaded["bookings"]
+
+    hit = next(b["disruption"] for b in reloaded["bookings"] if b["id"] == leg["id"])
+    assert hit["delay_minutes"] == 195
+    assert hit["now_arrives"] and hit["was"]
+
+
+def test_a_restored_trip_carries_what_it_takes_to_draw_it(client):
+    """Half a restored trip -- rows with no reason they cannot be taken -- is
+    worse than none, and a page that cannot tell whether storage is durable
+    warns about losing a trip it will not lose."""
+    booked = book(client)
+    row = next(t for t in client.get("/api/itineraries").json()["itineraries"]
+               if t["trip_id"] == booked["trip_id"])
+    assert row["problems"] == booked["problems"]
+    assert isinstance(row["durable"], bool)
+    assert row["total"] == booked["total"]
+
+
 def test_the_scheduled_times_are_not_overwritten_by_the_delay(client):
     """`starts` and `ends` are what was BOOKED and they do not move. A delay is
     what the world is doing to the schedule, not a correction of it, and

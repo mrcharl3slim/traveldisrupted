@@ -1280,6 +1280,12 @@ def itineraries() -> dict:
             "legs": len(trip.bookings),
             "disrupted": disruption is not None,
             "disrupted_booking": disruption.booking_id if disruption else "",
+            # Everything a page needs to show this trip again after a refresh.
+            # It was already storing the trip; what it could not do was come
+            # back to one, and half a restored trip -- rows without the reasons
+            # they cannot be taken -- is worse than none.
+            "problems": infeasible(trip),
+            "durable": store_module.store().durable,
             "bookings": _bookings_out(trip, disruption),
         })
     return {"itineraries": rows}
@@ -1520,6 +1526,11 @@ def _injected(trip_id: str, booking_id: str, make) -> dict:
     payload["saved"] = recovery.saved
     payload["preference"] = recovery.preference
     payload["warning"] = recovery.warning
+    # The itinerary as it now reads, with the deviation on the row it happened
+    # to. Returned so the page has ONE source for what is wrong with a leg --
+    # it had two, the row it was holding and the signal in this response, and
+    # the second does not survive a refresh.
+    payload["bookings"] = _bookings_out(trip, recovery.disruption)
     return payload
 
 

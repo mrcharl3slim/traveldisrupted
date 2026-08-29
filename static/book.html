@@ -357,8 +357,41 @@ async function select(){
   };
   try { TRIP = await api('/api/select', body); } catch (e) { return fail('#ports', e); }
   OUT = null; PICKED = null;
+  remember();
   $('#s-out').hidden = true; $('#s-hand').hidden = true;
   paintTrip();
+}
+
+// The trip id in the address bar, so a refresh comes back to the same trip
+// instead of an empty search form. It is already stored on the server under
+// this id -- the only thing the page was failing to keep was which one it had
+// been looking at, and a URL is where that belongs: it survives a refresh, a
+// restart and being sent to somebody else.
+function remember(){
+  const url = new URL(location.href);
+  if (TRIP && TRIP.trip_id) url.searchParams.set('trip', TRIP.trip_id);
+  else url.searchParams.delete('trip');
+  history.replaceState(null, '', url);
+}
+
+async function restore(){
+  const id = new URL(location.href).searchParams.get('trip');
+  if (!id) return;
+  let rows;
+  try { rows = (await api('/api/itineraries')).itineraries; }
+  catch (e) { return; }
+  const found = rows.find(t => t.trip_id === id);
+  // A trip id that is no longer stored is not an error worth a banner: the
+  // instance restarted and took its memory store with it, which /health has
+  // already said out loud.
+  if (!found) return remember(TRIP = null);
+  TRIP = {trip_id: found.trip_id, label: found.label, total: found.total,
+          problems: found.problems || [], durable: found.durable,
+          bookings: found.bookings};
+  paintTrip();
+  try { WATCH = await api(`/api/alerts?trip=${encodeURIComponent(id)}`); }
+  catch (e) { WATCH = null; }
+  paintWatch();
 }
 
 function paintTrip(){
@@ -376,10 +409,14 @@ function paintTrip(){
     : '';
 
   $('#trip-legs').innerHTML = TRIP.bookings.map(b => {
-    // What has happened to THIS row, if anything. A delay is not a small
-    // cancellation and must not be drawn as one: the leg is still flying and
-    // the traveller is still on it, so it keeps its colour and gains a time.
-    const hit = OUT && OUT.signal.booking_id === b.id ? OUT.signal : null;
+    // What has happened to THIS row, read off the row. It used to come from
+    // the last disruption response, which is a fact about this browser tab
+    // rather than about the trip -- so the label and the new time vanished on
+    // a refresh while the disruption was still sitting in storage. A delay is
+    // not a small cancellation and must not be drawn as one either: the leg is
+    // still flying and the traveller is still on it, so it keeps its colour
+    // and gains a time.
+    const hit = b.disruption;
     const gone = hit && hit.cancelled;
     const late = hit && !hit.cancelled && hit.delay_minutes > 0;
     return `
@@ -423,6 +460,10 @@ async function disrupt(path, what){
   try {
     OUT = await api(path, Object.assign({trip_id: TRIP.trip_id}, what));
   } catch (e) { return fail('#trip-problems', e); }
+  // The rows come back with the deviation attached, so the page holds one
+  // version of the itinerary rather than a stale one plus a correction.
+  if (OUT.bookings) TRIP = Object.assign({}, TRIP, {bookings: OUT.bookings});
+  remember();
   PICKED = null;
   paintTrip();
   paintOutcome();
@@ -511,6 +552,8 @@ function paintOutcome(){
             </div>`).join('') + `</div>`;
       }).join('') || '<div class="note">This plan asks nothing of anybody.</div>');
 }
+
+restore();
 
 api('/health').then(h => {
   $('#ports').innerHTML = `ports: ${esc(h.ports_mode)} · model: ${esc(h.model)} · `

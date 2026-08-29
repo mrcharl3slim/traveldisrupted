@@ -191,6 +191,15 @@ one is struck through. Until this, `/api/itineraries` knew a trip was disrupted
 and not what had happened to it, so a flight running three hours late showed its
 original times with nothing to say so.
 
+**And it survives a refresh.** The label was drawn from the last disruption
+response, which is a fact about one browser tab rather than about the trip — so
+it vanished on reload while the disruption sat in storage the whole time. The
+row now reads what happened to *it*, the disruption endpoints hand back the same
+rows `/api/itineraries` does, and `/book` keeps the trip id in the address bar.
+The trip was always stored; the only thing the page could not do was come back
+to one, and a URL is where that belongs — it survives a refresh, a restart, and
+being sent to somebody else.
+
 ### What replay cannot check
 
 Replay is what makes the demo survivable, and it has exactly one blind spot: in
