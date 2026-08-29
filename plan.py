@@ -34,7 +34,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 
-from domain import Booking, Disruption, Kind, Trip, transit
+from domain import Booking, Disruption, Kind, Trip
 from graph import Impact, ReachModel, Severity, no_action_model, propagate
 
 
@@ -133,23 +133,41 @@ class Plan:
 
 
 def _reach(disruption: Disruption, trip: Trip, offer) -> ReachModel:
+    """Where the traveller can be if they take ``offer``. None means inaction.
+
+    One extra arrival on top of the no-action model, which is the entire
+    difference between a plan and doing nothing.
+    """
     base = no_action_model(disruption, trip)
     if offer is None:
         return base
-    arrivals = dict(base.arrivals)
-    arrivals[offer.destination] = offer.arrive
-    return ReachModel(arrivals=arrivals, settled_from=base.settled_from)
+    under = ReachModel(dict(base.arrivals), base.settled_from)
+    under.arrive(offer.destination, offer.arrive)
+    return under
 
 
-def _can_reach(offer, b: Booking) -> tuple[bool, timedelta | None]:
-    """Can the traveller make ``b`` after taking ``offer``, and by how much?"""
-    if offer is None:
-        return False, None
-    leg = transit(offer.destination, b.where)
-    if leg is None:
-        return False, None
-    at = offer.arrive + leg
-    return at <= b.must_arrive_by, b.must_arrive_by - at
+def _outcomes(trip: Trip, disruption: Disruption, now: datetime, offer) -> dict:
+    """Every booking under this plan, judged by the code that judges inaction.
+
+    This function is the promise `ReachModel` has always made and did not
+    keep. Candidates were scored by a one-hop test of their own -- ground
+    transit from the offer's landing point to the booking, and nothing else --
+    while the baseline they are compared against went through `propagate`.
+    Two reachability models, one ranking, and the answer depended on which one
+    happened to run.
+
+    The one-hop test could only ever see the offer. It could not see the
+    traveller's own surviving legs, so a plan that lands them in Milan in time
+    for the flight to Rome they already hold was still charged for everything
+    in Rome -- the same blindness `propagate` was fixed for, left behind in the
+    half of the engine that decides what to recommend. It could not see
+    `settled_from` either, so it disagreed with the baseline about tomorrow.
+
+    Now both sides walk the same itinerary with the same rules and differ only
+    in the one arrival the offer adds.
+    """
+    walked = propagate(trip, disruption, now, _reach(disruption, trip, offer))
+    return {n.booking.id: n for n in walked.nodes}
 
 
 def _can_board(disruption: Disruption, trip: Trip, offer) -> bool:
@@ -269,6 +287,8 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
     if _is_the_disrupted_flight(trip.by_id(disruption.booking_id), offer):
         return None          # the flight that failed is not its own replacement
 
+    under = _outcomes(trip, disruption, now, offer)
+
     actions: list[Action] = []
     delivered: set[str] = set()
     wasted_ids: set[str] = set()
@@ -287,6 +307,19 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
 
         # --- the leg that was missed -------------------------------------
         if b.kind is Kind.FLIGHT:
+            # Unless this plan gets them to it. A replacement that lands in
+            # Milan by 13:40 has saved the 16:00 hop to Rome, and cancelling
+            # it anyway charged the traveller its full fare under every plan
+            # and none under doing nothing -- so the engine recommended
+            # inaction over the option that rescued the trip. The flight
+            # branch was the last one deciding this without asking the walk.
+            reached = under.get(b.id)
+            if reached is not None and reached.attended:
+                delivered.add(b.id)
+                buffer = reached.slack
+                if buffer is not None and (tightest is None or buffer < tightest[1]):
+                    tightest = (b.id, buffer)
+                continue
             if offer is None:
                 wasted_ids.add(b.id); wasted += b.price
                 continue
@@ -320,8 +353,8 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
 
         # --- lodging: a message, not money --------------------------------
         if b.kind is Kind.LODGING:
-            ok, _ = _can_reach(offer, b)
-            if ok:
+            reached = under.get(b.id)
+            if reached is not None and reached.attended:
                 actions.append(Action(
                     verb="notify", booking_id=b.id, lane=lane_for(b.provider, "notify"),
                     label=f"Email {_property(b)} about a late check-in",
@@ -351,9 +384,10 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
             continue
 
         # --- fixed slots: keep if you can get there, move if you cannot ---
-        ok, buffer = _can_reach(offer, b)
-        if ok:
+        reached = under.get(b.id)
+        if reached is not None and reached.attended:
             delivered.add(b.id)
+            buffer = reached.slack
             if buffer is not None and (tightest is None or buffer < tightest[1]):
                 tightest = (b.id, buffer)
             continue

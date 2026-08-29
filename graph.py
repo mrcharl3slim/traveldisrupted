@@ -40,9 +40,16 @@ class ReachModel:
     """Where the traveller can be, and when.
 
     A scenario -- doing nothing, or any candidate recovery plan -- is entirely
-    described by this. plan.py will subclass it so every plan is scored by the
-    same propagation code that scores inaction, which is the only way the
-    comparison means anything.
+    described by this, and that is what makes the comparison mean anything:
+    `plan.build` runs `propagate` over a model with the offer's arrival added
+    and reads the result, so a plan and the inaction it is ranked against are
+    judged by the same walk over the same itinerary, differing only in the one
+    arrival buying the offer would buy.
+
+    It said "will" here for a long time and never did. Candidates were scored
+    by a one-hop test of their own that could see the offer and nothing else --
+    not the traveller's surviving legs, not `settled_from` -- so the two halves
+    of the ranking disagreed about what was reachable.
     """
 
     def __init__(self, arrivals: dict[str, datetime],
@@ -77,6 +84,18 @@ class ReachModel:
         at = self.presence(b.where, b.must_arrive_by)
         return at is not None and at <= b.must_arrive_by
 
+    def arrive(self, place: str, when: datetime) -> None:
+        """Record that the traveller can be in ``place`` from ``when``.
+
+        Earliest wins. Two ways of being in the same city are not two
+        arrivals, they are one arrival at whichever comes first, and letting a
+        later one overwrite an earlier one would make the traveller harder to
+        reach by giving them another way to get there.
+        """
+        held = self.arrivals.get(place)
+        if held is None or when < held:
+            self.arrivals[place] = when
+
     def took(self, b: Booking) -> None:
         """Record that the traveller took ``b`` and is now where it ends.
 
@@ -84,17 +103,9 @@ class ReachModel:
         and a meeting are places you have to be, not journeys that put you
         somewhere, and both carry an origin and no destination -- so this is
         the whole test, and it stays right for the next kind of booking added.
-
-        Earliest wins. Two ways of being in the same city are not two
-        arrivals, they are one arrival at whichever comes first, and letting a
-        later leg overwrite an earlier one would make the traveller harder to
-        reach by giving them another way to get there.
         """
-        if not b.destination or b.end is None:
-            return
-        held = self.arrivals.get(b.destination)
-        if held is None or b.end < held:
-            self.arrivals[b.destination] = b.end
+        if b.destination and b.end is not None:
+            self.arrive(b.destination, b.end)
 
 
 def no_action_model(disruption: Disruption, trip: Trip) -> ReachModel:
@@ -166,6 +177,15 @@ class Node:
     cutoff: datetime | None = None
     reason: str = ""
     parents: list[str] = field(default_factory=list)
+    #: Whether the traveller can physically be there in time, under whatever
+    #: model this walk was run with. NOT a restatement of severity, which is
+    #: about money: a EUR 0 dinner that gets missed is SAFE because nothing was
+    #: at stake, and a commitment that gets missed is BROKEN with an exposure
+    #: of zero. Severity is what it costs; this is what happens.
+    attended: bool = False
+    #: Time to spare, where there is any. What a plan calls its tightest
+    #: connection is the smallest of these.
+    slack: timedelta | None = None
 
     @property
     def id(self) -> str:
@@ -259,7 +279,10 @@ def propagate(trip: Trip, disruption: Disruption, now: datetime,
 
     prior: list[str] = [source.id]
     for b in exposed_to(trip, disruption):
-        attends = reached.can_attend(b)
+        # Taken once and kept, because both facts fall out of it and plan.py
+        # needs both: whether the traveller gets there, and by how much.
+        at = reached.presence(b.where, b.must_arrive_by)
+        attends = at is not None and at <= b.must_arrive_by
         if attends:
             reached.took(b)
         recoverable = b.recoverable_at(now)
@@ -293,6 +316,8 @@ def propagate(trip: Trip, disruption: Disruption, now: datetime,
             cutoff=cut.closes if cut else None,
             reason=why,
             parents=list(prior[-1:]),
+            attended=attends,
+            slack=(b.must_arrive_by - at) if attends else None,
         ))
         prior.append(b.id)
 

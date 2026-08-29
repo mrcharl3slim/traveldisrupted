@@ -297,6 +297,15 @@ trip had hidden:
   It only ever forgives, and it forgives the baseline and every candidate plan
   through the same map. The scripted trip has one destination and nothing
   flying on from it, which is exactly why it never showed.
+- **One reachability model, or the ranking is meaningless.** Candidates were
+  scored by a one-hop test of their own — ground transit from where the offer
+  lands, and nothing else — while the baseline they are ranked against went
+  through `propagate`. It could not see the traveller's own surviving legs, so
+  a replacement landing in Milan at 13:40 was still charged for the 16:00
+  flight to Rome it had just saved: EUR 140 on every candidate and nothing on
+  doing nothing, and the engine recommended inaction over the plan that
+  rescued the trip. `plan.build` now walks the same itinerary with the same
+  rules, differing only in the one arrival the offer adds.
 
 The old scripted demo — one late flight, eleven bookings, EUR 282 — still runs
 at `/`, from the same fixtures, asserting the same numbers.

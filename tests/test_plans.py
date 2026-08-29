@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 import pytest
 
 from demo_trip import TRIP, CEST, dt
-from domain import Disruption
+from domain import Booking, Disruption, Kind, Trip
 from offers import OFFERS
 from plan import Lane, generate
 
@@ -25,6 +25,76 @@ def plans():
 @pytest.fixture
 def ranked():
     return generate(TRIP, DISRUPTION, NOW, OFFERS)
+
+
+class Offer:
+    """The minimum a plan candidate has to be. Built here rather than taken
+    from the recordings because the point is a routing the demo trip does not
+    contain: somewhere to fly on to."""
+
+    price_source = "quoted"
+
+    def __init__(self, ident, origin, destination, depart, arrive, price):
+        self.id = self.key = self.label = ident
+        self.origin, self.destination = origin, destination
+        self.depart, self.arrive, self.price = depart, arrive, price
+        self.carrier, self.currency = "XX", "EUR"
+
+
+def _flies_on():
+    """ZRH -> MXP -> FCO with a Rome room, and the first leg cancelled."""
+    day = datetime(2026, 10, 12, tzinfo=CEST)
+
+    def at(hour, minute=0):
+        return day.replace(hour=hour, minute=minute)
+
+    trip = Trip([
+        Booking(id="l1", kind=Kind.FLIGHT, provider="LX", title="ZRH to MXP",
+                start=at(9), end=at(10, 10), origin="ZRH", destination="MXP",
+                price=170.0),
+        Booking(id="l2", kind=Kind.FLIGHT, provider="AZ", title="MXP to FCO",
+                start=at(16), end=at(17, 20), origin="MXP", destination="FCO",
+                price=140.0),
+        Booking(id="h1", kind=Kind.LODGING, provider="hotel", title="Rome hotel",
+                start=at(14), end=at(23), origin="FCO", price=430.0,
+                hard_deadline=at(22),
+                mitigation="call the property to hold the room"),
+    ])
+    cancelled = Disruption("l1", at(8, 30), "cancelled", 1.0, cancelled=True)
+    # Lands at 13:40, comfortably ahead of the 16:00 hop they already hold.
+    rescue = Offer("r1", "ZRH", "MXP", at(12, 20), at(13, 40), 120.0)
+    return trip, cancelled, at(8, 30), [rescue]
+
+
+def test_a_plan_is_scored_by_the_walk_that_scores_inaction():
+    """Candidates had a reachability test of their own -- one ground hop from
+    where the offer lands -- while the baseline they are ranked against went
+    through `propagate`. The one-hop test cannot see the traveller's own
+    surviving legs, so a replacement landing in Milan at 13:40 was still
+    charged for the 16:00 flight to Rome it had just saved.
+
+    EUR 140 on every candidate and nothing on doing nothing, which is how the
+    engine came to recommend inaction over the plan that rescued the trip."""
+    trip, cancelled, now, offers = _flies_on()
+    ranked = generate(trip, cancelled, now, offers)
+    best, noop = ranked[0], next(p for p in ranked if p.id == "noop")
+
+    assert best.id == "r1", "the rescue has to beat doing nothing"
+    assert "l2" in best.delivered and "l2" not in best.wasted_ids
+    assert "l2" in noop.wasted_ids, "inaction really does lose that flight"
+    assert best.total_damage < noop.total_damage
+
+
+def test_a_plan_that_arrives_too_late_still_loses_the_leg():
+    """The other half: forgiveness has to be earned. Same trip, a replacement
+    landing after the onward hop has gone."""
+    trip, cancelled, now, _ = _flies_on()
+    day = datetime(2026, 10, 12, tzinfo=CEST)
+    late = Offer("r2", "ZRH", "MXP", day.replace(hour=17),
+                 day.replace(hour=18, minute=20), 120.0)
+
+    plan = next(p for p in generate(trip, cancelled, now, [late]) if p.id == "r2")
+    assert "l2" in plan.wasted_ids and "l2" not in plan.delivered
 
 
 def test_rail_plan_is_cheaper_than_the_trip_as_booked(plans):
