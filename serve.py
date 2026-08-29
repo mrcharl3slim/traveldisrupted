@@ -718,6 +718,7 @@ def _req_out(req) -> dict:
         "ret": req.ret.isoformat() if req.ret else None,
         "one_way": req.one_way, "travellers": req.travellers,
         "hotel": req.hotel, "hotel_area": req.hotel_area,
+        "confirmed": req.confirmed,
         "stay_nights": req.stay_nights, "nights": req.nights,
         "preference": req.preference, "summary": req.summary(),
         "ready": req.ready,
@@ -751,6 +752,7 @@ def _req_in(raw: dict):
         hotel=raw.get("hotel") if isinstance(raw.get("hotel"), bool) else None,
         hotel_area=str(raw.get("hotel_area") or "")[:60],
         stay_nights=max(0, min(int(raw.get("stay_nights") or 0), 60)),
+        confirmed=bool(raw.get("confirmed")),
         preference=(str(raw.get("preference") or "").lower()
                     if str(raw.get("preference") or "").lower()
                     in request_mod.PREFERENCES else ""),
@@ -791,6 +793,7 @@ def _appt_out(a) -> dict:
     return {
         "kind": "appointment",
         "what": a.what, "who": a.who, "where": a.where, "place": a.place,
+        "confirmed": a.confirmed,
         "day": a.day.isoformat() if a.day else None,
         "at": a.when.strftime("%H:%M") if a.when else None,
         "minutes": a.minutes, "trip_id": a.trip_id,
@@ -824,6 +827,7 @@ def _appt_in(raw: dict):
         day=settled, when=when,
         minutes=max(5, min(int(raw.get("minutes") or 60), 12 * 60)),
         trip_id=str(raw.get("trip_id") or "")[:40],
+        confirmed=bool(raw.get("confirmed")),
         raw=str(raw.get("raw") or "")[:2000],
     )
 
@@ -864,18 +868,34 @@ def _appointment_turn(body: Chat) -> dict:
     # before the sentence is parsed, because the parse is part of the telling.
     started_at = (base or appt_mod.Appointment()).settled
     fresh = appt_mod.parse(body.text, date.today())
+
+    # Additive while collecting, overwriting while correcting -- the same rule
+    # `converse.read` applies to a booking, and for the same reason: offering
+    # to confirm and then ignoring the correction is worse than not offering.
+    correcting = (base is not None and not base.confirmed
+                  and [a.field for a in base.gaps() if not a.optional] == ["confirm"])
+
+    def pick(field_name, empty):
+        was = getattr(base, field_name) if base else empty
+        now = getattr(fresh, field_name)
+        if correcting and now != empty:
+            return now
+        return was if was != empty else now
+
     merged = appt_mod.Appointment(
-        what=(base.what if base else "") or fresh.what,
-        who=(base.who if base else "") or fresh.who,
-        where=(base.where if base else "") or fresh.where,
-        place=(base.place if base else "") or fresh.place,
-        day=(base.day if base else None) or fresh.day,
-        when=(base.when if base else None) or fresh.when,
-        minutes=(base.minutes if base and base.minutes != appt_mod.DEFAULT_MINUTES
-                 else fresh.minutes),
+        what=pick("what", ""), who=pick("who", ""),
+        where=pick("where", ""), place=pick("place", ""),
+        day=pick("day", None), when=pick("when", None),
+        minutes=(fresh.minutes if fresh.minutes != appt_mod.DEFAULT_MINUTES
+                 else (base.minutes if base else appt_mod.DEFAULT_MINUTES)),
         trip_id=chosen or (base.trip_id if base else ""),
+        confirmed=(base.confirmed if base and not correcting else False),
         raw=body.text or (base.raw if base else ""),
     )
+    if correcting and fresh.where and not fresh.place:
+        # A corrected location has to be re-confirmed as a city, because the
+        # clock moves with it.
+        merged = replace_dataclass(merged, place="")
     settled = appt_mod.enrich(merged, _model.get_model())
 
     # A typed reply answers the open question first, exactly as it does when
@@ -887,8 +907,25 @@ def _appointment_turn(body: Chat) -> dict:
 
     asks = [{"field": a.field, "question": a.question, "options": list(a.options),
              "why": a.why, "optional": a.optional} for a in settled.gaps()]
+    pending = next((a for a in asks if not a["optional"]), None)
+
+    # The city an unrecognised address sits in, offered from the trips that
+    # cover that day rather than left as free text. A traveller who typed
+    # "the Ritz Carlton" is far more likely to tap "New York" than to spell it.
+    if pending and pending["field"] == "place" and settled.day:
+        known = []
+        for _tid, trip, _label in _loaded_trips():
+            rows = [b for b in trip.in_order() if b.start]
+            if rows and rows[0].start.date() <= settled.day <= max(
+                    (b.end or b.start) for b in rows).date():
+                known += [places.label(b.where) for b in trip.in_order()
+                          if places.by_code(b.where)]
+        pending["options"] = list(dict.fromkeys(known))[:4]
+
     out = {"kind": "appointment", "state": _appt_out(settled), "asks": asks,
            "unread": unread, "ports": [], "note": "", "detail": "",
+           "confirm": settled.card() if pending and pending["field"] == "confirm"
+                      else None,
            "flights": [], "returns": [], "stays": []}
 
     if asks:
@@ -912,12 +949,26 @@ def _appointment_turn(body: Chat) -> dict:
                 "trip first and tell me about this again, and I'll check it "
                 "against the flights."}
     if len(options) > 1:
-        labels = {tid: label for tid, _, label in trips}
+        # Told apart by what is IN them, not by their labels. Two trips booked
+        # the same way carry the same label -- "Zurich to Milan · 18 Sep – 20
+        # Sep · hotel" twice -- and a choice between two identical chips is not
+        # a choice. The first flight and the total are what differ.
+        by_id = {tid: (trip, label) for tid, trip, label in trips}
+
+        def distinguish(trip_id: str) -> str:
+            trip, label = by_id[trip_id]
+            legs = [b for b in trip.in_order() if b.kind is Kind.FLIGHT]
+            total = round(sum(b.price for b in trip.bookings))
+            head = legs[0].title.split(" - ")[0] if legs else label[:20]
+            return f"{head} · €{total:,}"
+
         return {**out,
                 "asks": [{"field": "trip", "question": "Which trip is this on?",
-                          "options": [labels[t][:44] for t in options],
-                          "ids": options, "why": "two of your trips cover that "
-                          "day, and the answer depends on which one",
+                          "options": [distinguish(t) for t in options],
+                          "ids": options,
+                          "why": "more than one of your trips covers that day, "
+                                 "and putting a meeting on the wrong one gives "
+                                 "you a confident answer about the wrong week",
                           "optional": False}],
                 "reply": "Which trip is this on?"}
 
@@ -943,6 +994,7 @@ def _appointment_turn(body: Chat) -> dict:
             "feasible": verdict["feasible"],
             "clashes": verdict["clashes"],
             "about_this": verdict["about_this"],
+            "notes": verdict["notes"],
             "bookings": _bookings_out(_load(trip_id)),
             "reply": (f"Added to {saved.label}. "
                       + ("That works — nothing else is in the way."
@@ -1012,6 +1064,7 @@ def chat(body: Chat) -> dict:
              "options": list(a.options), "why": a.why, "optional": a.optional}
             for a in (state.get("asks") or [])]
 
+    pending = next((a for a in asks if not a["optional"]), None)
     reply = state.get("reply", "")
     # Nothing moved and something is still being asked: whatever the traveller
     # just said, this system did not understand it. Saying so beats asking the
@@ -1024,6 +1077,10 @@ def chat(body: Chat) -> dict:
     return {
         "reply": reply,
         "unread": unread,
+        # Shown only at the moment it is asked about. A summary card on every
+        # turn is wallpaper; one card, at the point where everything after it
+        # is computed from what it says, is a checkpoint.
+        "confirm": out.card() if pending and pending["field"] == "confirm" else None,
         "kind": state.get("kind", "book"),
         "state": {**_req_out(out), "kind": "book", "raw": out.raw},
         "asks": asks,

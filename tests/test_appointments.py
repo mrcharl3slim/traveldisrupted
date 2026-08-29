@@ -49,7 +49,11 @@ def test_the_worked_example():
     assert a.day == date(2026, 9, 19)
     assert a.when.hour == 10
     assert a.where == "their office"
-    assert a.ready
+    # Not ready: an address the engine cannot place has no clock, and the last
+    # gate is the traveller agreeing it was heard right.
+    assert [g.field for g in a.gaps()] == ["place"]
+    settled = ap.answer(ap.answer(a, "place", "Milan"), "confirm", "yes")
+    assert settled.ready
 
 
 def test_the_three_questions_are_the_three_that_decide_anything():
@@ -218,3 +222,150 @@ def test_a_naive_time_is_put_on_the_trips_clock(trip):
     a = made("meeting with the team on 18 september at 4pm at MXP")
     assert a.when.tzinfo is None
     assert ap.localise(a, trip).when.tzinfo is not None
+
+
+# --------------------------------------------------------------------------
+# a trip that crosses timezones
+# --------------------------------------------------------------------------
+
+SGT = timezone(timedelta(hours=8))
+EDT = timezone(timedelta(hours=-4))
+
+
+@pytest.fixture
+def long_haul():
+    """Singapore to New York: departs on the 31st, lands late on the 1st."""
+    from domain import Booking, Kind
+    from policy import Policy
+
+    return Trip([Booking(
+        id="br0226", kind=Kind.FLIGHT, provider="EVA Air",
+        title="BR 0226 - SIN to JFK via TPE",
+        start=datetime(2026, 8, 31, 23, 30, tzinfo=SGT),
+        end=datetime(2026, 9, 1, 22, 5, tzinfo=EDT),
+        origin="SIN", destination="JFK", price=1200.0, policy=Policy())])
+
+
+def test_nine_am_means_nine_am_where_the_meeting_is(long_haul):
+    """The bug a traveller hit. A 09:00 meeting in New York, on an itinerary
+    starting in Singapore, was stamped 09:00 +08:00 -- which is 21:00 the
+    previous evening in New York, twelve hours out, and an hour before the
+    flight it was then said to clash with."""
+    a = made("meeting with john on 2 september at 9am at JFK")
+    when = ap.localise(a, long_haul).when
+    assert when.strftime("%d %b %H:%M") == "02 Sep 09:00"
+    assert when.utcoffset() == timedelta(hours=-4), "stamped on the wrong clock"
+
+
+def test_a_meeting_after_a_long_haul_lands_is_not_a_clash(long_haul):
+    a = made("meeting with john on 2 september at 9am at JFK")
+    verdict = ap.assess(long_haul, a)
+    assert verdict["feasible"], verdict["clashes"]
+
+
+def test_a_known_place_beats_where_the_traveller_happens_to_be(long_haul):
+    """Best source first: if the traveller named somewhere the engine knows,
+    that place's own clock is the right one."""
+    a = made("meeting with the team on 2 september at 9am at ZRH")
+    assert ap.zone_for(a, long_haul) is not None
+    when = ap.localise(a, long_haul).when
+    assert when.utcoffset() == timedelta(hours=2)     # Europe/Zurich in September
+
+
+def test_a_clash_names_both_dates(long_haul):
+    """The message that hid this. A bare time for the meeting next to a full
+    date for the flight left no way to see which day the engine had chosen --
+    and when it chose wrong, the message concealed it."""
+    a = made("meeting with john on 1 september at 9am at JFK")
+    hits = ap.assess(long_haul, a)["about_this"]
+    assert hits and "01 Sep 09:00" in hits[0]
+
+
+# --------------------------------------------------------------------------
+# somewhere the engine has never heard of
+# --------------------------------------------------------------------------
+
+
+def test_an_address_we_do_not_know_is_not_a_place_we_cannot_reach(long_haul):
+    """"No route from JFK to ritz carlton" reads as "you cannot get there" and
+    means "I do not know where that is". Turning the second into the first
+    invents a clash out of our own ignorance."""
+    a = made("meeting with john on 2 september at 9am at ritz carlton")
+    verdict = ap.assess(long_haul, a)
+    assert verdict["feasible"]
+    assert not any("no route" in c for c in verdict["clashes"])
+    assert verdict["notes"], "checked nothing and said nothing"
+    assert "ritz carlton" in verdict["notes"][0]
+
+
+def test_two_places_we_do_know_still_report_a_missing_route(trip):
+    """The rule that `transit` returning None means the absence of a route
+    holds between two places we know. Only the unknown case is exempt."""
+    a = made("workshop with the vendor on 19 september at 10am at ZRH")
+    verdict = ap.assess(trip, a)
+    assert not verdict["feasible"]
+    assert any("no route" in c for c in verdict["about_this"])
+
+
+def test_the_timing_is_still_checked_when_the_place_is_unknown(long_haul):
+    """A location we cannot resolve stops the journey check, not the clock."""
+    a = made("meeting with john on 1 september at 9am at ritz carlton")
+    verdict = ap.assess(long_haul, a)
+    assert not verdict["feasible"], "airborne, and nobody said so"
+    assert any("overlaps" in c for c in verdict["about_this"])
+
+
+# --------------------------------------------------------------------------
+# the location decides the clock, so it has to be settled
+# --------------------------------------------------------------------------
+
+
+def test_an_address_must_be_placed_in_a_city_before_anything_is_checked():
+    """"9am at the Ritz Carlton" means nine in the morning in New York. Until
+    the engine knows which city that is, it is guessing a timezone — and it
+    guessed wrong once already, by twelve hours."""
+    a = made("meeting with john on 2 september at 9am at the ritz carlton")
+    assert a.where and not a.place
+    ask = next(g for g in a.gaps() if g.field == "place")
+    assert "which city" in ask.question.lower()
+    assert "ritz carlton" in ask.question.lower()
+
+    placed = ap.answer(a, "place", "new york", TODAY)
+    assert placed.place == "JFK"
+    assert "place" not in {g.field for g in placed.gaps()}
+
+
+def test_a_city_the_engine_does_not_know_leaves_the_question_open():
+    a = made("meeting with john on 2 september at 9am at the ritz carlton")
+    assert ap.answer(a, "place", "Narnia", TODAY) == a
+
+
+# --------------------------------------------------------------------------
+# confirming what was recorded
+# --------------------------------------------------------------------------
+
+
+def test_nothing_is_filed_until_the_traveller_agrees_it_was_heard_right():
+    a = made("meeting with john on 2 september at 9am at MXP")
+    assert not a.ready
+    assert [g.field for g in a.gaps()] == ["confirm"]
+    assert ap.answer(a, "confirm", "yes, save it", TODAY).ready
+
+
+def test_the_card_says_which_city_the_time_is_in():
+    """"09:00" is not a fact until somebody says where. A traveller reading
+    "09:00, New York time" catches in one second the mistake that otherwise
+    surfaces as a clash with the wrong flight."""
+    a = ap.answer(made("meeting with john on 2 september at 9am at the ritz carlton"),
+                  "place", "new york", TODAY)
+    when = next(r for r in a.card() if r["label"] == "When")
+    assert "09:00" in when["value"] and when["note"] == "New York time"
+
+    where = next(r for r in a.card() if r["label"] == "Where")
+    assert where["value"] == "ritz carlton" and "New York" in where["note"]
+
+
+def test_anything_other_than_yes_is_not_a_confirmation():
+    a = ap.answer(made("meeting with john on 2 september at 9am at MXP"),
+                  "confirm", "no, let me change it", TODAY)
+    assert not a.confirmed and not a.ready

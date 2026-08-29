@@ -28,7 +28,10 @@ def book(client, text="one way flight zurich to milan on 18 september "
     turn = client.post("/api/chat", json={"text": text}).json()
     answers = {"hotel": "yes", "preference": "cheapest", "ret": "one way",
                "stay_nights": "2", "depart": "18 september",
-               "origin": "zurich", "destination": "milan"}
+               "origin": "zurich", "destination": "milan",
+               # The last gate: nothing is searched until the traveller has
+               # looked at what was recorded and said yes.
+               "confirm": "yes, search it"}
     # Bounded, because an answer the server cannot read leaves the question
     # open and an unbounded loop then hangs rather than fails. That is exactly
     # the trap a traveller hit; a test helper should not be able to sit in it
@@ -176,8 +179,8 @@ def test_a_plan_that_is_not_on_this_disruption_is_refused(client, booked):
 def test_a_withdrawn_flight_is_refused_rather_than_substituted(client):
     """Silently booking the nearest thing is how somebody ends up holding a
     ticket they did not choose."""
-    turn = client.post("/api/chat", json={
-        "text": "one way flight zurich to milan on 18 september, cheapest, no hotel"}).json()
+    turn = confirmed(client, "one way flight zurich to milan on 18 september, "
+                             "cheapest, no hotel")
     response = client.post("/api/chat/choose", json={
         "state": turn["state"],
         "flight_key": "ZZ 9999|ZRH|MXP|2026-09-18T09:00:00+02:00",
@@ -191,8 +194,8 @@ def test_a_selection_survives_the_search_that_found_it(client):
     mints offer ids per offer request, so the id shown to the traveller does
     not exist in the search `choose` runs a moment later. Matching on what the
     flight IS survives that; matching on the id could not."""
-    turn = client.post("/api/chat", json={
-        "text": "one way flight zurich to milan on 18 september, cheapest, no hotel"}).json()
+    turn = confirmed(client, "one way flight zurich to milan on 18 september, "
+                             "cheapest, no hotel")
     shown = turn["flights"][0]
 
     saved = client.post("/api/chat/choose", json={
@@ -209,8 +212,8 @@ def test_the_same_flight_at_two_fares_picks_the_one_shown(client):
     """A key names an aircraft, not a price: the same flight is sold under
     several fare brands, and JU 0333 came back at both EUR 170 and EUR 255 in
     one search. The traveller meant the number they were looking at."""
-    turn = client.post("/api/chat", json={
-        "text": "one way flight zurich to milan on 18 september, cheapest, no hotel"}).json()
+    turn = confirmed(client, "one way flight zurich to milan on 18 september, "
+                             "cheapest, no hotel")
     by_key: dict[str, list] = {}
     for offer in turn["flights"]:
         by_key.setdefault(offer["key"], []).append(offer)
@@ -230,8 +233,8 @@ def test_the_same_flight_at_two_fares_picks_the_one_shown(client):
 def test_a_fare_that_moved_is_reported_not_swallowed(client):
     """Between the click and the booking, a price can change. That is ordinary
     and it is the traveller's business."""
-    turn = client.post("/api/chat", json={
-        "text": "one way flight zurich to milan on 18 september, cheapest, no hotel"}).json()
+    turn = confirmed(client, "one way flight zurich to milan on 18 september, "
+                             "cheapest, no hotel")
     shown = turn["flights"][0]
 
     saved = client.post("/api/chat/choose", json={
@@ -283,7 +286,7 @@ def test_typing_walks_the_whole_conversation(client):
     answerable by typing, because that is what a person does first."""
     turn = client.post("/api/chat", json={
         "text": "flight from zurich to milan on 18 september"}).json()
-    for said in ("one way", "yes", "2 nights", "cheapest"):
+    for said in ("one way", "yes", "2 nights", "cheapest", "yes that's right"):
         turn = client.post("/api/chat", json={
             "state": turn["state"], "text": said}).json()
     assert turn["state"]["ready"]
@@ -317,6 +320,15 @@ def test_an_unhandled_error_is_still_readable_json(client, monkeypatch):
 # --------------------------------------------------------------------------
 
 
+def confirmed(client, text: str) -> dict:
+    """Say it, agree it was heard right, and get the offers back."""
+    turn = client.post("/api/chat", json={"text": text}).json()
+    if any(a["field"] == "confirm" for a in turn.get("asks", [])):
+        turn = client.post("/api/chat", json={
+            "state": turn["state"], "answers": {"confirm": "yes"}}).json()
+    return turn
+
+
 def tell(client, text: str, trip_id: str = "") -> dict:
     """Say something about an appointment, settling which trip if asked.
 
@@ -326,10 +338,15 @@ def tell(client, text: str, trip_id: str = "") -> dict:
     the wrong week.
     """
     turn = client.post("/api/chat", json={"text": text}).json()
-    if any(a["field"] == "trip" for a in turn.get("asks", [])):
-        assert trip_id, "ambiguous trip and the test did not say which"
+    replies = {"confirm": "yes, save it", "trip": trip_id}
+    for _ in range(4):
+        pending = [a for a in turn.get("asks", []) if not a["optional"]]
+        if not pending or pending[0]["field"] not in replies:
+            break
+        field = pending[0]["field"]
+        assert replies[field], f"asked for {field} and the test did not say"
         turn = client.post("/api/chat", json={
-            "state": turn["state"], "answers": {"trip": trip_id}}).json()
+            "state": turn["state"], "answers": {field: replies[field]}}).json()
     return turn
 
 
@@ -349,16 +366,20 @@ def test_a_half_told_meeting_is_chased_for_who_when_and_where(client, booked):
     turn = client.post("/api/chat", json={"text": "i have a meeting"}).json()
     asked = []
     replies = {"who": "the Milan design team", "day": day, "at": "11pm",
-               "where": "MXP", "trip": booked["trip_id"]}
-    for _ in range(6):
-        if not turn.get("asks"):
+               "where": "MXP", "trip": booked["trip_id"],
+               "confirm": "yes, save it"}
+    for _ in range(8):
+        pending = [a for a in turn.get("asks", []) if not a["optional"]]
+        if not pending:
             break
-        field = turn["asks"][0]["field"]
+        field = pending[0]["field"]
         asked.append(field)
         turn = client.post("/api/chat", json={
             "state": turn["state"], "answers": {field: replies[field]}}).json()
 
+    # Who, when, where — then agree it was heard right.
     assert asked[:4] == ["who", "day", "at", "where"]
+    assert "confirm" in asked
     assert turn["feasible"] is True
     assert turn["saved"]["ready"], "finished without a complete appointment"
     # Cleared once it is filed, so the next appointment does not inherit this
@@ -376,8 +397,7 @@ def test_a_meeting_is_placed_on_the_trip_that_covers_that_day(client, booked):
 
 
 def test_a_meeting_on_a_day_you_are_not_travelling_is_refused_kindly(client, booked):
-    turn = client.post("/api/chat", json={
-        "text": "meeting with the vendor on 30 november at 10am at MXP"}).json()
+    turn = tell(client, "meeting with the vendor on 30 november at 10am at MXP")
     assert turn.get("trip_id") is None
     assert "nothing you have booked" in turn["reply"].lower()
 

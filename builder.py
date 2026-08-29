@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-from domain import Booking, Kind, Trip, transit
+from domain import TRANSIT, Booking, Kind, Trip, transit
 from policy import Policy, Window
 
 #: Time on the ground between a landing and the next departure. Not a comfort
@@ -212,15 +212,28 @@ def clashes(trip: Trip) -> list[str]:
             # same building at the same time is still two meetings, and the
             # first version let exactly that through — the case an appointment
             # feature exists to catch.
+            # Both dates spelled out. The first version printed the meeting
+            # as a bare time next to a full date for the flight, so a traveller
+            # reading "at 09:00 overlaps ... which runs to 01 Sep 22:05" had no
+            # way to see which day the engine had put their meeting on -- and
+            # when it had put it on the wrong one, the message hid it.
             out.append(
-                f"{later.title} at {b_start:%H:%M} overlaps {earlier.title}, "
-                f"which runs to {a_end:%d %b %H:%M}")
+                f"{later.title} at {b_start:%d %b %H:%M} overlaps "
+                f"{earlier.title}, which runs to {a_end:%d %b %H:%M}")
 
     for earlier, later in zip(ordered, ordered[1:]):
         if not later.commitment and not earlier.commitment:
             continue                       # purchases are `infeasible`'s job
         from_where = earlier.destination or earlier.where
         if not from_where or not later.where or from_where == later.where:
+            continue
+        # An address the engine has never heard of is not a place it cannot
+        # reach. "No route from JFK to ritz carlton" reads as "you cannot get
+        # there" and means "I do not know where that is" -- and turning the
+        # second into the first invents a clash out of our own ignorance. The
+        # rule that `transit` returning None means the absence of a route holds
+        # between two places we know; it says nothing about a hotel name.
+        if not (_known(from_where) and _known(later.where)):
             continue
         leg = transit(from_where, later.where)
         if leg is None:
@@ -233,6 +246,33 @@ def clashes(trip: Trip) -> list[str]:
             out.append(f"{later.title} starts {late} min before you could get "
                        f"there from {earlier.title}")
     return out
+
+
+def _known(where: str) -> bool:
+    """Is this somewhere the engine can reason about, or just a string?"""
+    import places
+
+    if not where or where == "?":
+        return False
+    if places.by_code(where):
+        return True
+    # Places the transit table names directly -- MILAN, SMG, ZRH_HB -- are
+    # known even though they are not airports.
+    return any(where in pair for pair in TRANSIT)
+
+
+def unplaced(trip: Trip) -> list[str]:
+    """Commitments whose location the engine could not recognise.
+
+    Reported as a gap in what was checked, never as a failure. "I could not
+    work out where the Ritz Carlton is, so I have not checked you can get
+    there" is a true and useful sentence; "no route to ritz carlton" is a
+    false one, and it is the one that was being shown.
+    """
+    return [f"I don't recognise \"{b.where}\" as a place, so I checked the "
+            f"timing of {b.title} but not the journey to it"
+            for b in trip.in_order()
+            if b.commitment and b.where and not _known(b.where)]
 
 
 def _unreachable_stays(ordered: list) -> list[str]:

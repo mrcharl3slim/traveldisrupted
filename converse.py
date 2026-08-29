@@ -89,7 +89,8 @@ def _set(value) -> bool:
 def read(s: State) -> State:
     """Text -> a Request, deterministically, then the model on the blanks."""
     base = s.get("req") or request_mod.Request()
-    fresh = request_mod.parse(s.get("text", ""), s.get("today"))
+    # A date already on the card gives a bare "the 19th" its month.
+    fresh = request_mod.parse(s.get("text", ""), s.get("today"), base.depart)
 
     # A follow-up sentence adds to what is already known rather than replacing
     # it. "actually make it the 3rd" must not wipe the destination.
@@ -101,10 +102,23 @@ def read(s: State) -> State:
     # answered in their opening sentence. Naming fields means the next one
     # added is forgotten too, and the failure is not a crash but a question
     # that will not go away.
+    # Additive while collecting, OVERWRITING while correcting.
+    #
+    # "actually make it the 3rd" must not wipe the destination -- so during
+    # collection a settled slot wins over anything a later sentence says. But
+    # once everything is settled and the traveller is looking at "have I got
+    # this right?", the only reason to type is to change something, and an
+    # additive merge would silently ignore them. Answering a confirmation with
+    # a correction that changes nothing is worse than not offering to confirm.
+    correcting = (not base.confirmed
+                  and [a.field for a in base.gaps() if not a.optional] == ["confirm"])
     merged = replace(base, **{
-        f.name: (getattr(base, f.name) if _set(getattr(base, f.name))
+        f.name: (getattr(fresh, f.name)
+                 if (correcting and _set(getattr(fresh, f.name)))
+                 else getattr(base, f.name) if _set(getattr(base, f.name))
                  else getattr(fresh, f.name))
-        for f in fields(base) if f.name not in ("raw", "filled", "travellers")
+        for f in fields(base) if f.name not in ("raw", "filled", "travellers",
+                                                "confirmed")
     })
     merged = replace(merged,
                      travellers=max(base.travellers, fresh.travellers),

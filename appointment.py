@@ -69,6 +69,7 @@ class Appointment:
     day: date | None = None    # known day, unknown time
     minutes: int = DEFAULT_MINUTES
     trip_id: str = ""
+    confirmed: bool = False
     raw: str = ""
 
     def gaps(self) -> list[Ask]:
@@ -96,7 +97,28 @@ class Appointment:
             out.append(Ask("where", "Where is it?",
                            why="whether you can get there from where you land "
                                "is the whole question"))
-        return out
+        elif not self.place:
+            # The location is not optional colour -- it decides the CLOCK.
+            # "9am at the Ritz Carlton" means nine in the morning in New York,
+            # and until the engine knows which city that is it has to guess a
+            # timezone. It guessed wrong once already: a 09:00 meeting stamped
+            # in the departure city's zone landed twelve hours out and clashed
+            # with a flight the traveller had already got off.
+            out.append(Ask("place", f"Which city is {self.where} in?",
+                           why="the time depends on it — 9am at the Ritz "
+                               "Carlton means 9am in New York, and I have to "
+                               "know which city that is before I can check "
+                               "anything against your flights"))
+        if not out and not self.confirmed:
+            out.append(Ask("confirm", "Have I got this right?",
+                           options=("yes, save it", "no, let me change it"),
+                           why="everything after this is checked against what "
+                               "is written here"))
+        # Blocking questions first. An optional one listed ahead of the
+        # confirmation makes any caller that reads asks[0] show the wrong
+        # thing -- and "anywhere in particular to stay?" is a strange chip to
+        # offer under "have I got this right?".
+        return sorted(out, key=lambda a: a.optional)
 
     @property
     def ready(self) -> bool:
@@ -111,7 +133,7 @@ class Appointment:
         answers yes to everything.
         """
         return (self.what, self.who, self.where, self.place,
-                self.day, self.when, self.minutes)
+                self.day, self.when, self.minutes, self.confirmed)
 
     @property
     def ends(self) -> datetime | None:
@@ -145,6 +167,35 @@ class Appointment:
         if self.where:
             bits.append(self.where)
         return " · ".join(bits)
+
+    def card(self) -> list[dict]:
+        """What the system has recorded, laid out to be checked line by line.
+
+        The time carries the city it is in. That is the whole reason this
+        exists: "09:00" is not a fact until somebody says where, and a
+        traveller reading "09:00, New York time" can catch in one second the
+        mistake that otherwise surfaces as a clash with the wrong flight.
+        """
+        where = places.by_code(self.place)
+        rows = [{"label": "What", "value": self.title()}]
+        if self.who:
+            rows.append({"label": "With", "value": self.who})
+        rows.append({
+            "label": "When",
+            "value": (f"{self.when:%A %d %B, %H:%M}" if self.when
+                      else f"{self.day:%A %d %B}" if self.day else "—"),
+            "note": (f"{where.label} time" if where else ""),
+        })
+        rows.append({
+            "label": "Where",
+            "value": self.where or "—",
+            "note": (f"{where.label} ({where.code})" if where
+                     and where.label.lower() != (self.where or "").lower() else ""),
+        })
+        rows.append({"label": "For",
+                     "value": (f"{self.minutes // 60}h {self.minutes % 60:02d}m"
+                               if self.minutes >= 60 else f"{self.minutes} min")})
+        return rows
 
     def to_booking(self, booking_id: str = "") -> Booking:
         """The appointment as the engine sees it: a place, a time, a promise."""
@@ -302,6 +353,13 @@ def answer(base: Appointment, field: str, value: str,
     if field == "where":
         found = places.find(value)
         return replace(base, where=value[:60], place=found.code if found else "")
+    if field == "place":
+        found = places.find(value)
+        return replace(base, place=found.code) if found else base
+    if field == "confirm":
+        if re.match(r"\s*(y|yes|yeah|yep|correct|right|ok|okay|save|go)", value, re.I):
+            return replace(base, confirmed=True)
+        return base                       # anything else is a correction
     if field == "day":
         day, _ = _dates(value.lower(), today)
         if not day:
@@ -372,20 +430,62 @@ def candidates(appt: Appointment, trips: list[tuple[str, object]]) -> list[str]:
     return [trip_id for trip_id, _ in same_day]
 
 
-def localise(appt: Appointment, trip) -> Appointment:
-    """Put the appointment on the trip's clock.
+def zone_for(appt: Appointment, trip):
+    """The clock the meeting is actually on.
 
-    A traveller saying "10am" means ten in the morning where the meeting is,
-    and everything in an itinerary is timezone-aware because a Zurich arrival
+    "9am" means nine in the morning WHERE THE MEETING IS, and the first version
+    of this took the timezone of the trip's first booking. On a trip that
+    crosses timezones that is the wrong end of the journey: a 09:00 meeting in
+    New York, on an itinerary starting in Singapore, was stamped 09:00 +08:00
+    and silently became 21:00 the previous evening in New York. Twelve hours
+    out, and it presented as a clash with the flight the traveller had already
+    landed from.
+
+    Three sources, best first:
+
+      1. the place itself, when the traveller named somewhere the engine knows;
+      2. where they will be that day -- the arrival timezone of the last thing
+         that starts on or before it, which is the clock they are living on;
+      3. the first booking, which is only ever a last resort.
+    """
+    from zoneinfo import ZoneInfo
+
+    known = places.by_code(appt.place) if appt.place else None
+    if known:
+        try:
+            return ZoneInfo(known.zone)
+        except Exception:                                   # noqa: BLE001
+            pass
+    # Below here is a fallback that should now be unreachable for anything the
+    # traveller confirmed: `gaps` will not call an appointment complete until
+    # its city resolves. Kept because the engine is also handed appointments
+    # from storage and from tests, and a guess that announces itself beats an
+    # exception in a clash check.
+
+    rows = [b for b in trip.in_order() if b.start]
+    if not rows:
+        return None
+    if appt.day:
+        before = [b for b in rows if b.start.date() <= appt.day]
+        if before:
+            landed = before[-1]
+            return (landed.end or landed.start).tzinfo
+    return rows[0].start.tzinfo
+
+
+def localise(appt: Appointment, trip) -> Appointment:
+    """Put the appointment on its own clock.
+
+    Everything in an itinerary is timezone-aware because a Zurich arrival
     rendered in Singapore time is a different flight. A naive datetime compared
     to an aware one does not quietly do the wrong thing -- Python raises -- so
     this is the seam where it has to be settled rather than a bug waiting for
     the first appointment somebody adds.
     """
-    rows = [b for b in trip.in_order() if b.start]
-    if appt.when is None or appt.when.tzinfo is not None or not rows:
+    if appt.when is None or appt.when.tzinfo is not None:
         return appt
-    return replace(appt, when=appt.when.replace(tzinfo=rows[0].start.tzinfo))
+    zone = zone_for(appt, trip)
+    return appt if zone is None else replace(appt, when=appt.when.replace(tzinfo=zone))
 
 
 def attach(trip, appt: Appointment):
@@ -404,14 +504,18 @@ def assess(trip, appt: Appointment) -> dict:
     appointment the traveller has -- telling them it clashes is the product;
     declining to record it would just move the clash somewhere we cannot see.
     """
-    from builder import clashes
+    from builder import clashes, unplaced
 
     combined = attach(trip, appt)
     found = clashes(combined)
     mine = [c for c in found if appt.title() in c]
+    notes = unplaced(combined)
     return {
+        # Judged on what is known. A location the engine does not recognise is
+        # a gap in what we can check, not a verdict -- see `unplaced`.
         "feasible": not mine,
         "clashes": found,
         "about_this": mine,
+        "notes": notes,
         "trip": combined,
     }

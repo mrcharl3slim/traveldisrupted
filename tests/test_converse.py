@@ -100,9 +100,10 @@ def test_every_question_says_why_it_is_being_asked():
 def test_an_optional_question_never_blocks_a_search():
     r = parse("cheapest flight singapore to london on 3 october one way "
               "with a hotel for 4 nights")
-    assert r.ready
-    assert [a.field for a in r.gaps()] == ["hotel_area"]
-    assert all(a.optional for a in r.gaps())
+    assert [a.field for a in r.gaps()] == ["confirm", "hotel_area"]
+    agreed = rq.answer(r, "confirm", "yes", TODAY)
+    assert agreed.ready
+    assert all(a.optional for a in agreed.gaps())
 
 
 def test_a_room_covers_the_trip_rather_than_one_night():
@@ -334,3 +335,83 @@ def test_a_model_call_that_fails_is_recorded(monkeypatch):
     base = rq.parse("take me somewhere", TODAY)
     assert rq.enrich(base, Broken(), TODAY) == base      # carried on
     assert "expired token" in _model.unavailable         # and said so
+
+
+# --------------------------------------------------------------------------
+# confirming what was recorded
+# --------------------------------------------------------------------------
+
+
+def test_nothing_is_searched_until_it_has_been_agreed():
+    """Dates and airports are the two things a sentence gets wrong most often
+    and the two a traveller can check in a second — and every fare and every
+    deadline after this point is worked out from them."""
+    r = parse("zurich to milan 18 to 20 september with a hotel, cheapest")
+    assert not r.ready
+    assert "confirm" in {a.field for a in r.gaps()}
+    assert rq.answer(r, "confirm", "yes, search it", TODAY).ready
+
+
+def test_the_card_spells_the_dates_out_in_full():
+    """"18/09" and "09/18" are the same six characters and different days."""
+    r = parse("zurich to milan 18 to 20 september with a hotel, cheapest")
+    rows = {row["label"]: row for row in r.card()}
+    assert rows["Out"]["value"] == "Friday 18 September"
+    assert rows["Back"]["value"] == "Sunday 20 September"
+    assert rows["From"]["note"] == "ZRH" and rows["To"]["note"] == "MXP"
+    assert rows["Hotel"]["value"] == "2 nights"
+
+
+def test_a_correction_at_the_confirmation_overwrites():
+    """Collecting is additive so "make it the 3rd" cannot wipe the
+    destination. Correcting is not: once everything is settled and the
+    traveller is looking at "have I got this right?", the only reason to type
+    is to change something, and an additive merge would ignore them."""
+    settled = converse.turn("zurich to milan 18 to 20 september with a hotel, "
+                            "cheapest", today=TODAY)["req"]
+    assert [a.field for a in settled.gaps() if not a.optional] == ["confirm"]
+
+    fixed = converse.turn("actually the 19th to the 22nd", settled,
+                          today=TODAY)["req"]
+    assert fixed.depart == date(2026, 9, 19) and fixed.ret == date(2026, 9, 22)
+    assert fixed.destination == "MXP", "a correction wiped something it did not mention"
+    assert not fixed.confirmed, "a correction left the old confirmation standing"
+
+
+def test_collecting_is_still_additive():
+    """The rule that protects a half-finished request has not been traded away
+    to get corrections working."""
+    first = converse.turn("flight from singapore to zurich", today=TODAY)["req"]
+    second = converse.turn("on 18 september", first, today=TODAY)["req"]
+    assert second.destination == "ZRH" and second.depart == date(2026, 9, 18)
+
+
+def test_blocking_questions_come_before_optional_ones():
+    """"Anywhere in particular to stay?" is a strange chip to offer under
+    "have I got this right?"."""
+    r = parse("zurich to milan 18 to 20 september with a hotel, cheapest")
+    fields = [a.field for a in r.gaps()]
+    assert fields[0] == "confirm"
+    assert all(a.optional for a in r.gaps()[1:])
+
+
+def test_a_bare_day_is_read_against_the_month_on_the_card():
+    """"actually the 19th to the 22nd" is how a person corrects a date they
+    are looking at. The month is the one already recorded."""
+    settled = converse.turn("zurich to milan 18 to 20 september with a hotel, "
+                            "cheapest", today=TODAY)["req"]
+    assert [a.field for a in settled.gaps() if not a.optional] == ["confirm"]
+    fixed = converse.turn("actually the 19th to the 22nd", settled,
+                          today=TODAY)["req"]
+    assert (fixed.depart, fixed.ret) == (date(2026, 9, 19), date(2026, 9, 22))
+
+
+def test_a_bare_number_is_not_mistaken_for_a_date():
+    """"2 adults" and "2 nights" are far commoner than "the 2nd", and reading
+    them as a date would be the confident kind of wrong. Only an ordinal or a
+    leading "the" counts."""
+    settled = converse.turn("zurich to milan 18 to 20 september with a hotel, "
+                            "cheapest", today=TODAY)["req"]
+    same = converse.turn("2 adults", settled, today=TODAY)["req"]
+    assert same.depart == date(2026, 9, 18)
+    assert same.travellers == 2

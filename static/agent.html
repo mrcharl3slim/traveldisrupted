@@ -87,6 +87,15 @@
           border-radius:9px;padding:10px 13px;margin-top:10px;line-height:1.7}
   .banner.bad{color:#ffb4ae;background:#1b1113;border-color:#4d2326}
   .banner.warn{color:#f0cf72;background:#1b1710;border-color:#4d3f16}
+  .card{border:1px solid var(--edge);border-left:3px solid var(--key);border-radius:9px;
+        background:#101821;padding:4px 14px;margin-top:12px}
+  .card .row{display:flex;gap:14px;padding:9px 0;border-bottom:1px solid #1b242e;
+             align-items:baseline}
+  .card .row:last-child{border-bottom:none}
+  .card .k{font:10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;
+           color:var(--faint);min-width:84px}
+  .card .v{font-size:14px}
+  .card .n{font:11.5px var(--mono);color:var(--key);margin-left:auto}
   .note{font-size:12.5px;color:var(--dim);margin-top:10px;line-height:1.6}
 </style>
 </head>
@@ -212,6 +221,10 @@ async function say(text, answers){
     html += turn.feasible
       ? `<div class="banner">nothing else is in the way</div>`
       : `<div class="banner bad">` + hits.map(esc).join('<br>') + `</div>`;
+    // What could not be checked, kept apart from what was. A gap in the
+    // checking is not a verdict, and showing it as one invents problems.
+    if ((turn.notes || []).length)
+      html += `<div class="banner warn">` + turn.notes.map(esc).join('<br>') + `</div>`;
     if (turn.bookings)
       html += `<div class="note">That day now reads:</div>` + turn.bookings.map(b => `
         <div class="leg"><div>${esc(b.title)}${b.commitment
@@ -222,6 +235,14 @@ async function say(text, answers){
 
   // The question carries the reason it is being asked. A question you can see
   // the point of is a question worth answering.
+  // What the system has recorded, at the one moment it matters: everything
+  // after this is computed from it.
+  if (turn.confirm)
+    html += `<div class="card">` + turn.confirm.map(r => `
+      <div class="row"><div class="k">${esc(r.label)}</div>
+        <div class="v">${esc(r.value)}</div>
+        ${r.note ? `<div class="n">${esc(r.note)}</div>` : ''}</div>`).join('') + `</div>`;
+
   const ask = (turn.asks || []).find(a => !a.optional) || (turn.asks || [])[0];
   if (ask && !(turn.flights || []).length){
     if (ask.why) html += `<div class="why">Why I'm asking: ${esc(ask.why)}</div>`;
@@ -242,7 +263,10 @@ async function say(text, answers){
   if ((turn.returns || []).length) html += offerTable('ret', 'Return', turn.returns);
   if ((turn.stays || []).length)   html += stayTable(turn.stays);
   if ((turn.flights || []).length)
-    html += `<div class="chips"><button class="btn key" id="confirm" disabled>
+    // A class, not an id. Every completed turn left another element with the
+    // same id in the document, which is invalid and means any global lookup
+    // finds the oldest, disabled one rather than the live button.
+    html += `<div class="chips"><button class="btn key confirm" disabled>
              Save this itinerary</button></div>`;
   if (turn.note)
     html += `<div class="banner warn">${esc(turn.note)}${turn.detail
@@ -288,10 +312,10 @@ function wireOffers(el){
                                 price: parseFloat(tr.dataset.price || 0)};
     el.querySelectorAll(`tr[data-kind="${kind}"]`).forEach(r =>
       r.classList.toggle('sel', PICK[kind] && r.dataset.id === PICK[kind].id));
-    const go = el.querySelector('#confirm');
+    const go = el.querySelector('.confirm');
     if (go) go.disabled = !PICK.flight;
   });
-  const go = el.querySelector('#confirm');
+  const go = el.querySelector('.confirm');
   if (go) go.onclick = () => confirm(go);
 }
 
@@ -396,7 +420,7 @@ async function breakLeg(tripId, bookingId){
         <td class="n">${eur(p.total_damage)}</td>
         <td>${p.arrives_at ? esc(p.arrives_where) + ' ' + at(p.arrives_at) : '—'}</td>
       </tr>`).join('') + `</tbody></table>
-    <div class="chips"><button class="btn key" id="do-it" disabled>Take this plan</button></div>`;
+    <div class="chips"><button class="btn key do-it" disabled>Take this plan</button></div>`;
 
   const el = bubble('Downstream', html);
   let chosen = null;
@@ -404,9 +428,9 @@ async function breakLeg(tripId, bookingId){
     chosen = tr.dataset.plan;
     el.querySelectorAll('tr[data-plan]').forEach(r =>
       r.classList.toggle('sel', r.dataset.plan === chosen));
-    el.querySelector('#do-it').disabled = false;
+    el.querySelector('.do-it').disabled = false;
   });
-  el.querySelector('#do-it').onclick = () => takePlan(el.querySelector('#do-it'), chosen);
+  el.querySelector('.do-it').onclick = () => takePlan(el.querySelector('.do-it'), chosen);
   await loadTrips();
 }
 

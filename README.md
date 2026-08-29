@@ -8,7 +8,7 @@ python serve.py                   # the web app, first free port from 8000
 python cli.py                     # the same numbers, in a terminal
 python cli.py --base written      # the October scenario, as the tests assert it
 python mcp_server.py              # the engine as MCP tools, over stdio
-python -m pytest tests/ -q        # 201 tests, no keys, no network
+python -m pytest tests/ -q        # 220 tests, no keys, no network
 ```
 
 `/health` reports `ports_mode`, `model_status` and `storage`, and the front page
@@ -123,6 +123,24 @@ difference** rather than swallowing it. A flight that is gone entirely is
 refused — silently booking the nearest thing is how somebody ends up holding a
 ticket they did not choose.
 
+## Confirming what was recorded
+
+Nothing is searched, and nothing is filed, until the traveller has looked at
+what the system heard and agreed with it. Dates and airports are the two things
+a sentence gets wrong most often and the two a person can check in one second —
+and every fare, deadline and clash after that point is computed from them.
+
+The card spells dates out in full (`Friday 18 September`, because `18/09` and
+`09/18` are the same six characters and different days) and names the codes it
+resolved. For an appointment it also names **the city the time is in**.
+
+A correction is not a new sentence. Collecting is additive, so "make it the
+3rd" cannot wipe the destination; but at the confirmation the only reason to
+type is to change something, so a stated field overwrites. `actually the 19th
+to the 22nd` works — a bare day is read against the month already on the card,
+while a bare number is not, because "2 adults" and "2 nights" are far commoner
+than "the 2nd".
+
 ## Appointments
 
 The same box takes things nobody sold you:
@@ -151,6 +169,26 @@ nothing to miss. A EUR 0 meeting with the Milan team is the reason the trip
 exists. Missed commitments are **counted, never priced** — inventing a euro
 figure so the meeting could join the money total would be the engine making up
 the most important number on the page.
+
+**The location is not colour, it is the clock.** "9am at the Ritz Carlton"
+means nine in the morning in New York, so an address the engine cannot place is
+a question rather than a note: *"Which city is the ritz carlton in?"*, offered
+with the cities from the trips that cover that day. Until it is answered there
+is no timezone, and without a timezone nothing can be checked.
+
+**A meeting is on the clock of the place it happens.** Taking the timezone of
+the trip's first booking is wrong the moment a trip crosses zones: a 09:00
+meeting in New York, on an itinerary starting in Singapore, was stamped
+09:00 +08:00 and became 21:00 the previous evening — twelve hours out, and an
+hour before the flight it was then reported to clash with. `zone_for` prefers
+the place's own zone, then the arrival zone of wherever the traveller is that
+day, and only then the first booking.
+
+**An address the engine has never heard of is not a place it cannot reach.**
+"No route from JFK to ritz carlton" reads as *you cannot get there* and means
+*I do not know where that is*; turning the second into the first invents a
+clash out of our own ignorance. Unrecognised locations come back as a `note` —
+the timing is still checked, the journey is not, and the page says which.
 
 `builder.clashes` then answers two questions: what overlaps, and what there is
 no time to reach. A hotel is excluded from both — a room is somewhere you *may*

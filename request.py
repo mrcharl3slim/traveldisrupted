@@ -75,6 +75,7 @@ class Request:
     #: Nights, when the trip has no return date to derive them from.
     stay_nights: int = 0
     preference: str = ""
+    confirmed: bool = False
     raw: str = ""
     filled: tuple[str, ...] = ()        # what the traveller settled, for the UI
 
@@ -132,12 +133,48 @@ class Request:
                            why="only narrows the search; skip it and you get "
                                "the whole city",
                            optional=True))
-        return out
+        if not [a for a in out if not a.optional] and not self.confirmed:
+            # The last gate before anything is searched. Dates and airports are
+            # the two things a sentence gets wrong most often and the two the
+            # traveller can check in a second -- and every number after this
+            # point is computed against them.
+            out.append(Ask("confirm", "Have I got this right?",
+                           options=("yes, search it", "no, let me change it"),
+                           why="every fare and every deadline after this is "
+                               "worked out from what is written here"))
+        # Blocking questions first. An optional one listed ahead of the
+        # confirmation makes any caller that reads asks[0] show the wrong
+        # thing -- and "anywhere in particular to stay?" is a strange chip to
+        # offer under "have I got this right?".
+        return sorted(out, key=lambda a: a.optional)
 
     @property
     def ready(self) -> bool:
         """Enough to search. Optional gaps do not hold anything up."""
         return not [a for a in self.gaps() if not a.optional]
+
+    def card(self) -> list[dict]:
+        """What the system has recorded, laid out to be checked line by line."""
+        out = [
+            {"label": "From", "value": places.label(self.origin) or "—",
+             "note": self.origin},
+            {"label": "To", "value": places.label(self.destination) or "—",
+             "note": self.destination},
+            {"label": "Out", "value": (f"{self.depart:%A %d %B}"
+                                       if self.depart else "—")},
+        ]
+        out.append({"label": "Back",
+                    "value": (f"{self.ret:%A %d %B}" if self.ret
+                              else "one way" if self.one_way else "—")})
+        if self.travellers > 1:
+            out.append({"label": "Travellers", "value": str(self.travellers)})
+        out.append({"label": "Hotel",
+                    "value": (f"{self.nights} night"
+                              + ("s" if self.nights != 1 else "")
+                              if self.hotel else "not needed"),
+                    "note": (places.label(self.destination) if self.hotel else "")})
+        out.append({"label": "Sort by", "value": self.preference or "cheapest"})
+        return out
 
     @property
     def settled(self) -> tuple:
@@ -151,7 +188,7 @@ class Request:
         """
         return (self.origin, self.destination, self.depart, self.ret,
                 self.one_way, self.travellers, self.hotel, self.hotel_area,
-                self.stay_nights, self.preference)
+                self.stay_nights, self.preference, self.confirmed)
 
     @property
     def nights(self) -> int:
@@ -204,6 +241,15 @@ _DATE_MONTH_FIRST = re.compile(
 _ISO = re.compile(r"(?<!\d)(\d{4})-(\d{2})-(\d{2})(?!\d)")
 _PEOPLE = re.compile(r"(\d+)\s*(?:adults?|people|persons?|pax|travell?ers?)", re.I)
 
+#: Days with no month, which is how a person corrects a date they are looking
+#: at: "actually the 19th to the 22nd". Only ordinals or a leading "the" count
+#: -- a bare "2" is far more likely to be two adults or two nights, and reading
+#: it as a date would be the confident kind of wrong.
+_BARE_RANGE = re.compile(
+    r"(?:the\s+)?(\d{1,2})(?:st|nd|rd|th)\s*(?:to|-|–|until|till)\s*"
+    r"(?:the\s+)?(\d{1,2})(?:st|nd|rd|th)", re.I)
+_BARE_ONE = re.compile(r"(?:the\s+)(\d{1,2})(?:st|nd|rd|th)?(?!\d)", re.I)
+
 
 def _resolve_year(month: int, day: int, today: date) -> date:
     """A month with no year means the next one that has not happened.
@@ -222,7 +268,24 @@ def _resolve_year(month: int, day: int, today: date) -> date:
     return date(today.year + 1, month, day)
 
 
-def _dates(text: str, today: date) -> tuple[date | None, date | None]:
+def _bare(text: str, context: date) -> tuple[date | None, date | None]:
+    """Days read against a month the traveller is already looking at."""
+    def on(day: int) -> date | None:
+        try:
+            return date(context.year, context.month, day)
+        except ValueError:
+            return None
+
+    m = _BARE_RANGE.search(text)
+    if m:
+        start, end = on(int(m.group(1))), on(int(m.group(2)))
+        return start, (end if start and end and end >= start else None)
+    m = _BARE_ONE.search(text)
+    return (on(int(m.group(1))), None) if m else (None, None)
+
+
+def _dates(text: str, today: date,
+           context: date | None = None) -> tuple[date | None, date | None]:
     iso = _ISO.findall(text)
     if iso:
         found = [date(int(y), int(m), int(d)) for y, m, d in iso]
@@ -247,7 +310,9 @@ def _dates(text: str, today: date) -> tuple[date | None, date | None]:
     m = _DATE_ONE.search(text)
     if m and m.group(2).lower() in MONTHS:
         return _resolve_year(MONTHS[m.group(2).lower()], int(m.group(1)), today), None
-    return None, None
+    # Nothing named a month. If the traveller is correcting a date they can
+    # see, the month is the one already on the card.
+    return _bare(text, context) if context else (None, None)
 
 
 def _endpoints(text: str) -> tuple[str, str]:
@@ -293,12 +358,17 @@ def _endpoints(text: str) -> tuple[str, str]:
     return "", ""
 
 
-def parse(text: str, today: date | None = None) -> Request:
-    """Free text -> whatever can be established without guessing."""
+def parse(text: str, today: date | None = None,
+          context: date | None = None) -> Request:
+    """Free text -> whatever can be established without guessing.
+
+    ``context`` is a date already on screen, used only to give a bare "the
+    19th" a month. Never used to invent a date out of nothing.
+    """
     today = today or date.today()
     low = (text or "").lower()
     origin, destination = _endpoints(text)
-    depart, ret = _dates(low, today)
+    depart, ret = _dates(low, today, context)
 
     hotel: bool | None = None
     if re.search(r"\b(no|without|don'?t need a?)\s+(hotel|room|accommodation)", low):
@@ -444,7 +514,7 @@ def answer(base: Request, field_name: str, value: str,
                            **{field_name: found.code, other: ""})
         return replace(base, filled=filled, **{field_name: found.code})
     if field_name == "depart":
-        found, _ = _dates(value.lower(), today)
+        found, _ = _dates(value.lower(), today, base.depart)
         return replace(base, depart=found, filled=filled) if found else base
     if field_name in ("ret", "ret_date"):
         # Three outcomes, not two. A date settles it; "one way" settles it the
@@ -491,6 +561,11 @@ def answer(base: Request, field_name: str, value: str,
         digits = re.search(r"\d+", value)
         return (replace(base, stay_nights=max(1, min(int(digits.group()), 60)),
                         filled=filled) if digits else base)
+    if field_name == "confirm":
+        if re.match(r"\s*(y|yes|yeah|yep|correct|right|ok|okay|search|go)",
+                    value, re.I):
+            return replace(base, confirmed=True, filled=filled)
+        return base                       # anything else is a correction
     if field_name == "travellers":
         digits = re.search(r"\d+", value)
         return (replace(base, travellers=max(1, min(int(digits.group()), 9)),
