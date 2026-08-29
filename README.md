@@ -8,7 +8,7 @@ python serve.py                   # the web app, first free port from 8000
 python cli.py                     # the same numbers, in a terminal
 python cli.py --base written      # the October scenario, as the tests assert it
 python mcp_server.py              # the engine as MCP tools, over stdio
-python -m pytest tests/ -q        # 153 tests, no keys, no network
+python -m pytest tests/ -q        # 173 tests, no keys, no network
 ```
 
 `/health` reports `ports_mode`, `model_status` and `storage`, and the front page
@@ -89,6 +89,22 @@ with `LLM_PROVIDER=none`.
 
 The page names the providers it called. Book as many itineraries as you like,
 then break any one of them from the panel and take a plan.
+
+### What replay cannot check
+
+Replay is what makes the demo survivable, and it has exactly one blind spot: in
+replay `call` returns the recording and never invokes the lambda that builds a
+URL. So every port shipped its own query-string interpolation, none of it was
+ever executed by a test, and the first city with a space in it took a live
+search down — `InvalidURL` on `cityName=New York`.
+
+Three ports, three degrees of wrong: hotels interpolated raw, rail hand-rolled
+`.replace(' ', '%20')` (survives a space, mangles `Zürich HB` — the more
+dangerous kind, because it does not raise), and status stripped spaces from a
+flight number, which is correct for that field and encodes nothing else.
+`base.url_for` is now the one place that knows how to build a URL, and
+`tests/test_urls.py` reaches past `call` to assert on the URLs the ports would
+actually request.
 
 ### Why a selection is matched by key and not by id
 

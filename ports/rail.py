@@ -17,7 +17,7 @@ from __future__ import annotations
 import re
 from datetime import datetime, timedelta
 
-from base import call, get_json
+from base import call, get_json, url_for
 
 BASE = "https://transport.opendata.ch/v1/connections"
 
@@ -47,9 +47,9 @@ DEEP_LINK = "https://www.sbb.ch/en/buying/pages/fahrplan/fahrplan.xhtml"
 #: enough down the list".
 def connections(origin: str, destination: str, when: datetime, limit: int = 12):
     key = {"from": origin, "to": destination, "at": when.strftime("%Y-%m-%dT%H:%M")}
-    url = (f"{BASE}?from={origin.replace(' ', '%20')}"
-           f"&to={destination.replace(' ', '%20')}"
-           f"&date={when:%Y-%m-%d}&time={when:%H:%M}&limit={limit}")
+    url = url_for(BASE, **{"from": origin, "to": destination,
+                           "date": f"{when:%Y-%m-%d}", "time": f"{when:%H:%M}",
+                           "limit": limit})
     return call("rail", key, lambda: get_json(url))
 
 

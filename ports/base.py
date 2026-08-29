@@ -188,6 +188,34 @@ def _replay(name: str, key: dict[str, Any], prefer: date | None = None) -> Any:
 TIMEOUT = int(os.environ.get("DOWNSTREAM_TIMEOUT", "8"))
 
 
+def url_for(base: str, path: str = "", **params: Any) -> str:
+    """Build a URL with the query string encoded, once, in one place.
+
+    THIS IS THE FUNCTION REPLAY CANNOT TEACH YOU TO WRITE. In replay `call`
+    never invokes the lambda that builds a URL, so every port shipped its own
+    interpolation and none of them were ever executed by a test. Three ports,
+    three different degrees of wrong: hotels interpolated the city raw and
+    crashed on "New York"; rail hand-rolled `.replace(' ', '%20')`, which
+    survives a space and mangles "Zürich HB"; status stripped spaces out of a
+    flight number, which is right for that field and encodes nothing else.
+
+    A space is only the first character that needs this. Accents, ampersands,
+    plus signs and slashes all appear in real place names, and each one fails
+    differently -- some raise, some silently query for the wrong thing, which
+    is worse. `urlencode` knows all of them.
+
+    ``path`` segments are quoted too, because a city can end up in a path as
+    easily as in a query.
+    """
+    from urllib.parse import quote, urlencode
+
+    if path:
+        base = base.rstrip("/") + "/" + "/".join(
+            quote(str(part), safe="") for part in path.strip("/").split("/"))
+    clean = {k: v for k, v in params.items() if v is not None and v != ""}
+    return f"{base}?{urlencode(clean)}" if clean else base
+
+
 def get_json(url: str, headers: dict[str, str] | None = None,
              body: bytes | None = None, timeout: int | None = None) -> Any:
     req = urllib.request.Request(url, data=body, headers=headers or {})

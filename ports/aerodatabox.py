@@ -12,7 +12,7 @@ from __future__ import annotations
 import os
 from datetime import datetime
 
-from base import call, get_json
+from base import call, get_json, url_for
 
 HOST = "aerodatabox.p.rapidapi.com"
 
@@ -24,7 +24,11 @@ def _headers():
 
 def status(flight: str, day: datetime):
     key = {"flight": flight.replace(" ", ""), "on": f"{day:%Y-%m-%d}"}
-    url = f"https://{HOST}/flights/number/{flight.replace(' ', '')}/{day:%Y-%m-%d}"
+    # The space really is stripped rather than encoded: "SQ 346" and "SQ346"
+    # are the same flight and this API wants the second. Everything after that
+    # is quoted like any other path segment.
+    url = url_for(f"https://{HOST}", f"flights/number/"
+                  f"{flight.replace(' ', '')}/{day:%Y-%m-%d}")
     return call("status", key, lambda: get_json(url, headers=_headers()))
 
 

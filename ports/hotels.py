@@ -19,7 +19,7 @@ import json
 import os
 from datetime import datetime, time, timedelta
 
-from base import call, get_json
+from base import call, get_json, url_for
 
 BASE = "https://api.liteapi.travel/v3.0"
 
@@ -39,8 +39,8 @@ def _headers() -> dict[str, str]:
 def catalogue(city: str, country: str, limit: int = 10) -> dict:
     """Hotels in a city. Reference data — slow-moving, worth recording once."""
     key = {"city": city, "country": country, "limit": str(limit)}
-    url = (f"{BASE}/data/hotels?countryCode={country}&cityName={city}"
-           f"&limit={limit}")
+    url = url_for(f"{BASE}/data/hotels", countryCode=country, cityName=city,
+                  limit=limit)
     return call("hotels", key, lambda: get_json(url, headers=_headers()))
 
 
