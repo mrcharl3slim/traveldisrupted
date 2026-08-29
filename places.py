@@ -25,6 +25,20 @@ class Place:
     country: str       # ISO-2, which the hotel catalogue requires
     zone: str          # IANA, because a check-in time is local to the building
     city: str = ""     # the hotel search's name for it, when it differs
+    #: The main station, as the timetable spells it, and a code for the engine.
+    #: Two fields because they answer different questions: `station` is what
+    #: transport.opendata.ch is asked, and `station_code` is what the engine
+    #: reasons about -- a station is not its airport, and a trip that lands at
+    #: Malpensa and leaves from Milano Centrale has a fifty-minute problem the
+    #: engine can only see if the two places have different names.
+    #:
+    #: Empty where there is no station worth naming, and that is a real answer
+    #: rather than a gap: `flow.search_rail` returns nothing for a place with
+    #: no station, exactly as it returns nothing for a destination no airline
+    #: serves. Naming a station does NOT claim the timetable can route to it --
+    #: that is the API's answer, and an unroutable pair comes back empty.
+    station: str = ""
+    station_code: str = ""
 
     @property
     def hotel_city(self) -> str:
@@ -33,17 +47,28 @@ class Place:
 
 PLACES: tuple[Place, ...] = (
     Place("SIN", "Singapore", "SG", "Asia/Singapore"),
-    Place("LHR", "London", "GB", "Europe/London"),
-    Place("ZRH", "Zurich", "CH", "Europe/Zurich"),
-    Place("MXP", "Milan", "IT", "Europe/Rome"),
-    Place("FLR", "Florence", "IT", "Europe/Rome"),
-    Place("CDG", "Paris", "FR", "Europe/Paris"),
-    Place("FCO", "Rome", "IT", "Europe/Rome"),
-    Place("BCN", "Barcelona", "ES", "Europe/Madrid"),
-    Place("MAD", "Madrid", "ES", "Europe/Madrid"),
-    Place("AMS", "Amsterdam", "NL", "Europe/Amsterdam"),
-    Place("FRA", "Frankfurt", "DE", "Europe/Berlin"),
-    Place("MUC", "Munich", "DE", "Europe/Berlin"),
+    Place("LHR", "London", "GB", "Europe/London",
+          station="London St Pancras", station_code="LONDON_STP"),
+    Place("ZRH", "Zurich", "CH", "Europe/Zurich",
+          station="Zurich HB", station_code="ZRH_HB"),
+    Place("MXP", "Milan", "IT", "Europe/Rome",
+          station="Milano Centrale", station_code="MILANO_C"),
+    Place("FLR", "Florence", "IT", "Europe/Rome",
+          station="Firenze S.M.N.", station_code="FIRENZE_SMN"),
+    Place("CDG", "Paris", "FR", "Europe/Paris",
+          station="Paris Gare de Lyon", station_code="PARIS_GDL"),
+    Place("FCO", "Rome", "IT", "Europe/Rome",
+          station="Roma Termini", station_code="ROMA_TERMINI"),
+    Place("BCN", "Barcelona", "ES", "Europe/Madrid",
+          station="Barcelona Sants", station_code="BARCELONA_SANTS"),
+    Place("MAD", "Madrid", "ES", "Europe/Madrid",
+          station="Madrid Puerta de Atocha", station_code="MADRID_ATOCHA"),
+    Place("AMS", "Amsterdam", "NL", "Europe/Amsterdam",
+          station="Amsterdam Centraal", station_code="AMSTERDAM_CS"),
+    Place("FRA", "Frankfurt", "DE", "Europe/Berlin",
+          station="Frankfurt (Main) Hbf", station_code="FRANKFURT_HBF"),
+    Place("MUC", "Munich", "DE", "Europe/Berlin",
+          station="Munchen Hbf", station_code="MUENCHEN_HBF"),
     Place("BKK", "Bangkok", "TH", "Asia/Bangkok"),
     Place("HKG", "Hong Kong", "HK", "Asia/Hong_Kong"),
     Place("NRT", "Tokyo", "JP", "Asia/Tokyo"),
@@ -77,6 +102,11 @@ ALIASES: dict[str, str] = {
     "tokyo narita": "NRT", "hk": "HKG",
 }
 
+#: The Swiss timetable is the only rail API this reaches, so the table above is
+#: where rail coverage begins and the API is where it ends. `station` names a
+#: platform; whether a train runs between two of them is not ours to assert.
+_BY_STATION = {p.station_code: p for p in PLACES if p.station_code}
+
 _BY_CODE = {p.code: p for p in PLACES}
 _BY_NAME = {p.label.lower(): p for p in PLACES}
 _BY_NAME.update({p.hotel_city.lower(): p for p in PLACES})
@@ -95,7 +125,24 @@ def find(text: str) -> Place | None:
 
 
 def by_code(code: str) -> Place | None:
-    return _BY_CODE.get((code or "").strip().upper())
+    """The place a code names -- an airport code or a station code.
+
+    Both, because a rail leg puts a station code where every other part of the
+    engine expects an airport one, and a lookup that answered None for
+    MILANO_C would strand every consequence of a train.
+    """
+    key = (code or "").strip().upper()
+    return _BY_CODE.get(key) or _BY_STATION.get(key)
+
+
+def station_map() -> dict[str, str]:
+    """Station name -> the code the engine reasons about.
+
+    The timetable answers in its own spellings, so the port needs this to say
+    where a train actually went. Names it does not know fall through to the
+    port's own default rather than being invented here.
+    """
+    return {p.station: p.station_code for p in PLACES if p.station}
 
 
 def label(code: str) -> str:

@@ -18,6 +18,8 @@ from fastapi.testclient import TestClient          # noqa: E402
 import serve                                        # noqa: E402
 
 DAY = "2026-09-18"
+#: The day the rail timetable was recorded for.
+RAIL_DAY = "2026-10-12"
 OUT = "2026-09-20"
 
 
@@ -56,6 +58,43 @@ def book(client) -> dict:
 @pytest.fixture(scope="module")
 def booked(client):
     return book(client)
+
+
+def test_a_train_can_be_bought_through_the_same_door_as_a_flight(client):
+    """Rail was searchable by the engine and unbuyable by a person: no
+    endpoint, no mode on a leg, and `select` re-resolved every leg by asking
+    Duffel -- which does not sell trains, so the option came back withdrawn
+    one request after it was offered."""
+    found = client.get("/api/search/rail", params={
+        "origin": "ZRH", "destination": "MXP", "on": RAIL_DAY}).json()
+    assert found["offers"], "the recorded timetable has gone"
+    train = found["offers"][0]
+    assert train["mode"] == "rail" and train["estimated"] is True
+
+    body = client.post("/api/select", json={
+        "label": "by train",
+        "flights": [{"origin": "ZRH", "destination": "MXP", "on": RAIL_DAY,
+                     "mode": "rail", "offer_key": train["key"]}],
+        "hotels": []}).json()
+    assert body["problems"] == []
+    leg = body["bookings"][0]
+    assert leg["kind"] == "rail" and leg["price"] == train["price"]
+
+    # And the whole engine applies from there, which is the only reason any of
+    # this was worth wiring rather than special-casing.
+    broken = client.post("/api/cancel", json={
+        "trip_id": body["trip_id"], "booking_id": leg["id"]})
+    assert broken.status_code == 200, broken.text
+
+
+def test_a_route_with_no_train_says_so_rather_than_failing(client):
+    """This reaches the Swiss timetable and nothing else, so most pairs of
+    cities on earth have no train between them here. An empty list is the
+    honest answer; a 503 would read as the software falling over."""
+    body = client.get("/api/search/rail", params={
+        "origin": "SIN", "destination": "BKK", "on": RAIL_DAY})
+    assert body.status_code == 200
+    assert body.json()["offers"] == []
 
 
 def test_the_delay_button_reaches_the_engine(client):

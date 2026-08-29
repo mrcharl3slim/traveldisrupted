@@ -22,6 +22,9 @@ CEST = timezone(timedelta(hours=2))
 #: The day the offers were recorded against. Pinned rather than computed from
 #: today so a test that passes this morning still passes in November.
 DAY = datetime(2026, 9, 18, 9, 0, tzinfo=CEST)
+#: The day the rail timetable was recorded for. Its own constant because
+#: the rail fixture is a different capture from the flight ones.
+RAIL_DAY = datetime(2026, 10, 12, 9, 0, tzinfo=CEST)
 OUT = DAY + timedelta(days=2)
 
 
@@ -94,6 +97,75 @@ def test_a_room_nobody_can_reach_is_refused_at_selection(parts):
 # --------------------------------------------------------------------------
 # cancelling
 # --------------------------------------------------------------------------
+
+
+def test_a_train_is_a_leg_like_any_other():
+    """Rail was a recovery option the engine could offer and not a thing a
+    traveller could buy. The port worked, nothing routed to it, and `places`
+    held no station to point it at."""
+    trains = flow.search_rail("ZRH", "MXP", RAIL_DAY)
+    assert trains, "the recorded timetable has gone"
+    assert all(o.mode == "rail" for o in trains)
+    assert all(o.origin == "ZRH_HB" and o.destination == "MILANO_C" for o in trains)
+    assert all(o.price_source == "estimate" for o in trains), (
+        "no reachable API sells this fare and the offer has to keep saying so")
+
+
+def test_a_place_with_no_station_has_no_trains():
+    """The same answer `search_flights` gives for somewhere no airline serves,
+    and it means the same thing: not a failure, an absence. Naming a station in
+    `places` is not a claim that a train runs to it either -- that is the
+    timetable's answer, and it comes back empty."""
+    assert flow.search_rail("SIN", "BKK", RAIL_DAY) == []
+    assert flow.search_rail("ZRH", "ZRH", RAIL_DAY) == [], "a train to itself"
+
+
+def test_the_fare_estimate_survives_into_the_itinerary():
+    """The one number in an assembled trip that nobody quoted. The offer said
+    so and the Booking did not, so it stopped being an estimate the moment it
+    was selected -- which is precisely where it starts being added up."""
+    train = flow.search_rail("ZRH", "MXP", RAIL_DAY)[0]
+    built, problems = flow.select([train], [])
+    assert not problems
+    leg = built.in_order()[0]
+    assert leg.kind is Kind.RAIL
+    assert leg.price_source == "estimate"
+    assert leg.ticket_group is None, "a train is not part of the two-ticket argument"
+
+
+def test_a_hotel_is_reachable_from_the_station_it_is_not_at():
+    """Milano Centrale is not Malpensa, and the hotel is filed under the code
+    its own search was pointed at. Without a transit time between them a train
+    delivered the traveller to a city the rest of their trip could not be
+    reached from."""
+    train = flow.search_rail("ZRH", "MXP", RAIL_DAY)[0]
+    stays = flow.search_hotels("Milan", "IT", RAIL_DAY, RAIL_DAY + timedelta(days=2),
+                               code="MXP")
+    built, problems = flow.select([train], stays[:1])
+    assert not problems
+
+    room = next(b for b in built.in_order() if b.kind is Kind.LODGING)
+    assert room.where != train.destination, "the premise: two different places"
+    impact = flow.replan(built, flow.cancel(built, built.in_order()[0].id)).impact
+    assert next(n for n in impact.nodes if n.booking.id == room.id).severity \
+        is not Severity.SAFE, "cancelling the train has to strand the room"
+
+
+def test_a_cancelled_train_is_offered_a_plane():
+    """The claim the whole product rests on, finally reachable from a trip
+    somebody assembled rather than from a scripted one. The gap starts at
+    Milano Centrale, which is not an airport -- `search_flights` returned
+    nothing for it and the traveller was handed their own baseline."""
+    train = flow.search_rail("ZRH", "MXP", RAIL_DAY)[0]
+    stays = flow.search_hotels("Milan", "IT", RAIL_DAY, RAIL_DAY + timedelta(days=2),
+                               code="MXP")
+    built, _ = flow.select([train], stays[:1])
+    recovery = flow.replan(built, flow.cancel(built, built.in_order()[0].id))
+
+    assert recovery.gap.origin == "ZRH_HB", "they are stranded at a station"
+    assert recovery.offers, "a cancelled train still deserves a search"
+    assert any(o.mode == "flight" for o in recovery.offers)
+    assert recovery.disruption.reason.endswith("operator"), "trains have no airline"
 
 
 def test_the_gap_is_derived_from_the_leg_that_was_cancelled(trip):

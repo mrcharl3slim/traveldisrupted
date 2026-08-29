@@ -43,7 +43,13 @@ expires.
 
 - **The rail fare is an estimate.** transport.opendata.ch returns timetables,
   not prices, and SBB publishes no free fare API. Every `Offer` carries
-  `price_source`; rail is `"estimate"` and says so everywhere it appears.
+  `price_source`; rail is `"estimate"` and says so everywhere it appears —
+  including on the `Booking` once it is selected, which is exactly where it
+  starts being added up.
+- **Rail is the Swiss timetable and nothing else.** `places.py` names a station
+  per city; whether a train runs between two of them is the API's answer, not
+  ours, and most pairs come back empty. That is an absence, not a fault, and
+  the page says "no trains" rather than raising.
 - **Live flight status only covers about a week either side of today**, so a
   fixed October scenario cannot be demonstrated live in September. Anchoring
   the trip relative to run time is scheduled for days 9–10.
@@ -298,9 +304,28 @@ commitment makes every meeting in the trip a clash.
 ## Buying a trip, then breaking it
 
 `/book` is the same engine with nothing scripted. Search real inventory (Duffel
-for flights, LiteAPI for stays — both on accounts that cannot take money), pick
-an outbound, an onward leg and a room, then press **Cancel this flight** on any
-leg and watch the consequences come out of live data. `flow.py` is the whole
+for flights, LiteAPI for stays, transport.opendata.ch for trains — the first two
+on accounts that cannot take money, the third needs no key at all), pick an
+outbound, an onward leg and a room, then press **Cancel** or **Late** on any leg
+and watch the consequences come out of live data.
+
+**The onward leg offers both modes.** Zurich to Milan is a flight or a train and
+the traveller picks; the mode travels with the selection because the server
+re-resolves it, and asking Duffel for a train finds nothing and reports the
+option as withdrawn. A train is a `Booking` with `Kind.RAIL`, no ticket group —
+two flights bought separately are two contracts and that is the scenario's whole
+premise, but a rail ticket is not part of that argument either way.
+
+Two things had to exist before a train was reachable rather than merely
+offerable. `places.py` had no station to point the timetable at, so nothing
+could be searched; and `TRANSIT` had no time between an airport and its city's
+main station, so a train that delivered somebody to Milano Centrale left the
+Milan hotel — filed under MXP, because that is the code its own search was
+pointed at — as far away as another country. `_city` closes the same gap on the
+way out: a gap starting at Milano Centrale is a gap starting in Milan, so a
+cancelled train is answered by flights from Malpensa as well as by other trains.
+That is the cross-provider replanning this README opens by claiming, finally
+reachable from a trip somebody assembled rather than from a scripted one. `flow.py` is the whole
 loop: `search_flights`, `search_hotels`, `select`, `cancel`, `replan`.
 
 Nothing about the scenario is configured. The recovery query — where the

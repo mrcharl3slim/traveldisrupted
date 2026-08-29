@@ -15,6 +15,7 @@ what it can and cannot touch does not get to quietly invent a fare.
 from __future__ import annotations
 
 import re
+import unicodedata
 from datetime import datetime, timedelta
 
 from base import call, get_json, url_for
@@ -76,10 +77,26 @@ def _change(c: dict) -> tuple[str, timedelta] | None:
     return sections[0]["arrival"]["station"]["name"], depart - arrive
 
 
+def _norm(name: str) -> str:
+    """A station name, comparable.
+
+    We ask with "Zurich HB" and the timetable answers "Zürich HB". Both are the
+    same platform, and a lookup that treats them as two left every train from
+    it filed under whatever default the caller happened to pass -- which is
+    fine while the only route is the one in the demo and wrong the moment a
+    second city has an umlaut in it. Accents stripped, case and spacing
+    flattened, on both sides of the comparison.
+    """
+    stripped = unicodedata.normalize("NFKD", name or "")
+    return " ".join("".join(c for c in stripped
+                            if not unicodedata.combining(c)).lower().split())
+
+
 def offers(origin: str, destination: str, when: datetime, station_map: dict):
     """Wire format -> Offer, with any change named in the label."""
     from offers import Offer
 
+    codes = {_norm(name): code for name, code in (station_map or {}).items()}
     out = []
     for c in connections(origin, destination, when).get("connections", []):
         transfers = int(c.get("transfers", 0))
@@ -102,8 +119,8 @@ def offers(origin: str, destination: str, when: datetime, station_map: dict):
             label=f"{product} {dep:%H:%M} - {c['from']['station']['name']} "
                   f"to {c['to']['station']['name']}{via}",
             depart=dep, arrive=arr,
-            origin=station_map.get(c["from"]["station"]["name"], "ZRH_HB"),
-            destination=station_map.get(c["to"]["station"]["name"], "MILANO_C"),
+            origin=codes.get(_norm(c["from"]["station"]["name"]), "ZRH_HB"),
+            destination=codes.get(_norm(c["to"]["station"]["name"]), "MILANO_C"),
             price=ESTIMATE_EUR, price_source="estimate", book_url=DEEP_LINK,
         ))
     return out

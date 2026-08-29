@@ -36,6 +36,22 @@ TRANSIT: dict[tuple[str, str], int] = {
     ("MILAN", "SMG"): 28,      # hotel to Santa Maria delle Grazie
     ("MXP", "SMG"): 55,
     ("MILANO_C", "SMG"): 20,
+
+    # Airport to that city's main station, once rail became bookable. Without
+    # these a train is a booking the rest of the trip cannot reach: a hotel is
+    # filed under the airport code its own search was pointed at, and arriving
+    # at Milano Centrale left it as far away as another country. Published
+    # transfer times, and the named service is the check.
+    ("MXP", "MILANO_C"): 50,                  # Malpensa Express
+    ("FLR", "FIRENZE_SMN"): 20,               # T2 tram
+    ("FCO", "ROMA_TERMINI"): 32,              # Leonardo Express
+    ("CDG", "PARIS_GDL"): 50,                 # RER B, one change
+    ("FRA", "FRANKFURT_HBF"): 15,             # S8/S9
+    ("MUC", "MUENCHEN_HBF"): 45,              # S1/S8
+    ("AMS", "AMSTERDAM_CS"): 17,              # Intercity
+    ("BCN", "BARCELONA_SANTS"): 25,           # R2 Nord
+    ("MAD", "MADRID_ATOCHA"): 30,             # C1 Cercanías
+    ("LHR", "LONDON_STP"): 50,                # Piccadilly, one change
 }
 
 # A flight you reach three minutes before pushback is a flight you have missed.
@@ -109,6 +125,14 @@ class Booking:
     commitment: bool = False
     #: Who it is with. Empty for anything bought rather than arranged.
     who: str = ""
+    #: Where `price` came from. "quoted" for a fare a provider actually sold,
+    #: "estimate" for one that is ours. It travels on the booking rather than
+    #: only on the offer because the offer is gone by the time anybody reads
+    #: the itinerary, and a Swiss rail fare is the one number in this system no
+    #: reachable API quotes -- see ports/rail.py. A total that silently mixes a
+    #: quote with a guess is the thing this product exists to catch other
+    #: people doing.
+    price_source: str = "quoted"
 
     @property
     def where(self) -> str:

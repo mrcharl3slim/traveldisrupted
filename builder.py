@@ -71,6 +71,37 @@ def flight(offer, seat: int = 1) -> Booking:
     )
 
 
+def rail(offer) -> Booking:
+    """One chosen train -> a Booking, carrying the fare's provenance.
+
+    Its own function rather than a branch in `flight` for one reason that
+    matters: a train has no ticket group. Two flights bought separately are two
+    contracts and nobody owes the connection, which is the premise of this whole
+    scenario -- and a rail ticket is not part of that argument either way, so
+    giving it a group would quietly make it look like one.
+
+    `price_source` comes across because the fare is an estimate and stays one.
+    transport.opendata.ch returns timetables and SBB publishes no free fare
+    API, so this is the single number in an assembled trip that nobody quoted.
+    Losing that on the way into the itinerary would put a guess in a total and
+    let it read like everything else in the column.
+    """
+    return Booking(
+        id=f"r{offer.id[-8:]}".lower(),
+        kind=Kind.RAIL,
+        provider=offer.carrier,
+        title=offer.label,
+        start=offer.depart,
+        end=offer.arrive,
+        origin=offer.origin,
+        destination=offer.destination,
+        price=offer.price,
+        currency=offer.currency,
+        price_source=getattr(offer, "price_source", "quoted"),
+        policy=Policy(source="fare conditions not published by the timetable"),
+    )
+
+
 def stay(hotel: dict, place: str = "") -> Booking:
     """One chosen hotel rate -> a Booking, with the deadline that matters.
 
@@ -100,6 +131,12 @@ def stay(hotel: dict, place: str = "") -> Booking:
     )
 
 
+def _leg(offer) -> Booking:
+    """Whatever mode this offer is. One place that knows, so the next mode is
+    one line here rather than a branch in every caller."""
+    return rail(offer) if getattr(offer, "mode", "flight") == "rail" else flight(offer)
+
+
 def assemble(flights: list, hotels: list) -> Trip:
     """Selections -> a Trip, in the order they happen.
 
@@ -112,7 +149,7 @@ def assemble(flights: list, hotels: list) -> Trip:
     consequence after that is confidently wrong.
     """
     legs = sorted(flights, key=lambda o: o.depart)
-    bookings = [flight(o) for o in legs]
+    bookings = [_leg(o) for o in legs]
 
     for h in hotels:
         before = [o for o in legs if o.arrive <= h["arrival_guarantee"]]

@@ -169,6 +169,10 @@ class Leg(BaseModel):
     on: str
     offer_key: str = ""
     offer_id: str = ""
+    #: "flight" or "rail". One list rather than two, in the order the journey
+    #: happens, because that is the order the traveller chose them in and they
+    #: do not think in modes -- they think in "and then I go to Milan".
+    mode: str = "flight"
 
 
 class Stay(BaseModel):
@@ -711,6 +715,30 @@ def search_flights(origin: str, destination: str, on: str, after: str = "") -> d
     try:
         found = flow.search_flights(origin.upper(), destination.upper(),
                                     _day(on, zone), after=not_before)
+    except PortError as exc:
+        raise HTTPException(503, str(exc)) from exc
+    return {"origin": origin.upper(), "destination": destination.upper(),
+            "on": on, "offers": [_offer(o) for o in found]}
+
+
+@app.get("/api/search/rail")
+def search_rail(origin: str, destination: str, on: str) -> dict:
+    """Real timetables, and a fare that is ours.
+
+    ``estimated`` on every offer, because transport.opendata.ch returns
+    departures and rolling stock and no price, and SBB publishes no free fare
+    API. The number is labelled wherever it appears and the deep link goes to
+    the operator, so the traveller sees the real one before paying.
+
+    An empty list is the ordinary answer, not a fault: this reaches the Swiss
+    timetable and nothing else, so most pairs of cities on earth have no train
+    between them as far as this product is concerned.
+    """
+    from base import PortError
+
+    zone = _zone_for(origin)
+    try:
+        found = flow.search_rail(origin.upper(), destination.upper(), _day(on, zone))
     except PortError as exc:
         raise HTTPException(503, str(exc)) from exc
     return {"origin": origin.upper(), "destination": destination.upper(),
@@ -1348,16 +1376,24 @@ def select(body: Selection) -> dict:
     try:
         for leg in body.flights:
             zone = _zone_for(leg.origin)
-            found = flow.search_flights(leg.origin.upper(),
-                                        leg.destination.upper(),
-                                        _day(leg.on, zone))
+            # Re-resolved through the search that produced it. A rail offer id
+            # is minted from a departure minute and a flight id from Duffel's
+            # own search, so asking the wrong provider finds nothing and reports
+            # it as inventory that has moved on.
+            found = (flow.search_rail(leg.origin.upper(), leg.destination.upper(),
+                                      _day(leg.on, zone))
+                     if leg.mode == "rail" else
+                     flow.search_flights(leg.origin.upper(),
+                                         leg.destination.upper(),
+                                         _day(leg.on, zone)))
             offer = (next((o for o in found if o.key == leg.offer_key), None)
                      if leg.offer_key else None)
             offer = offer or next((o for o in found if o.id == leg.offer_id), None)
             if offer is None:
                 raise HTTPException(
-                    409, "that flight is no longer being sold — search again "
-                         "and pick from what is there now")
+                    409, f"that {'train' if leg.mode == 'rail' else 'flight'} is "
+                         "no longer being sold — search again and pick from "
+                         "what is there now")
             picked.append(offer)
 
         stays = []

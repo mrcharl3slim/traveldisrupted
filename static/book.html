@@ -42,6 +42,10 @@
   /* The two buttons and the amount that qualifies one of them, on one line so
      it reads as a single control rather than as two unrelated hazards. */
   .break{display:flex;gap:6px;justify-content:flex-end;margin-top:6px}
+  /* Which mode a row is, said once and in the row rather than in a legend. */
+  .tag{font:10px var(--mono);letter-spacing:.08em;text-transform:uppercase;
+       background:#17222f;border:1px solid #2b3c4f;color:var(--dim);
+       border-radius:5px;padding:2px 6px;vertical-align:2px}
   select.btn{padding-right:6px}
 
   table{width:100%;border-collapse:collapse;font-size:14px}
@@ -133,7 +137,8 @@
 
   <section id="s-on" hidden>
     <h2>3 · Onward <span id="on-note" class="m"></span></h2>
-    <table><thead><tr><th>Flight</th><th>Departs</th><th>Arrives</th><th class="n">Fare</th></tr></thead>
+    <table><thead><tr><th>Flight or train</th><th>Departs</th><th>Arrives</th>
+      <th class="n">Fare</th></tr></thead>
       <tbody id="t-on"></tbody></table>
   </section>
 
@@ -251,8 +256,17 @@ $('#go').onclick = async () => {
     [IN, ON, HOTELS] = await Promise.all([
       api(`/api/search/flights?origin=${$('#a-from').value}&destination=${$('#a-to').value}&on=${on}`)
         .then(r => r.offers),
-      api(`/api/search/flights?origin=${$('#b-from').value}&destination=${$('#b-to').value}&on=${on}`)
-        .then(r => r.offers),
+      // Both modes for the onward leg, and the train is allowed to come back
+      // empty: this reaches the Swiss timetable and nothing else, so most
+      // pairs of cities have no train between them as far as we are
+      // concerned. A failed rail search is an absent option, never an error
+      // over the top of a perfectly good list of flights.
+      Promise.all([
+        api(`/api/search/flights?origin=${$('#b-from').value}&destination=${$('#b-to').value}&on=${on}`)
+          .then(r => r.offers).catch(() => []),
+        api(`/api/search/rail?origin=${$('#b-from').value}&destination=${$('#b-to').value}&on=${on}`)
+          .then(r => r.offers).catch(() => []),
+      ]).then(([air, train]) => air.concat(train)),
       api(`/api/search/hotels?city=${encodeURIComponent($('#city').value)}&country=IT`
         + `&check_in=${on}&check_out=${iso(on, nights)}`).then(r => r.stays),
     ]);
@@ -266,8 +280,10 @@ $('#go').onclick = async () => {
 function flightRows(list, which){
   return list.map(o => `
     <tr class="pick ${PICK[which] === o.id ? 'sel' : ''}" data-id="${esc(o.id)}" data-w="${which}">
-      <td>${esc(o.label)}<div class="m">${esc(o.carrier)}${
-        o.refundable ? ' · refundable' : o.change_fee != null
+      <td>${o.mode === 'rail' ? '<span class="tag">train</span> ' : ''}${esc(o.label)}
+        <div class="m">${esc(o.carrier)}${
+        o.mode === 'rail' ? ' · fare estimated, no API sells this ticket'
+        : o.refundable ? ' · refundable' : o.change_fee != null
           ? ` · change ${eur(o.change_fee)}` : ' · non-refundable'}</div></td>
       <td>${at(o.depart)}</td>
       <td>${at(o.arrive)}${o.overnight ? '<div class="m">next day</div>' : ''}</td>
@@ -289,6 +305,7 @@ function paintFlights(){
     : ON;
   $('#on-note').textContent = chosen
     ? `${usable.length} of ${ON.length} leave at least 90 min after you land`
+      + (ON.some(o => o.mode === 'rail') ? ' · trains included' : '')
     : 'pick an outbound first — a connection needs 90 minutes on the ground';
   $('#t-on').innerHTML = flightRows(usable, 'on');
 
@@ -316,6 +333,11 @@ async function select(){
       {origin:$('#a-from').value, destination:$('#a-to').value, on,
        offer_key:(IN.find(o => o.id === PICK.in) || {}).key || ''},
       {origin:$('#b-from').value, destination:$('#b-to').value, on,
+       // The mode travels with the leg because the server re-resolves it: a
+       // train is found by asking the timetable and a flight by asking Duffel,
+       // and asking the wrong one finds nothing and reports the option as
+       // withdrawn.
+       mode:(ON.find(o => o.id === PICK.on) || {}).mode || 'flight',
        offer_key:(ON.find(o => o.id === PICK.on) || {}).key || ''},
     ],
     hotels: PICK.hotel ? [{city:$('#city').value, country:'IT', check_in:on,

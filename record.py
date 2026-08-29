@@ -32,6 +32,12 @@ from demo_trip import CEST, dt                          # noqa: E402
 
 DAY = dt(12, 9, 0)
 
+#: The hour a rail search starts from. transport.opendata.ch returns what
+#: departs AFTER the time it is given, so this decides how much of the day one
+#: recording holds. Shared with flow.RAIL_HOUR, and they have to stay equal or
+#: the fixture is for a different question than the one being asked.
+RAIL_HOUR = 6
+
 #: The trip the demo builds from live data: Singapore out, Zurich, Milan by
 #: rail, a hotel in Milan. Recorded a few days ahead so the dates are real
 #: without being tomorrow.
@@ -79,6 +85,7 @@ JOBS = {
 # "the demo covers whatever you tell it to before you present".
 #
 #     DOWNSTREAM_PORTS=record python record.py fly SIN ZRH 2026-09-18
+#     DOWNSTREAM_PORTS=record python record.py train ZRH MXP 2026-09-18
 #     DOWNSTREAM_PORTS=record python record.py stay Zurich CH 2026-09-18 2026-09-20
 # ---------------------------------------------------------------------------
 
@@ -93,6 +100,27 @@ if argv and argv[0] == "fly":
         data = duffel.search(origin.upper(), destination.upper(), when)
         print(f"  recorded  duffel  {origin.upper()} -> {destination.upper()} "
               f"on {day}  ({_count(data)} offers)")
+    except Exception as exc:                            # noqa: BLE001
+        print(f"  FAILED    {type(exc).__name__}: {exc}")
+    raise SystemExit(0)
+
+if argv and argv[0] == "train":
+    if len(argv) != 4:
+        sys.exit("usage: record.py train <FROM> <TO> <YYYY-MM-DD>   (city codes)")
+    _, origin, destination, day = argv
+    import places
+    a, b = places.by_code(origin.upper()), places.by_code(destination.upper())
+    if not (a and a.station and b and b.station):
+        sys.exit(f"no station on file for {origin} or {destination} — see places.py")
+    # From the top of the travel day, and the SAME hour flow.search_rail asks
+    # from. The timetable answers with the connections AFTER the time it is
+    # given, so a recording made at noon holds no morning trains and a demo
+    # that searches at 06:00 replays an empty afternoon.
+    when = datetime.fromisoformat(day).replace(hour=RAIL_HOUR, tzinfo=CEST)
+    try:
+        data = rail.connections(a.station, b.station, when)
+        print(f"  recorded  rail  {a.station} -> {b.station} on {day} "
+              f"from {RAIL_HOUR:02d}:00  ({_count(data)} connections)")
     except Exception as exc:                            # noqa: BLE001
         print(f"  FAILED    {type(exc).__name__}: {exc}")
     raise SystemExit(0)
@@ -118,7 +146,7 @@ wanted = argv or list(JOBS)
 unknown = [w for w in wanted if w not in JOBS]
 if unknown:
     sys.exit(f"unknown job(s) {unknown}. Available: {', '.join(JOBS)}, "
-             "plus `fly <FROM> <TO> <DATE>` and `stay <City> <CC> <IN> <OUT>`")
+             "plus `fly <FROM> <TO> <DATE>`, `train <FROM> <TO> <DATE>` and `stay <City> <CC> <IN> <OUT>`")
 
 for name in wanted:
     label, fn = JOBS[name]

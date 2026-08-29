@@ -176,6 +176,11 @@ def to_bookings(raw: dict) -> tuple[list[Booking], list[str], dict[str, str]]:
             pending=bool(item.get("pending")),
             commitment=bool(item.get("commitment")),
             who=str(item.get("who") or ""),
+            # Defaults to "quoted" only because everything that predates rail
+            # was. A stored booking with no provenance is one nobody thought
+            # about, not one somebody vouched for -- but calling it an estimate
+            # would put a warning on every flight ever filed.
+            price_source=str(item.get("price_source") or "quoted"),
             # Windows arrive already resolved when reading a stored trip, and
             # empty when reading a fresh extraction — `resolve` fills those in
             # against each booking's own times. A Policy with no windows means
@@ -298,6 +303,7 @@ def to_dicts(bookings: list[Booking]) -> list[dict]:
         "pending": b.pending,
         "commitment": b.commitment,
         "who": b.who,
+        "price_source": b.price_source,
         "fare_rules": b.policy.source if b.policy else "",
         # Resolved windows travel with the trip. Without them a stored trip has
         # no deadlines and no recoverable value, so the engine reports every

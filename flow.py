@@ -35,11 +35,20 @@ from datetime import datetime, timedelta
 
 import duffel
 import hotels as hotels_port
+import places
+import rail as rail_port
 from base import PortError
 from builder import assemble, infeasible
-from domain import Disruption, Trip
+from domain import Disruption, Kind, Trip
 from graph import Impact, propagate
 from plan import Gap, Plan, breaks_preference, generate, recovery_gap
+
+#: The hour a rail day starts. The timetable answers with what departs AFTER
+#: the time it is asked about, so this is not cosmetic: it decides how much of
+#: the day a single search -- and therefore a single recording -- can hold.
+#: Six is early enough to catch the first useful train and late enough not to
+#: spend the response's limited length on services nobody takes.
+RAIL_HOUR = 6
 
 #: A recovery search asks about the day the traveller is stranded and, when the
 #: deadline falls after midnight, the next one too. Any wider and the engine is
@@ -73,6 +82,42 @@ def search_flights(origin: str, destination: str, day: datetime,
                   key=lambda o: o.price)
 
 
+def search_rail(origin: str, destination: str, day: datetime) -> list:
+    """Trains between two cities, earliest first. Empty rather than raising.
+
+    Takes the same city codes as `search_flights` and resolves the stations
+    here, because a traveller asks to go to Milan and the timetable asks about
+    Milano Centrale. A place with no station in `places` returns nothing, which
+    is the same answer `search_flights` gives for somewhere no airline serves
+    and means the same thing: not "this failed", but "there is nothing here".
+
+    ONE API, AND IT IS SWISS. transport.opendata.ch is the only rail source
+    this reaches. It routes Swiss stations and the international services that
+    run out of them, and it has never claimed more -- so naming a station in
+    `places` is not a promise that a train runs to it. The empty list is the
+    honest answer for a pair it cannot route, and the caller shows it as
+    "no trains found" rather than as a fault.
+    """
+    start, end = places.by_code(origin), places.by_code(destination)
+    if not (start and end and start.station and end.station):
+        return []
+    if start.station_code == end.station_code:
+        return []                    # a train from a city to itself
+
+    # ALWAYS FROM THE TOP OF THE DAY, whatever hour the caller happened to
+    # hold. The timetable returns what departs after the moment it is given, so
+    # the hour is not cosmetic -- it decides which half of the day exists. It
+    # is normalised here rather than asked of callers because the first two
+    # callers disagreed: the search endpoint asked at noon and the selection
+    # that re-resolves the very same train asked at noon too, while the
+    # recording was made at six, and picking the 07:33 service then failed to
+    # find it again one request later.
+    from_dawn = day.replace(hour=RAIL_HOUR, minute=0, second=0, microsecond=0)
+    return sorted(rail_port.offers(start.station, end.station, from_dawn,
+                                   places.station_map()),
+                  key=lambda o: o.depart)
+
+
 def search_hotels(city: str, country: str, check_in: datetime,
                   check_out: datetime, limit: int = 5,
                   code: str = "") -> list[dict]:
@@ -86,15 +131,20 @@ def search_hotels(city: str, country: str, check_in: datetime,
                              check_in.tzinfo, limit=limit, code=code)
 
 
-def select(flights: list, hotels: list[dict]) -> tuple[Trip, list[str]]:
+def select(legs: list, hotels: list[dict]) -> tuple[Trip, list[str]]:
     """Chosen offers -> a trip, plus every reason it could not be taken.
+
+    ``legs`` is flights and trains together, in whatever order they happen. The
+    parameter was called ``flights`` while that was all it could be; sorting
+    them by mode is `builder`'s job and the traveller does not think in modes
+    anyway -- they think in "then I go to Milan".
 
     The problems come back WITH the trip rather than instead of it. A selection
     with an impossible connection is still the selection somebody made, and
     showing them the itinerary next to the reason it does not work is the only
     version of this that teaches anything.
     """
-    trip = assemble(flights, hotels)
+    trip = assemble(legs, hotels)
     return trip, infeasible(trip)
 
 
@@ -115,7 +165,10 @@ def cancel(trip: Trip, booking_id: str, at: datetime | None = None) -> Disruptio
     return Disruption(
         booking_id=booking_id,
         new_end=at or booking.start,
-        reason="cancelled by the airline",
+        # Whoever actually operates it. "Cancelled by the airline" was fine
+        # while only flights could be cancelled, and reads as a stray copy-paste
+        # the first time a traveller sees it under a train.
+        reason=f"cancelled by the {'operator' if booking.kind is Kind.RAIL else 'airline'}",
         confidence=1.0,
         cancelled=True,
     )
@@ -202,31 +255,54 @@ def from_dict(raw: dict | None) -> Disruption | None:
         return None
 
 
+def _city(code: str) -> str:
+    """The airport code for whatever this place is, station codes included.
+
+    A gap that starts at Milano Centrale is a gap that starts in Milan, and
+    Malpensa is fifty minutes away -- which `TRANSIT` already knows, and which
+    is the whole reason a traveller stranded off a train can still fly. Without
+    this the recovery for a cancelled train searched `search_flights` with
+    "MILANO_C", got nothing because that is not an airport, and offered the
+    traveller their own baseline.
+    """
+    place = places.by_code(code)
+    return place.code if place else code
+
+
 def replacements(trip: Trip, disruption: Disruption, gap: Gap | None = None) -> list:
-    """Live options for the hole this disruption left.
+    """Live options for the hole this disruption left, in every mode that fits.
 
     The query is the gap -- derived in plan.py from where the traveller now
     stands and the next place they are contractually due -- so cancelling a
     different leg searches a different route without anybody editing a config.
+
+    Both modes are asked, because the traveller did not lose a flight or a
+    train, they lost a way of being somewhere by a deadline. A cancelled train
+    is often best answered by a plane and the reverse is the demo's whole
+    point; asking only the mode that broke would rank an empty field.
     """
     gap = gap if gap is not None else recovery_gap(trip, disruption)
     if gap is None:
         return []
 
+    origin, destination = _city(gap.origin), _city(gap.destination)
     found: dict = {}
     for day in range(SEARCH_DAYS):
         when = gap.not_before + timedelta(days=day)
         if when.date() > gap.by.date():
             break
-        try:
-            for offer in search_flights(gap.origin, gap.destination, when,
-                                        after=gap.not_before):
-                found[offer.id] = offer
-        except PortError:
-            # No recording for this route and date. A missing fixture is a
-            # missing option, not a crash -- the traveller still gets the
-            # baseline and every option that did come back.
-            continue
+        for mode in (lambda: search_flights(origin, destination, when,
+                                            after=gap.not_before),
+                     lambda: [o for o in search_rail(origin, destination, when)
+                              if o.depart >= gap.not_before]):
+            try:
+                for offer in mode():
+                    found[offer.id] = offer
+            except PortError:
+                # No recording for this route and date. A missing fixture is a
+                # missing option, not a crash -- the traveller still gets the
+                # baseline and every option that did come back.
+                continue
     return sorted(found.values(), key=lambda o: o.price)
 
 
