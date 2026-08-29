@@ -170,7 +170,7 @@ def _outcomes(trip: Trip, disruption: Disruption, now: datetime, offer) -> dict:
     return {n.booking.id: n for n in walked.nodes}
 
 
-def _can_board(disruption: Disruption, trip: Trip, offer) -> bool:
+def _can_board(baseline: Impact, offer) -> bool:
     """Can the traveller actually be standing where this offer departs from?
 
     Every plan assumed they could. That held while the only disruption was a
@@ -178,11 +178,21 @@ def _can_board(disruption: Disruption, trip: Trip, offer) -> bool:
     replacement leaves from. A cancellation does not: it leaves you where you
     started, and without this check the engine offers somebody stranded in
     Singapore a train from Zurich — priced, ranked, and recommended.
+
+    Asked of the baseline walk rather than of a fresh `no_action_model`, which
+    is the last place in this file that had its own idea of where somebody
+    could be. The difference is the traveller's own surviving legs: a leg they
+    can still take puts them somewhere, and a replacement leaving from there is
+    boardable. Building the model here could not see that, so it refused the
+    onward options of anybody whose recovery began with a flight they already
+    held.
     """
     if offer is None:
         return True
-    base = no_action_model(disruption, trip)
-    at = base.presence(offer.origin, offer.depart)
+    reached = baseline.reached
+    if reached is None:
+        return True                # a walk that kept no map cannot refuse one
+    at = reached.presence(offer.origin, offer.depart)
     return at is not None and at <= offer.depart
 
 
@@ -281,7 +291,7 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
             at_risk=baseline.at_risk_value,
         )
 
-    if not _can_board(disruption, trip, offer):
+    if not _can_board(baseline, offer):
         return None          # unreachable: not a worse plan, not a plan at all
 
     if _is_the_disrupted_flight(trip.by_id(disruption.booking_id), offer):

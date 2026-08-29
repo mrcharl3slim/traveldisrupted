@@ -305,7 +305,13 @@ trip had hidden:
   flight to Rome it had just saved: EUR 140 on every candidate and nothing on
   doing nothing, and the engine recommended inaction over the plan that
   rescued the trip. `plan.build` now walks the same itinerary with the same
-  rules, differing only in the one arrival the offer adds.
+  rules, differing only in the one arrival the offer adds — and `_can_board`,
+  which decides whether a replacement can be got to at all, asks the same walk
+  rather than building a model of its own. That one refused an onward flight
+  out of Milan to a traveller whose delayed long-haul still lands them in time
+  for the Milan leg they already hold. Refused, not ranked low: `build` returns
+  `None`, so the option never appeared, and all the engine offered was losing
+  the room.
 
 The old scripted demo — one late flight, eleven bookings, EUR 282 — still runs
 at `/`, from the same fixtures, asserting the same numbers.

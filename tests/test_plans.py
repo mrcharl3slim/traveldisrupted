@@ -97,6 +97,67 @@ def test_a_plan_that_arrives_too_late_still_loses_the_leg():
     assert "l2" in plan.wasted_ids and "l2" not in plan.delivered
 
 
+def test_a_replacement_is_boardable_from_a_leg_they_still_hold():
+    """The last place in plan.py with its own idea of where somebody could be.
+
+    `_can_board` built a fresh `no_action_model`, which sees the disruption
+    point and nothing the traveller does next -- so an onward option leaving
+    Milan was refused to somebody whose delayed long-haul still lands them in
+    Zurich in time for the Milan leg they already hold. Refused, not ranked
+    low: build returns None, so the option does not appear at all, and the
+    only thing on offer was losing the room.
+    """
+    day = datetime(2026, 10, 12, tzinfo=CEST)
+
+    def at(hour, minute=0):
+        return day.replace(hour=hour, minute=minute)
+
+    trip = Trip([
+        Booking(id="l1", kind=Kind.FLIGHT, provider="SQ", title="SIN to ZRH",
+                start=at(1), end=at(8, 15), origin="SIN", destination="ZRH",
+                price=900.0),
+        # Still catchable on a 10:25 arrival, and it is what puts them in Milan.
+        Booking(id="l2", kind=Kind.FLIGHT, provider="LX", title="ZRH to MXP",
+                start=at(15, 10), end=at(16, 30), origin="ZRH", destination="MXP",
+                price=170.0),
+        Booking(id="h1", kind=Kind.LODGING, provider="hotel", title="Rome hotel",
+                start=at(14), end=at(23), origin="FCO", price=430.0,
+                hard_deadline=at(22)),
+    ])
+    late = Disruption("l1", at(10, 25), "late inbound aircraft", 0.91)
+    onward = Offer("r1", "MXP", "FCO", at(17, 30), at(18, 50), 95.0)
+
+    ranked = generate(trip, late, at(9), [onward])
+    assert [p.id for p in ranked] != ["noop"], "the option was refused outright"
+
+    best, noop = ranked[0], next(p for p in ranked if p.id == "noop")
+    assert best.id == "r1" and "h1" in best.delivered
+    assert noop.total_damage == 430.0 and best.total_damage == 95.0
+
+
+def test_a_replacement_they_genuinely_cannot_reach_is_still_refused():
+    """The guard this started as, and it has to survive. Stranded in Singapore
+    by a cancellation, offered a flight out of Milan -- priced, ranked and
+    recommended, until _can_board existed."""
+    day = datetime(2026, 10, 12, tzinfo=CEST)
+
+    def at(hour, minute=0):
+        return day.replace(hour=hour, minute=minute)
+
+    trip = Trip([
+        Booking(id="l1", kind=Kind.FLIGHT, provider="SQ", title="SIN to ZRH",
+                start=at(1), end=at(8, 15), origin="SIN", destination="ZRH",
+                price=900.0),
+        Booking(id="h1", kind=Kind.LODGING, provider="hotel", title="Rome hotel",
+                start=at(14), end=at(23), origin="FCO", price=430.0,
+                hard_deadline=at(22)),
+    ])
+    stuck = Disruption("l1", at(0, 30), "cancelled", 1.0, cancelled=True)
+    elsewhere = Offer("r9", "MXP", "FCO", at(17, 30), at(18, 50), 95.0)
+
+    assert [p.id for p in generate(trip, stuck, at(0, 30), [elsewhere])] == ["noop"]
+
+
 def test_rail_plan_is_cheaper_than_the_trip_as_booked(plans):
     """72 bought - 38 taxes back - 48 transfer refund = -14."""
     assert plans["ec317"].net_cash == -14.0

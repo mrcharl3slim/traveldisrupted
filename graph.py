@@ -196,6 +196,13 @@ class Node:
 class Impact:
     nodes: list[Node]
     now: datetime
+    #: Where the traveller can be by the end of this walk, arrivals included.
+    #: Kept because the walk is the only thing that knows: `presence` before it
+    #: runs sees the disruption point and nothing the traveller does next, and
+    #: a caller that asks the question again from scratch is a second
+    #: reachability model with all the drift that implies. `plan._can_board`
+    #: reads it to ask whether a replacement can be boarded at all.
+    reached: ReachModel | None = field(default=None, compare=False)
 
     def by_id(self, nid: str) -> Node:
         return next(n for n in self.nodes if n.id == nid)
@@ -321,4 +328,4 @@ def propagate(trip: Trip, disruption: Disruption, now: datetime,
         ))
         prior.append(b.id)
 
-    return Impact(nodes=nodes, now=now)
+    return Impact(nodes=nodes, now=now, reached=reached)
