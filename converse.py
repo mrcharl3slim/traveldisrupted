@@ -27,6 +27,7 @@ that unstated assumptions are what cost people money later.
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, replace
 from datetime import date, datetime, timedelta
 from typing import Any, TypedDict
@@ -177,33 +178,49 @@ def search(s: State) -> State:
             out["missing"].append(what)
             return []
 
-    out["flights"] = attempt(
-        "outbound",
-        f"no inventory recorded for {places.label(req.origin)} to "
-        f"{places.label(req.destination)} on {req.depart:%d %b}",
-        lambda: flow.search_flights(req.origin, req.destination,
-                                    _noon(req.depart, _zone(req.origin))))
+    # Concurrently, because these three do not depend on each other and the
+    # traveller is watching a spinner. Run one after another against live
+    # providers this is four HTTP round trips end to end -- outbound, return,
+    # hotel catalogue, hotel rates -- and a slow one anywhere in the chain
+    # pushes the whole request past the hosting gateway's patience, which then
+    # answers with its own error page instead of ours.
+    #
+    # Threads rather than async: the ports are deliberately plain urllib, so
+    # that `cli.py` runs on a clean interpreter and the arithmetic never
+    # depends on an event loop. A pool is the cheap way to overlap them without
+    # colouring the whole call chain.
+    jobs = [("outbound",
+             f"no inventory recorded for {places.label(req.origin)} to "
+             f"{places.label(req.destination)} on {req.depart:%d %b}",
+             lambda: flow.search_flights(req.origin, req.destination,
+                                         _noon(req.depart, _zone(req.origin))))]
 
     if req.ret and not req.one_way:
-        out["returns"] = attempt(
-            "return",
-            f"no inventory recorded for the return, "
-            f"{places.label(req.destination)} to {places.label(req.origin)} "
-            f"on {req.ret:%d %b}",
-            lambda: flow.search_flights(req.destination, req.origin,
-                                        _noon(req.ret, _zone(req.destination))))
+        jobs.append(("return",
+                     f"no inventory recorded for the return, "
+                     f"{places.label(req.destination)} to "
+                     f"{places.label(req.origin)} on {req.ret:%d %b}",
+                     lambda: flow.search_flights(
+                         req.destination, req.origin,
+                         _noon(req.ret, _zone(req.destination)))))
 
     if req.hotel:
         place = places.by_code(req.destination)
         checkout = req.ret or (req.depart + timedelta(days=1))
-        out["stays"] = attempt(
-            "stays",
-            f"no stays recorded in {place.hotel_city} for those nights",
-            lambda: flow.search_hotels(
-                place.hotel_city, place.country,
-                _noon(req.depart, _zone(req.destination)),
-                _noon(checkout, _zone(req.destination)),
-                code=req.destination))
+        jobs.append(("stays",
+                     f"no stays recorded in {place.hotel_city} for those nights",
+                     lambda: flow.search_hotels(
+                         place.hotel_city, place.country,
+                         _noon(req.depart, _zone(req.destination)),
+                         _noon(checkout, _zone(req.destination)),
+                         code=req.destination)))
+
+    with ThreadPoolExecutor(max_workers=len(jobs)) as pool:
+        futures = {pool.submit(attempt, what, human, call): what
+                   for what, human, call in jobs}
+        for future in futures:
+            out[{"outbound": "flights", "return": "returns",
+                 "stays": "stays"}[futures[future]]] = future.result()
 
     out["note"] = " · ".join(plain)
     out["detail"] = " · ".join(raw)

@@ -138,9 +138,20 @@ def _build(temperature: float):
         import boto3
         from botocore.config import Config
         from langchain_aws import ChatBedrockConverse
+        # Short, and short on purpose. 120s with four adaptive retries was
+        # copied from a batch job, where waiting is free; here it sits inside a
+        # request somebody is watching, and a slow or throttled Bedrock could
+        # hold the whole turn for minutes until the hosting gateway gave up and
+        # answered with its own error page over the top of ours.
+        #
+        # Every model call in this system has a deterministic fallback, so
+        # giving up early costs a less fluent sentence. Waiting costs the
+        # request.
         client = boto3.client("bedrock-runtime", config=Config(
-            region_name=REGION, read_timeout=120, connect_timeout=30,
-            retries={"max_attempts": 4, "mode": "adaptive"}))
+            region_name=REGION,
+            read_timeout=int(os.environ.get("BEDROCK_TIMEOUT", "12")),
+            connect_timeout=5,
+            retries={"max_attempts": 2, "mode": "adaptive"}))
         return ChatBedrockConverse(model_id=BEDROCK_MODEL, client=client,
                                    temperature=temperature)
     if PROVIDER == "anthropic":

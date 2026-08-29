@@ -26,8 +26,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path[:0] = [str(ROOT), str(ROOT / "data"), str(ROOT / "ports")]
 
-from fastapi import FastAPI, HTTPException                    # noqa: E402
-from fastapi.responses import FileResponse                    # noqa: E402
+from fastapi import FastAPI, HTTPException, Request           # noqa: E402
+from fastapi.responses import FileResponse, JSONResponse      # noqa: E402
 from pydantic import BaseModel                                # noqa: E402
 
 import _model                                                 # noqa: E402
@@ -77,6 +77,19 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(title="downstream", lifespan=lifespan)
 
 LANE_KEY = {Lane.AUTO: "auto", Lane.TAP: "tap", Lane.CALL: "call"}
+
+
+@app.exception_handler(Exception)
+async def _always_json(_request: Request, exc: Exception) -> JSONResponse:
+    """An unhandled error is still an answer, and it has to be readable.
+
+    Starlette's default is plain text, which a JSON client reports as
+    "unreadable response" -- three words that describe every proxy error page
+    in existence and identify none of them. Naming the exception costs nothing
+    and turns a mystery into a line somebody can act on.
+    """
+    return JSONResponse(status_code=500,
+                        content={"detail": f"{type(exc).__name__}: {exc}"})
 
 #: A stored trip is reached by an unguessable id and nothing else — the same
 #: bargain a shared document link makes. 96 bits of randomness is the whole of

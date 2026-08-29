@@ -280,3 +280,23 @@ def test_typing_walks_the_whole_conversation(client):
     assert turn["flights"], "walked the whole conversation and searched nothing"
     assert turn["state"]["preference"] == "cheapest"
     assert turn["state"]["hotel"] is True
+
+
+def test_an_unhandled_error_is_still_readable_json(client, monkeypatch):
+    """Starlette's default for a crash is plain text, which a JSON client
+    reports as "unreadable response" — three words that describe every proxy
+    error page in existence and identify none of them."""
+    import serve as app_module
+
+    def boom(*_a, **_k):
+        raise RuntimeError("something specific went wrong")
+
+    monkeypatch.setattr(app_module.converse, "turn", boom)
+    # raise_server_exceptions=False so the test sees what a browser sees,
+    # rather than the exception the test client helpfully re-raises.
+    browser = TestClient(app_module.app, raise_server_exceptions=False)
+    response = browser.post("/api/chat", json={"text": "flight to milan"})
+    assert response.status_code == 500
+    body = response.json()                       # must parse, that is the point
+    assert "something specific went wrong" in body["detail"]
+    assert "RuntimeError" in body["detail"]

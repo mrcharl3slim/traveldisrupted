@@ -138,10 +138,32 @@ let PICK = {flight:null, ret:null, hotel:null};
 let TRIPS = [], OPEN = null, RECOVERY = null;
 
 async function api(path, body){
-  const r = await fetch(path, body
-    ? {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(body)}
-    : undefined);
-  const j = await r.json().catch(() => ({detail:'unreadable response'}));
+  // Every failure has to name itself. The first version answered "unreadable
+  // response" for anything that was not JSON, which is every proxy error page
+  // there is — so a 502 from a request that outran the gateway and a crash in
+  // our own code produced the same three words, and neither the traveller nor
+  // whoever is debugging could tell which had happened.
+  let r;
+  try {
+    r = await fetch(path, body
+      ? {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(body)}
+      : undefined);
+  } catch (e) {
+    throw new Error(`could not reach the server (${e.message}) — it may still be waking up`);
+  }
+
+  const raw = await r.text();
+  let j = null;
+  try { j = JSON.parse(raw); } catch (e) { /* not JSON; `raw` is the evidence */ }
+
+  if (j === null) {
+    const snippet = raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160);
+    throw new Error(`${r.status} ${r.statusText} from ${path}`
+      + (snippet ? ` — ${snippet}` : ' — empty response')
+      + (r.status === 502 || r.status === 504
+         ? '. That is the gateway giving up before the providers answered; '
+           + 'try again now the instance is warm.' : ''));
+  }
   if (!r.ok) throw new Error(typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail));
   return j;
 }

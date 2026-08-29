@@ -33,6 +33,13 @@ services:
       - key: DOWNSTREAM_PORTS
         value: live
 
+      # How long one provider gets before we replay a recording instead. The
+      # whole request has to finish inside the hosting gateway's patience --
+      # past that it answers with its own error page, which a JSON client
+      # cannot read and which looks like a bug in this code.
+      - key: DOWNSTREAM_TIMEOUT
+        value: "8"
+
       # The deadline watch, in-process. Real while the service is awake, and a
       # free instance sleeps when idle — so on this plan it is a demonstration
       # of the mechanism rather than a promise to a traveller. Production swaps
@@ -58,6 +65,11 @@ services:
       # instead of silently falling back to templates.
       - key: LLM_PROVIDER
         value: bedrock
+
+      # Same reasoning as DOWNSTREAM_TIMEOUT: the model sits inside a request
+      # somebody is watching, and it has a deterministic fallback.
+      - key: BEDROCK_TIMEOUT
+        value: "12"
       - key: AWS_DEFAULT_REGION
         value: ap-southeast-1
       # AWS_PROFILE must NOT be set here — ~/.aws/credentials does not exist in

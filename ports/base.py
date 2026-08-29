@@ -178,10 +178,20 @@ def _replay(name: str, key: dict[str, Any], prefer: date | None = None) -> Any:
     return json.loads(_shift_dates(found.read_text(), days))
 
 
+#: How long to wait on one provider before giving up and replaying instead.
+#:
+#: Short on purpose. A recording exists for everything the demo touches, so the
+#: cost of giving up early is a `degraded` badge and a fare that is minutes
+#: rather than seconds old. The cost of waiting is a hosting gateway returning
+#: its own error page over the top of us, which the browser then cannot read as
+#: JSON -- a failure that looks like a bug in this code and is not.
+TIMEOUT = int(os.environ.get("DOWNSTREAM_TIMEOUT", "8"))
+
+
 def get_json(url: str, headers: dict[str, str] | None = None,
-             body: bytes | None = None, timeout: int = 15) -> Any:
+             body: bytes | None = None, timeout: int | None = None) -> Any:
     req = urllib.request.Request(url, data=body, headers=headers or {})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
+    with urllib.request.urlopen(req, timeout=timeout or TIMEOUT) as r:
         return json.loads(r.read().decode())
 
 
