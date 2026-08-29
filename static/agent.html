@@ -83,6 +83,12 @@
        border-bottom:1px solid #1b242e}
   .leg:last-child{border-bottom:none}
   .leg.pending .n{color:var(--warn)}
+  /* Late is not gone: the leg is still flying and the traveller is still on
+     it, so it keeps its weight and says what moved. */
+  .leg.gone{border-left-color:var(--bad);opacity:.6}
+  .leg.late{border-left-color:var(--warn)}
+  .late-line{color:var(--warn)}
+  .tag.bad{border-color:#4d2326;color:#ffb4ae}
   .tag{display:inline-block;font:9.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;
        padding:1px 7px;border-radius:999px;border:1px solid var(--edge);color:var(--faint);
        margin-left:6px}
@@ -401,12 +407,24 @@ function openTrip(id, quiet){
     title += ' · ' + part;
   }
   $('#detail-title').textContent = title;
-  $('#detail').innerHTML = trip.bookings.map(b => `
-    <div class="leg ${b.pending ? 'pending' : ''}">
+  $('#detail').innerHTML = trip.bookings.map(b => {
+    // What has happened to this row. The panel is painted from the stored
+    // itinerary, which knew a trip was disrupted and not what had happened to
+    // it -- so a flight running three hours late showed its original times
+    // with nothing to say so, which is the one fact the panel was opened for.
+    const hit = b.disruption;
+    const gone = hit && hit.cancelled;
+    const late = hit && !hit.cancelled && hit.delay_minutes > 0;
+    return `
+    <div class="leg ${b.pending ? 'pending' : ''} ${gone ? 'gone' : ''} ${late ? 'late' : ''}">
       <div>${esc(b.title)}
         ${b.pending ? '<span class="tag warn">not paid</span>' : ''}
+        ${gone ? '<span class="tag bad">cancelled</span>' : ''}
+        ${late ? `<span class="tag warn">delayed ${late_(hit.delay_minutes)}</span>` : ''}
         ${b.commitment ? '<span class="tag">commitment</span>' : ''}
-        <div class="m">${span(b.starts, b.ends)}${b.who ? ' · ' + esc(b.who) : ''}</div></div>
+        <div class="m">${span(b.starts, b.ends)}${b.who ? ' · ' + esc(b.who) : ''}</div>
+        ${late ? `<div class="m late-line">now in at <b>${at(hit.now_arrives)}</b>
+          — was ${at(hit.was)}</div>` : ''}</div>
       <div class="n" style="white-space:nowrap">${eur(b.price)}
         ${b.kind === 'flight' ? `<div class="break">
           <select class="btn sm" data-mins="${esc(b.id)}">${DELAYS.map(m =>
@@ -415,7 +433,8 @@ function openTrip(id, quiet){
           <button class="btn warn sm" data-late="${esc(b.id)}">Late</button>
           <button class="btn bad sm" data-break="${esc(b.id)}">Cancel</button>
         </div>` : ''}</div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   $('#detail').querySelectorAll('[data-break]').forEach(el =>
     el.onclick = () => breakLeg(id, {booking_id: el.dataset.break}, '/api/cancel'));
   $('#detail').querySelectorAll('[data-late]').forEach(el =>
@@ -427,7 +446,7 @@ function openTrip(id, quiet){
 
 // How late, said the way a person says it. "delayed 180 minutes" is a number
 // the traveller has to divide before it means anything.
-const late = m => m >= 60
+const late_ = m => m >= 60
   ? Math.floor(m / 60) + 'h' + (m % 60 ? ' ' + (m % 60) + 'm' : '')
   : m + 'm';
 
@@ -443,11 +462,11 @@ async function breakLeg(tripId, what, path){
   const gone = d.signal.cancelled;
   bubble('You', gone
     ? `My ${esc(d.signal.title)} has been cancelled.`
-    : `My ${esc(d.signal.title)} is running ${late(d.signal.delay_minutes)} late.`);
+    : `My ${esc(d.signal.title)} is running ${late_(d.signal.delay_minutes)} late.`);
 
   let html = gone
     ? `<b>${esc(d.signal.title)}</b> is cancelled. `
-    : `<b>${esc(d.signal.title)}</b> is ${late(d.signal.delay_minutes)} late — `
+    : `<b>${esc(d.signal.title)}</b> is ${late_(d.signal.delay_minutes)} late — `
       + `now in at ${at(d.signal.now_arrives)}, was ${at(d.signal.was)}. `
     + (d.gap
        ? `${gone ? 'You are at' : 'You land at'} ${esc(d.gap.origin)}, and you are due

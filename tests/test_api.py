@@ -116,6 +116,58 @@ def test_the_delay_button_reaches_the_engine(client):
     assert body["plans"], "a delay has to produce options like anything else"
 
 
+def test_a_delayed_leg_says_so_on_the_itinerary(client):
+    """The page showed a flight at its original times with nothing to say it
+    was running three hours late, which is the one fact it was opened for.
+    /api/itineraries knew the trip was disrupted and not what had happened."""
+    booked = book(client)
+    leg = [b for b in booked["bookings"] if b["kind"] == "flight"][0]
+    assert leg["disruption"] is None, "nothing has happened to it yet"
+
+    client.post("/api/delay", json={
+        "trip_id": booked["trip_id"], "booking_id": leg["id"], "minutes": 195})
+    row = next(t for t in client.get("/api/itineraries").json()["itineraries"]
+               if t["trip_id"] == booked["trip_id"])
+    hit = next(b["disruption"] for b in row["bookings"] if b["id"] == leg["id"])
+
+    assert hit["cancelled"] is False
+    assert hit["delay_minutes"] == 195
+    assert hit["now_arrives"]["iso"] > hit["was"]["iso"]
+    # And only the leg it happened to.
+    assert all(b["disruption"] is None for b in row["bookings"] if b["id"] != leg["id"])
+
+
+def test_the_scheduled_times_are_not_overwritten_by_the_delay(client):
+    """`starts` and `ends` are what was BOOKED and they do not move. A delay is
+    what the world is doing to the schedule, not a correction of it, and
+    replacing the arrival with a predicted one erases the comparison the
+    traveller is trying to make."""
+    booked = book(client)
+    leg = [b for b in booked["bookings"] if b["kind"] == "flight"][0]
+    client.post("/api/delay", json={
+        "trip_id": booked["trip_id"], "booking_id": leg["id"], "minutes": 240})
+
+    row = next(t for t in client.get("/api/itineraries").json()["itineraries"]
+               if t["trip_id"] == booked["trip_id"])
+    after = next(b for b in row["bookings"] if b["id"] == leg["id"])
+    assert after["starts"] == leg["starts"] and after["ends"] == leg["ends"]
+    assert after["disruption"]["was"] == leg["ends"]
+
+
+def test_a_cancelled_leg_is_not_reported_as_running_late(client):
+    """There is no arrival to be late for, so the row must not offer one."""
+    booked = book(client)
+    leg = [b for b in booked["bookings"] if b["kind"] == "flight"][0]
+    client.post("/api/cancel", json={
+        "trip_id": booked["trip_id"], "booking_id": leg["id"]})
+
+    row = next(t for t in client.get("/api/itineraries").json()["itineraries"]
+               if t["trip_id"] == booked["trip_id"])
+    hit = next(b["disruption"] for b in row["bookings"] if b["id"] == leg["id"])
+    assert hit["cancelled"] is True
+    assert hit["delay_minutes"] == 0 and hit["now_arrives"] is None
+
+
 def test_a_delay_of_nothing_is_refused(client, booked):
     """Zero minutes is not a disruption, and storing one would leave the watch
     counting down to a flight that is running exactly on time.

@@ -180,6 +180,17 @@ things had to be right before the button could be honest:
   more and hands the traveller a trip missing the leg they are about to board
   when it is merely late.
 
+**The row says what happened to it.** `starts` and `ends` are what was *booked*
+and they do not move — a delay is what the world is doing to the schedule, not a
+correction of it, and overwriting the arrival with a predicted one erases the
+comparison the traveller is making. So the affected booking carries a
+`disruption` of its own and every other row carries none: a `delayed 3h 15m` tag,
+and `now in at 11:30 — was 08:15` underneath. It keeps its colour, because a
+delayed leg is still flying and the traveller is still on it; only a cancelled
+one is struck through. Until this, `/api/itineraries` knew a trip was disrupted
+and not what had happened to it, so a flight running three hours late showed its
+original times with nothing to say so.
+
 ### What replay cannot check
 
 Replay is what makes the demo survivable, and it has exactly one blind spot: in

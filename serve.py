@@ -1280,7 +1280,7 @@ def itineraries() -> dict:
             "legs": len(trip.bookings),
             "disrupted": disruption is not None,
             "disrupted_booking": disruption.booking_id if disruption else "",
-            "bookings": _bookings_out(trip),
+            "bookings": _bookings_out(trip, disruption),
         })
     return {"itineraries": rows}
 
@@ -1357,13 +1357,43 @@ def act(body: Act) -> dict:
     }
 
 
-def _bookings_out(trip: Trip) -> list[dict]:
+def _bookings_out(trip: Trip, disruption=None) -> list[dict]:
+    """The trip's rows, with the deviation attached to the one it happened to.
+
+    KEPT SEPARATE FROM start AND end, deliberately. Those are what was booked
+    and they do not move: a delay is what the world is doing to the schedule,
+    not a correction of it, and overwriting `ends` with a predicted arrival
+    would erase the very comparison the traveller is trying to make. So the
+    affected row carries a `disruption` of its own, and every other row carries
+    none.
+
+    Without this a delayed leg was indistinguishable from an untouched one.
+    /api/itineraries knew a trip was disrupted and not what had happened to it,
+    so the panel showed a flight at its original times with nothing to say it
+    was running three hours late -- which is the one fact the traveller opened
+    the page for.
+    """
+    def deviation(b: Booking) -> dict | None:
+        if disruption is None or disruption.booking_id != b.id:
+            return None
+        late = int(disruption.delay(trip).total_seconds() // 60)
+        return {"cancelled": disruption.cancelled,
+                "delay_minutes": late,
+                "reason": disruption.reason,
+                # The scheduled arrival and the one now expected, both, because
+                # "now in at 23:05" means nothing without the 20:05 it replaced.
+                "was": _when(b.end),
+                "now_arrives": None if disruption.cancelled
+                               else _when(disruption.new_end)}
+
     return [{"id": b.id, "title": b.title, "provider": b.provider,
              "kind": b.kind.value, "where": b.where,
              "starts": _when(b.start), "ends": _when(b.end),
              "must_arrive_by": _when(b.must_arrive_by),
              "price": b.price, "currency": b.currency, "pending": b.pending,
              "commitment": b.commitment, "who": b.who,
+             "price_source": b.price_source,
+             "disruption": deviation(b),
              "ticket_group": b.ticket_group, "policy": b.policy.source}
             for b in trip.in_order()]
 

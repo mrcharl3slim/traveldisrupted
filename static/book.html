@@ -75,6 +75,12 @@
   .leg.flight{border-left-color:var(--key)}
   .leg.lodging{border-left-color:var(--ok)}
   .leg.gone{border-left-color:var(--bad);opacity:.6}
+  /* Late is not gone. The leg is still flying and the traveller is still on
+     it, so it keeps its weight and says what moved. */
+  .leg.late{border-left-color:var(--warn)}
+  .late-line{color:var(--warn)}
+  .tag.bad{border-color:#4d2326;color:#ffb4ae}
+  .tag.warn{border-color:#4d4423;color:#f0d68c}
   .leg .t{font-size:14px}
 
   .lane{margin-top:18px}
@@ -214,6 +220,12 @@ const span = (a, b) => !b ? at(a)
 // hard-coded number would demonstrate whichever of those the fixture happened
 // to land on.
 const DELAYS = [30, 90, 180, 360, 720];
+
+// How late, said the way a person says it. "delayed 180 minutes" is a number
+// the traveller has to divide before it means anything.
+const hours = m => m >= 60
+  ? Math.floor(m / 60) + 'h' + (m % 60 ? ' ' + (m % 60) + 'm' : '')
+  : m + 'm';
 
 const LANES = {
   auto: ['Downstream handles it', 'no payment, no authorisation, nobody to phone'],
@@ -363,13 +375,24 @@ function paintTrip(){
       + TRIP.problems.map(esc).join('<br>') + `</div>`
     : '';
 
-  $('#trip-legs').innerHTML = TRIP.bookings.map(b => `
+  $('#trip-legs').innerHTML = TRIP.bookings.map(b => {
+    // What has happened to THIS row, if anything. A delay is not a small
+    // cancellation and must not be drawn as one: the leg is still flying and
+    // the traveller is still on it, so it keeps its colour and gains a time.
+    const hit = OUT && OUT.signal.booking_id === b.id ? OUT.signal : null;
+    const gone = hit && hit.cancelled;
+    const late = hit && !hit.cancelled && hit.delay_minutes > 0;
+    return `
     <div class="leg ${b.kind === 'lodging' ? 'lodging' : 'flight'} ${
-      OUT && OUT.signal.booking_id === b.id ? 'gone' : ''}">
+      gone ? 'gone' : ''} ${late ? 'late' : ''}">
       <div>
-        <div class="t">${esc(b.title)}</div>
+        <div class="t">${esc(b.title)}
+          ${gone ? '<span class="tag bad">cancelled</span>' : ''}
+          ${late ? `<span class="tag warn">delayed ${hours(hit.delay_minutes)}</span>` : ''}</div>
         <div class="m">${esc(b.where)} · ${span(b.starts, b.ends)} · last moment ${at(b.must_arrive_by)}
           ${b.ticket_group ? ' · ticket ' + esc(b.ticket_group.slice(-6)) : ''}</div>
+        ${late ? `<div class="m late-line">now in at <b>${at(hit.now_arrives)}</b>
+          — was ${at(hit.was)}</div>` : ''}
       </div>
       <div style="text-align:right;white-space:nowrap">
         <div class="m">${esc(b.currency)} ${Math.round(b.price).toLocaleString()}</div>
@@ -381,7 +404,8 @@ function paintTrip(){
           <button class="btn bad" data-cancel="${esc(b.id)}">Cancel</button>
         </div>` : ''}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   document.querySelectorAll('[data-cancel]').forEach(el =>
     el.onclick = () => disrupt('/api/cancel', {booking_id: el.dataset.cancel}));
