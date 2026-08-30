@@ -606,17 +606,34 @@ async function breakLeg(tripId, what, path){
       ? '<span class="m">Taken already — pick a different row only if you want to change it.</span>'
       : '<button class="btn key do-it" disabled>Take this plan</button>'}</div>`;
 
+  html += `<div class="lines"></div>`;
   const el = bubble('Downstream', html);
   let chosen = null;
+  // Approve, reject, per line. Picking a plan lays out what it would do, one
+  // box each, all ticked; unticking one declines it and the rest still
+  // happens. The monitor has no box -- it moves nothing, costs nothing, and a
+  // plan taken without it is a plan nobody is watching.
+  const lines = el.querySelector('.lines');
   el.querySelectorAll('tr[data-plan]').forEach(tr => tr.onclick = () => {
     chosen = tr.dataset.plan;
     el.querySelectorAll('tr[data-plan]').forEach(r =>
       r.classList.toggle('sel', r.dataset.plan === chosen));
+    const plan = d.plans.find(p => (p.key || p.id) === chosen);
+    lines.innerHTML = plan && plan.id !== 'noop' ? `<div class="note"><b>This plan, line by line</b>
+      — untick anything you would rather handle yourself.` + plan.actions
+        .filter(a => a.verb !== 'monitor').map(a => `
+        <div class="leg"><label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer">
+          <input type="checkbox" checked data-act="${esc(a.id)}">
+          <span>${esc(a.label)}<div class="m">${esc(a.note || '')}${
+            a.approval && a.approval !== 'auto' ? ' · ' + esc(a.approval) : ''}</div></span></label>
+          <span class="tag ${a.lane === 'auto' ? 'ok' : 'warn'}">${esc(a.lane)}</span></div>`).join('')
+      + `</div>` : '';
     const go = el.querySelector('.do-it');
     if (go) go.disabled = false;
   });
   const doIt = el.querySelector('.do-it');
-  if (doIt) doIt.onclick = () => takePlan(doIt, chosen);
+  if (doIt) doIt.onclick = () => takePlan(doIt, chosen,
+    [...lines.querySelectorAll('input[data-act]:not(:checked)')].map(i => i.dataset.act));
   await loadTrips();
 }
 
@@ -689,12 +706,12 @@ async function confirmAbandon(button, tripId){
 }
 
 
-async function takePlan(button, planId){
+async function takePlan(button, planId, reject){
   button.disabled = true;
   let done;
   try {
     done = await api('/api/act', {trip_id: RECOVERY.trip,
-      booking_id: RECOVERY.booking, plan_key: planId});
+      booking_id: RECOVERY.booking, plan_key: planId, reject: reject || []});
   } catch (e) { button.disabled = false; return bubble('Downstream',
     `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
 
@@ -712,6 +729,13 @@ async function takePlan(button, planId){
         ? ` <a href="${esc(d.link)}" target="_blank" rel="noopener">open</a>` : ''}
         <div class="m">${esc(d.note || '')}</div></div>
         <span class="tag warn">${esc(d.lane)}</span></div>`).join('')}</div>`;
+  if ((done.declined || []).length)
+    html += `<div class="note"><b>Left to you</b>${done.declined.map(d =>
+      `<div class="leg"><div>${esc(d.label)}</div>
+        <span class="tag">declined</span></div>`).join('')}</div>`;
+  if (done.resolved === false)
+    html += `<div class="banner warn">The trip is still broken — you said you would handle the
+      replacement yourself, so I will keep counting down the deadlines until you do.</div>`;
   if (done.changed.length)
     html += `<div class="note"><b>Your itinerary now</b>: ${
       done.changed.map(esc).join('; ')}.</div>`;

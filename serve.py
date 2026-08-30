@@ -279,6 +279,11 @@ class Act(BaseModel):
     booking_id: str
     plan_key: str = ""
     plan_id: str = ""            # deprecated; ignored when a key is supplied
+    #: Actions in the plan the traveller is NOT taking, by their id -- the
+    #: brief's approve / reject, per line. Approve is the default; the list is
+    #: what was rejected, so an older client that sends nothing takes the plan
+    #: whole, exactly as before.
+    reject: list[str] = []
 
 
 class Cancellation(BaseModel):
@@ -381,6 +386,7 @@ def _when(value: datetime | None) -> dict | None:
 
 def _action(a) -> dict:
     return {
+        "id": a.id,
         "verb": a.verb,
         "label": a.label,
         "lane": LANE_KEY[a.lane],
@@ -1530,10 +1536,16 @@ def act(body: Act) -> dict:
             409, "that option is no longer available — the search has moved on. "
                  "Cancel again to see what is there now.")
 
-    return _take(body.trip_id, trip, recovery, plan, by="the traveller")
+    known = {a.id for a in plan.actions}
+    unknown = [r for r in body.reject if r not in known]
+    if unknown:
+        raise HTTPException(422, f"no such action on this plan: {', '.join(unknown)}")
+    return _take(body.trip_id, trip, recovery, plan, by="the traveller",
+                 skip=set(body.reject))
 
 
-def _take(trip_id: str, trip: Trip, recovery, plan, by: str) -> dict:
+def _take(trip_id: str, trip: Trip, recovery, plan, by: str,
+          skip: set[str] | None = None) -> dict:
     """Take one plan: perform what can be performed, rewrite the itinerary,
     record who decided.
 
@@ -1544,33 +1556,46 @@ def _take(trip_id: str, trip: Trip, recovery, plan, by: str) -> dict:
     its own is exactly the kind a person later wants to find in the log.
     """
     saved = store_module.store().get(trip_id)
+    skip = set(skip or set())
     lines: list[str] = []
-    done = act_mod.perform(plan, trip, trip_id, log=lines.append)
+    done = act_mod.perform(plan, trip, trip_id, log=lines.append, skip=skip)
     offer = next((o for o in recovery.offers if o.id == plan.id), None)
-    updated, changed = act_mod.apply(plan, trip, recovery.disruption, offer)
+    updated, changed = act_mod.apply(plan, trip, recovery.disruption, offer, skip=skip)
+    declined = [d for d in done if d.state == "declined"]
+
+    # Declining the replacement leaves the trip broken. Everything else in the
+    # plan can be taken -- the hotel emailed, the transfer cancelled -- and the
+    # traveller has said they will handle the flight; the disruption stays
+    # open so the watch keeps counting down to whatever that flight was for.
+    resolved = plan.id == "noop" or "buy:offer" not in skip
 
     payload = dict(saved.payload)
     payload["bookings"] = ingest.to_dicts(updated.bookings)
     payload["acted"] = {"at": datetime.now(timezone.utc).isoformat(),
                         "plan": plan.name, "changed": changed, "by": by,
+                        "declined": [d.label for d in declined],
+                        "resolved": resolved,
                         "permission": recovery.verdict.why
                         if recovery.verdict and by != "the traveller" else ""}
-    # The disruption is resolved: this itinerary is no longer the broken one,
-    # so the watch stops counting down deadlines that have been dealt with.
-    payload.pop("disruption", None)
-    payload.pop("watermark", None)
+    if resolved:
+        # This itinerary is no longer the broken one, so the watch stops
+        # counting down deadlines that have been dealt with.
+        payload.pop("disruption", None)
+        payload.pop("watermark", None)
     store_module.store().update(trip_id, payload)
 
     return {
         "trip_id": trip_id,
         "plan": plan.name,
         "by": by,
+        "resolved": resolved,
         "summary": act_mod.summarise(done, changed),
         "sent": [d.__dict__ for d in done if d.state == "sent"],
         "pending": [d.__dict__ for d in done if d.state == "pending"],
+        "declined": [d.__dict__ for d in declined],
         "changed": changed,
         "log": lines,
-        "bookings": _bookings_out(_load(trip_id)),
+        "bookings": _bookings_out(_load(trip_id), None if resolved else recovery.disruption),
     }
 
 

@@ -354,6 +354,29 @@ commitment makes every meeting in the trip a clash.
   arrives flagged `pending`, and that flag survives storage — a real booking in
   the plan and an intention in the record are not allowed to look alike.
 
+## Approve, reject, per line
+
+"Take this plan" was all or nothing. The brief's queue is *approve, reject or
+modify*, and the useful case is the middle one: *email the hotel and cancel the
+transfer, but I'll sort the flight myself*. Every action now has an `id` — verb
+and booking, unique within a plan and stable across re-searching, which a label
+carrying a fare is not — and `/api/act` takes a `reject` list of them. Approve
+is the default, so an older client that sends nothing takes the plan whole.
+
+A declined action is **recorded as declined, not dropped**: "I chose not to
+email the hotel" is a fact the history has to hold, because the room that then
+goes unheld is that choice's consequence. The monitor cannot be declined — it
+moves nothing and costs nothing, and a plan taken without it is a plan nobody
+is watching.
+
+**Declining the replacement keeps the trip open.** The hotel is still emailed,
+the cancelled leg still leaves — it is not being flown whatever the traveller
+decides — no replacement arrives, and the disruption stays for the watch to
+count down. "I will sort the flight myself" is not "nothing happened", and the
+page says so. *Modify* is choosing a different row; per-line modification of a
+fare or a time is not offered, because the engine would then be pricing a plan
+it did not build.
+
 ## Buying a trip, then breaking it
 
 `/book` is the same engine with nothing scripted. Search real inventory (Duffel

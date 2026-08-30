@@ -248,6 +248,97 @@ def test_rules_can_be_changed_after_booking_and_are_listed(client):
 
 
 # --------------------------------------------------------------------------
+# approve, reject, per line
+# --------------------------------------------------------------------------
+
+
+def _recovery(client):
+    """A booked trip with its onward hop cancelled, and the recommended plan."""
+    booked = _with_meeting(client, {})
+    onward = [b for b in booked["bookings"] if b["kind"] == "flight"][1]
+    outcome = client.post("/api/cancel", json={
+        "trip_id": booked["trip_id"], "booking_id": onward["id"]}).json()
+    best = outcome["plans"][0]
+    assert best["id"] != "noop", "the premise: something worth taking"
+    return booked, onward, best
+
+
+def _act(client, booked, onward, best, reject):
+    return client.post("/api/act", json={
+        "trip_id": booked["trip_id"], "booking_id": onward["id"],
+        "plan_key": best["key"], "reject": reject})
+
+
+def test_every_action_has_a_name_the_traveller_can_point_at(client):
+    _booked, _onward, best = _recovery(client)
+    ids = [a["id"] for a in best["actions"]]
+    assert ids and len(ids) == len(set(ids)), "two actions with the same name"
+    assert "buy:offer" in ids
+
+
+def test_declining_the_email_leaves_the_rest_of_the_plan_intact(client):
+    """The brief's "choose individual actions". Everything else is done; the
+    declined one is recorded as declined, not dropped -- the room that then
+    goes unheld is that choice's consequence and the history has to hold it."""
+    booked, onward, best = _recovery(client)
+    email = next(a["id"] for a in best["actions"] if a["verb"] == "notify" and a["lane"] == "auto")
+    done = _act(client, booked, onward, best, [email]).json()
+
+    assert done["resolved"] is True
+    assert [d["verb"] for d in done["declined"]] == ["notify"]
+    assert not any(d["verb"] == "notify" for d in done["sent"])
+    assert any(d["verb"] == "buy" for d in done["pending"]), "the rest still happened"
+    assert "1 declined" in done["summary"]
+
+    row = _row(client, booked["trip_id"])
+    assert row["acted"]["declined"] and row["acted"]["resolved"] is True
+    assert not row["disrupted"]
+
+
+def test_declining_the_replacement_keeps_the_trip_open(client):
+    """"I will sort the flight myself" is not "nothing happened". The hotel is
+    still emailed, the cancelled leg still leaves, no replacement arrives, and
+    the disruption stays for the watch to count down."""
+    booked, onward, best = _recovery(client)
+    done = _act(client, booked, onward, best, ["buy:offer"]).json()
+
+    assert done["resolved"] is False
+    assert [d["verb"] for d in done["declined"]] == ["buy"]
+    assert any(d["verb"] == "notify" for d in done["sent"]), "the email still went"
+    titles = {b["title"] for b in done["bookings"]}
+    assert onward["title"] not in titles, "the cancelled leg is not being flown"
+    assert not any(b["pending"] for b in done["bookings"]), "a replacement arrived anyway"
+
+    row = _row(client, booked["trip_id"])
+    assert row["disrupted"], "declined the fix and the watch stopped watching"
+    assert row["acted"]["resolved"] is False
+
+
+def test_the_monitor_cannot_be_declined(client):
+    """It moves nothing and costs nothing, and a plan taken without it is a
+    plan nobody is watching."""
+    booked, onward, best = _recovery(client)
+    watch = next(a["id"] for a in best["actions"] if a["verb"] == "monitor")
+    done = _act(client, booked, onward, best, [watch]).json()
+    assert not done["declined"]
+
+
+def test_rejecting_an_action_that_is_not_on_the_plan_is_refused(client):
+    booked, onward, best = _recovery(client)
+    response = _act(client, booked, onward, best, ["cancel:nothing"])
+    assert response.status_code == 422
+    assert "cancel:nothing" in response.json()["detail"]
+
+
+def test_an_older_client_that_sends_no_rejections_takes_the_plan_whole(client):
+    booked, onward, best = _recovery(client)
+    done = client.post("/api/act", json={
+        "trip_id": booked["trip_id"], "booking_id": onward["id"],
+        "plan_key": best["key"]}).json()
+    assert done["declined"] == [] and done["resolved"] is True
+
+
+# --------------------------------------------------------------------------
 # who is asking
 # --------------------------------------------------------------------------
 

@@ -54,7 +54,7 @@ class Done:
     verb: str
     label: str
     lane: str
-    state: str                    # "sent" | "pending" | "nothing to send"
+    state: str      # "sent" | "pending" | "nothing to send" | "declined"
     channels: list[str] = field(default_factory=list)
     link: str = ""
     note: str = ""
@@ -86,10 +86,24 @@ def _link(plan: Plan, action: Action) -> str:
 
 
 def perform(plan: Plan, trip: Trip, trip_id: str = "",
-            log=print) -> list[Done]:
-    """Run every action in the plan, each according to its lane."""
+            log=print, skip: set[str] | None = None) -> list[Done]:
+    """Run every action in the plan, each according to its lane.
+
+    ``skip`` names the actions the traveller declined, by `Action.id`. A
+    declined action is recorded as declined rather than dropped: "I chose not
+    to email the hotel" is a fact the itinerary's history has to hold, because
+    the room that then goes unheld is that choice's consequence and nobody
+    should have to reconstruct it later. The monitor cannot be declined -- it
+    moves nothing and costs nothing, and a plan taken without it is a plan
+    nobody is watching.
+    """
+    skip = set(skip or set())
     out: list[Done] = []
     for action in plan.actions:
+        if action.id in skip and action.verb != "monitor":
+            out.append(Done(action.verb, action.label, action.lane.value,
+                            "declined", note=action.note))
+            continue
         if action.lane is Lane.AUTO and action.verb == "notify":
             channels = notify.deliver(_as_alert(action, trip), trip_id, log=log)
             out.append(Done(action.verb, action.label, action.lane.value,
@@ -133,7 +147,8 @@ def _as_alert(action: Action, trip: Trip):
     return _AlertShim(action, when, title)
 
 
-def apply(plan: Plan, trip: Trip, disruption, offer=None) -> tuple[Trip, list[str]]:
+def apply(plan: Plan, trip: Trip, disruption, offer=None,
+          skip: set[str] | None = None) -> tuple[Trip, list[str]]:
     """The itinerary the traveller has after taking this plan.
 
     Three edits, all derived from the plan rather than from a form: the
@@ -141,8 +156,17 @@ def apply(plan: Plan, trip: Trip, disruption, offer=None) -> tuple[Trip, list[st
     replacement leg arrives marked pending. Nothing else is touched -- a
     recovery that quietly reorganises the rest of the week is a recovery nobody
     trusts twice.
+
+    A declined purchase means no replacement arrives. The cancelled leg still
+    leaves -- it is not being flown whatever the traveller decides about the
+    replacement -- so the itinerary then honestly shows the hole, and the
+    disruption stays open for the watch. Declining the flight is "I will sort
+    that part myself", not "nothing happened".
     """
     from builder import flight
+
+    if "buy:offer" in (skip or set()):
+        offer = None
 
     # The disrupted leg goes only if it is not going. A cancelled flight is off
     # the itinerary because it does not exist any more; a delayed one is still
@@ -186,6 +210,9 @@ def summarise(done: list[Done], changed: list[str]) -> str:
         bits.append(f"{len(sent)} sent ({', '.join(where) or 'no channel took it'})")
     if pending:
         bits.append(f"{len(pending)} waiting on you")
+    declined = [d for d in done if d.state == "declined"]
+    if declined:
+        bits.append(f"{len(declined)} declined")
     removed = len([c for c in changed if c.startswith("removed")])
     added = len([c for c in changed if c.startswith("added")])
     if removed or added:

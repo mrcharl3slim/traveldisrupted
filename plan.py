@@ -91,6 +91,17 @@ class Action:
     #: judged the offer that named the carrier is gone.
     provider: str = ""
 
+    @property
+    def id(self) -> str:
+        """What a traveller points at when they say "not that one".
+
+        Verb and booking, because that pair is unique within a plan -- a
+        booking gets one repair -- and stable across re-searching, which a
+        label is not: the label carries a fare or a time that the second
+        search may quote differently.
+        """
+        return f"{self.verb}:{self.booking_id or 'offer'}"
+
 
 @dataclass
 class Plan:

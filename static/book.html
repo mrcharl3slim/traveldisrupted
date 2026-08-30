@@ -584,7 +584,9 @@ function paintOutcome(){
         return `<div class="lane"><h3>${esc(title)}</h3><div class="who">${esc(who)}</div>`
           + acts.map(a => `
             <div class="act">
-              <div>${esc(a.label)}${a.estimated ? '<span class="badge est">estimated fare</span>' : ''}${
+              <div>${a.verb !== 'monitor' && !(OUT.auto_taken) && !TRIP.abandoned
+                ? `<input type="checkbox" checked data-act="${esc(a.id)}" style="margin-right:8px">` : ''
+              }${esc(a.label)}${a.estimated ? '<span class="badge est">estimated fare</span>' : ''}${
                 a.approval && a.approval !== 'auto'
                   ? ` <span class="tag ${a.approval === 'pre-authorised' ? 'ok' : 'warn'}"
                        title="${esc(a.approval_why || '')}">${esc(a.approval)}</span>` : ''}</div>
@@ -592,7 +594,29 @@ function paintOutcome(){
               <div class="cash">${a.net ? (a.net > 0 ? 'costs ' : 'returns ') + eur(Math.abs(a.net))
                 : 'no money moves'}${a.deadline ? ' · before ' + at(a.deadline) : ''}</div>
             </div>`).join('') + `</div>`;
-      }).join('') || '<div class="note">This plan asks nothing of anybody.</div>');
+      }).join('') || '<div class="note">This plan asks nothing of anybody.</div>')
+    + (chosen.id !== 'noop' && !OUT.auto_taken && !TRIP.abandoned && !(TRIP.acted && TRIP.acted.resolved)
+        ? `<div class="note" style="display:flex;gap:10px;align-items:center">
+             <button class="btn key" id="take">Take this plan</button>
+             <span class="m">untick anything you would rather handle yourself</span></div>
+           <div id="taken"></div>` : '');
+  const take = $('#take');
+  if (take) take.onclick = async () => {
+    take.disabled = true;
+    const reject = [...document.querySelectorAll('#handoff input[data-act]:not(:checked)')]
+      .map(i => i.dataset.act);
+    let done;
+    try { done = await api('/api/act', {trip_id: TRIP.trip_id, booking_id: OUT.signal.booking_id,
+                                        plan_key: chosen.key || chosen.id, reject}); }
+    catch (e) { take.disabled = false; return fail('#taken', e); }
+    $('#taken').innerHTML = `<div class="banner" style="border-left:3px solid var(--ok);margin-top:10px">
+      <b>Taken.</b> ${esc(done.summary)}.${(done.declined || []).length
+        ? ' Left to you: ' + done.declined.map(d => esc(d.label)).join(' · ') + '.' : ''}${
+        done.resolved === false ? ' The trip is still broken until you sort the replacement; the watch keeps counting.' : ''}</div>`;
+    TRIP = Object.assign({}, TRIP, {bookings: done.bookings,
+      acted: {by: done.by, plan: done.plan, resolved: done.resolved, changed: done.changed}});
+    paintTrip();
+  };
 }
 
 // --------------------------------------------------------------------------
