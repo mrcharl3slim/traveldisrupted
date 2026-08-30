@@ -255,10 +255,15 @@ const iso = (d, plus) => {
   return t.toISOString().slice(0, 10);
 };
 
+// The same token the agent page keeps: a link somebody shared, or nothing.
+const TOKEN = (() => { try { return localStorage.getItem('downstream.token') || ''; } catch (e) { return ''; } })();
+const AUTH = TOKEN ? {'authorization': 'Bearer ' + TOKEN} : {};
+
 async function api(path, body){
   const r = await fetch(path, body
-    ? {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(body)}
-    : undefined);
+    ? {method:'POST', headers:Object.assign({'content-type':'application/json'}, AUTH),
+       body:JSON.stringify(body)}
+    : {headers: AUTH});
   const j = await r.json().catch(() => ({detail:'unreadable response'}));
   if (!r.ok) throw new Error(typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail));
   return j;
@@ -395,7 +400,8 @@ async function restore(){
   TRIP = {trip_id: found.trip_id, label: found.label, total: found.total,
           problems: found.problems || [], durable: found.durable,
           abandoned: found.abandoned, permissions: found.permissions,
-          acted: found.acted, detected: found.detected, bookings: found.bookings};
+          acted: found.acted, detected: found.detected, bookings: found.bookings,
+          role: found.role, can: found.can || []};
   paintTrip();
   try { WATCH = await api(`/api/alerts?trip=${encodeURIComponent(id)}`); }
   catch (e) { WATCH = null; }
@@ -404,7 +410,8 @@ async function restore(){
 
 function paintTrip(){
   $('#s-trip').hidden = false;
-  $('#trip-total').textContent = `${eur(TRIP.total)} · ${TRIP.bookings.length} bookings`
+  $('#trip-total').textContent = `${TRIP.total == null ? '' : eur(TRIP.total) + ' · '}${TRIP.bookings.length} bookings`
+    + (TRIP.role && TRIP.role !== 'owner' ? ` · you are the ${TRIP.role}` : '')
     + (TRIP.durable ? '' : ' · stored in memory, lost on restart');
 
   // Problems come back WITH the trip rather than instead of it. A selection with
@@ -450,8 +457,8 @@ function paintTrip(){
           off.deadline ? ' · before ' + at(off.deadline) : ''}</div>` : ''}
       </div>
       <div style="text-align:right;white-space:nowrap">
-        <div class="m">${esc(b.currency)} ${Math.round(b.price).toLocaleString()}</div>
-        ${b.kind === 'flight' && !off ? `<div class="break">
+        <div class="m">${b.price == null ? '' : esc(b.currency) + ' ' + Math.round(b.price).toLocaleString()}</div>
+        ${b.kind === 'flight' && !off && (!TRIP.can || TRIP.can.includes('act')) ? `<div class="break">
           <select class="btn sm" data-mins="${esc(b.id)}">${DELAYS.map(m =>
             `<option value="${m}"${m === 180 ? ' selected' : ''}>${
               m < 60 ? m + 'm' : (m / 60) + 'h'} late</option>`).join('')}</select>

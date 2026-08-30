@@ -142,6 +142,34 @@ def test_a_profile_outlives_the_process_and_is_replaced_not_duplicated(fresh):
     assert again.profile("owner-nobody") == {}
 
 
+def test_a_person_is_a_token_and_an_unknown_token_is_nobody(fresh):
+    db = fresh(None)
+    db.add_person("p1", "tok-1", "Priya")
+    assert db.person("tok-1") == {"id": "p1", "name": "Priya"}
+    assert db.person("tok-x") is None
+
+
+def test_a_shared_trip_is_listed_for_the_person_it_was_shared_with(fresh):
+    db = fresh(None)
+    mine = db.save("owner-a", {"bookings": [], "members": [{"person": "p2", "role": "host"}]}, "shared")
+    db.save("owner-a", {"bookings": []}, "not shared")
+    seen = {t.id for t in db.list("p2")}
+    assert seen == {mine.id}
+    assert {t.id for t in db.live()} >= {mine.id}
+
+
+@needs_db
+def test_people_and_membership_survive_the_process(fresh):
+    db = fresh(DATABASE_URL)
+    db.add_person("p9", "tok-9", "Nadia")
+    shared = db.save("owner-z", {"bookings": [], "members": [{"person": "p9", "role": "contact"}]}, "z")
+    again = fresh(DATABASE_URL)
+    assert again.person("tok-9") == {"id": "p9", "name": "Nadia"}
+    assert shared.id in {t.id for t in again.list("p9")}
+    assert shared.id not in {t.id for t in again.list("p8")}
+    assert shared.id in {t.id for t in again.live()}
+
+
 @needs_db
 def test_the_watch_asks_the_database_for_its_work(fresh):
     """A watch that loads every itinerary anybody ever pasted, once a minute,

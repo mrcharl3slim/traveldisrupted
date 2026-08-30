@@ -38,6 +38,12 @@ CREATE TABLE IF NOT EXISTS profiles (
     updated    TIMESTAMPTZ NOT NULL,
     payload    JSONB NOT NULL
 );
+CREATE TABLE IF NOT EXISTS people (
+    id         TEXT PRIMARY KEY,
+    token      TEXT NOT NULL UNIQUE,
+    name       TEXT NOT NULL,
+    created    TIMESTAMPTZ NOT NULL
+);
 """
 
 
@@ -64,6 +70,7 @@ class MemoryStore:
     def __init__(self) -> None:
         self._trips: dict[str, Saved] = {}
         self._profiles: dict[str, dict] = {}
+        self._people: dict[str, dict] = {}       # token -> {id, name}
         self._lock = threading.Lock()
 
     def save(self, owner: str, payload: dict, label: str = "") -> Saved:
@@ -92,8 +99,21 @@ class MemoryStore:
             return updated
 
     def list(self, owner: str, limit: int = 20) -> list[Saved]:
-        rows = [t for t in self._trips.values() if t.owner == owner]
+        """Trips this person owns, and trips somebody shared with them.
+
+        One list, because the page shows one list: a traveller and their
+        assistant looking at the same screen should see the same trip in it.
+        What each may DO with it is the role's business, not this query's.
+        """
+        rows = [t for t in self._trips.values()
+                if t.owner == owner or _member(t.payload, owner)]
         return sorted(rows, key=lambda t: t.created, reverse=True)[:limit]
+
+    def live(self, limit: int = 50) -> list[Saved]:
+        """Every trip, whoever owns it. For the watch, which serves everybody
+        and has no person to ask on behalf of."""
+        return sorted(self._trips.values(), key=lambda t: t.created,
+                      reverse=True)[:limit]
 
     def watching(self, limit: int = 50) -> list[Saved]:
         """Trips with a live disruption -- the only ones a ticker has work for.
@@ -123,6 +143,17 @@ class MemoryStore:
         with self._lock:
             self._profiles[owner] = dict(payload)
         return dict(payload)
+
+    # -- people: a name and the token that is them ------------------------
+    def add_person(self, person_id: str, token: str, name: str) -> None:
+        with self._lock:
+            self._people[token] = {"id": person_id, "name": name}
+
+    def person(self, token: str) -> dict | None:
+        """Who holds this token, or None. The token is the whole of the
+        security, so an unknown one is nobody rather than a guess."""
+        found = self._people.get(token)
+        return dict(found) if found else None
 
 
 class PostgresStore:
@@ -176,10 +207,21 @@ class PostgresStore:
 
     def list(self, owner: str, limit: int = 20) -> list[Saved]:
         with self._conn() as conn:
+            # Owned, or named in the members list -- the JSONB containment
+            # test does the membership check in the database rather than by
+            # loading every trip and asking in Python.
             rows = conn.execute(
                 "SELECT id, owner, created, label, payload FROM trips"
-                " WHERE owner = %s ORDER BY created DESC LIMIT %s",
-                (owner, limit)).fetchall()
+                " WHERE owner = %s OR payload->'members' @> %s::jsonb"
+                " ORDER BY created DESC LIMIT %s",
+                (owner, json.dumps([{"person": owner}]), limit)).fetchall()
+        return [Saved(*r) for r in rows]
+
+    def live(self, limit: int = 50) -> list[Saved]:
+        with self._conn() as conn:
+            rows = conn.execute(
+                "SELECT id, owner, created, label, payload FROM trips"
+                " ORDER BY created DESC LIMIT %s", (limit,)).fetchall()
         return [Saved(*r) for r in rows]
 
     def delete(self, trip_id: str, owner: str) -> bool:
@@ -205,6 +247,22 @@ class PostgresStore:
                 " updated = EXCLUDED.updated",
                 (owner, datetime.now(timezone.utc), json.dumps(payload)))
         return dict(payload)
+
+    def add_person(self, person_id: str, token: str, name: str) -> None:
+        with self._conn() as conn:
+            conn.execute(
+                "INSERT INTO people (id, token, name, created) VALUES (%s, %s, %s, %s)",
+                (person_id, token, name, datetime.now(timezone.utc)))
+
+    def person(self, token: str) -> dict | None:
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT id, name FROM people WHERE token = %s", (token,)).fetchone()
+        return {"id": row[0], "name": row[1]} if row else None
+
+
+def _member(payload: dict, person_id: str) -> bool:
+    return any(m.get("person") == person_id for m in (payload.get("members") or []))
 
 
 _store = None

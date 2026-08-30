@@ -130,6 +130,7 @@
       </div>
       <div class="box" id="you-box">
         <h2>You</h2>
+        <div id="me" class="m" style="margin-bottom:8px"></div>
         <div id="you"></div>
       </div>
       <div class="box" id="detail-box" hidden>
@@ -175,6 +176,21 @@ let PICK = {flight:null, ret:null, hotel:null};
 const DELAYS = [30, 90, 180, 360, 720];
 let TRIPS = [], OPEN = null, RECOVERY = null;
 
+// Who you are, as far as this page knows: a token from a link somebody shared,
+// kept in this browser and sent with every call. There is no login; a token is
+// a key, and it is said so on /test. No token means the anonymous traveller.
+const TOKEN = (() => {
+  const url = new URL(location.href), given = url.searchParams.get('token');
+  try {
+    if (given) { localStorage.setItem('downstream.token', given);
+                 url.searchParams.delete('token'); history.replaceState(null, '', url); }
+    return localStorage.getItem('downstream.token') || '';
+  } catch (e) { return given || ''; }
+})();
+const AUTH = TOKEN ? {'authorization': 'Bearer ' + TOKEN} : {};
+let ME = {name: 'the traveller', anonymous: true};
+const may = (trip, cap) => (trip.can || []).includes(cap);
+
 async function api(path, body){
   // Every failure has to name itself. The first version answered "unreadable
   // response" for anything that was not JSON, which is every proxy error page
@@ -184,8 +200,9 @@ async function api(path, body){
   let r;
   try {
     r = await fetch(path, body
-      ? {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(body)}
-      : undefined);
+      ? {method:'POST', headers:Object.assign({'content-type':'application/json'}, AUTH),
+         body:JSON.stringify(body)}
+      : {headers: AUTH});
   } catch (e) {
     throw new Error(`could not reach the server (${e.message}) — it may still be waking up`);
   }
@@ -385,6 +402,17 @@ async function confirm(button){
 // and shown when it is: home and sort order fill blanks on the confirmation
 // card marked "from your profile"; the rules become each new trip's starting
 // rules. Nothing is inferred from past trips.
+function paintMe(){
+  $('#me').innerHTML = ME.anonymous
+    ? `Nobody in particular — no link was used. Trips you make here are yours alone.`
+    : `Signed in as <b>${esc(ME.name)}</b>, by a link somebody shared.
+       <a href="#" id="me-out">forget it</a>`;
+  const out = $('#me-out');
+  if (out) out.onclick = e => { e.preventDefault();
+    try { localStorage.removeItem('downstream.token'); } catch (x) {}
+    location.href = location.pathname; };
+}
+
 async function loadProfile(){
   let p;
   try { p = (await api('/api/profile')).profile; } catch (e) { return; }
@@ -414,7 +442,9 @@ async function loadProfile(){
 }
 
 async function loadTrips(){
-  TRIPS = (await api('/api/itineraries')).itineraries;
+  const listed = await api('/api/itineraries');
+  TRIPS = listed.itineraries;
+  if (listed.me) { ME = listed.me; paintMe(); }
   $('#trips').innerHTML = TRIPS.length ? TRIPS.map(t => `
     <div class="trip ${t.disrupted ? 'broken' : ''} ${OPEN === t.trip_id ? 'on' : ''}"
          data-id="${esc(t.trip_id)}">
@@ -467,8 +497,8 @@ function openTrip(id, quiet){
           — was ${at(hit.was)}</div>` : ''}
         ${off ? `<div class="m">${off.lane === 'auto' ? 'done for you — '
           : 'yours to do — '}${esc(off.label)}</div>` : ''}</div>
-      <div class="n" style="white-space:nowrap">${eur(b.price)}
-        ${b.kind === 'flight' && !off ? `<div class="break">
+      <div class="n" style="white-space:nowrap">${b.price == null ? '' : eur(b.price)}
+        ${b.kind === 'flight' && !off && may(trip, 'act') ? `<div class="break">
           <select class="btn sm" data-mins="${esc(b.id)}">${DELAYS.map(m =>
             `<option value="${m}"${m === 180 ? ' selected' : ''}>${
               m < 60 ? m + 'm' : (m / 60) + 'h'}</option>`).join('')}</select>
@@ -491,7 +521,7 @@ function openTrip(id, quiet){
 
   // What the agent may do on its own about this trip. Under the legs, above
   // "cancel the whole trip": the rules are about the trip as it stands.
-  if (!trip.abandoned) {
+  if (!trip.abandoned && may(trip, 'rules')) {
     const r = trip.permissions || {auto_limit: 0, never: []};
     $('#detail').innerHTML += `<div class="note">
       <div class="m" style="margin-bottom:6px">${(Number(r.auto_limit) || 0) > 0
@@ -525,13 +555,49 @@ function openTrip(id, quiet){
   // not a bigger version of "cancel this flight", it is a different decision,
   // and putting it in the row of per-leg buttons invites the wrong one.
   $('#detail').innerHTML += trip.abandoned
-    ? `<div class="note">This trip is cancelled. ${eur(trip.abandoned.refund)}
-       is coming back, ${eur(trip.abandoned.lost)} is gone.</div>`
-    : `<div class="note" style="display:flex;justify-content:space-between;
+    ? `<div class="note">This trip is cancelled.${trip.abandoned.refund == null ? '' :
+       ` ${eur(trip.abandoned.refund)} is coming back, ${eur(trip.abandoned.lost)} is gone.`}</div>`
+    : may(trip, 'abandon')
+    ? `<div class="note" style="display:flex;justify-content:space-between;
          align-items:center;gap:10px">Not going at all?
-       <button class="btn bad sm" id="abandon">Cancel the whole trip</button></div>`;
+       <button class="btn bad sm" id="abandon">Cancel the whole trip</button></div>`
+    : `<div class="m">You are the ${esc(trip.role)} on this trip — you can see it${
+       may(trip, 'act') ? ' and act on it' : ', and that is all'}.</div>`;
   const off = $('#abandon');
   if (off) off.onclick = () => priceAbandon(id);
+
+  // Letting somebody in, as a role. Owner only. The link is shown once and
+  // says so: the token is not readable back, so a lost link is one to revoke
+  // and reissue, never one to look up.
+  if (may(trip, 'share')) {
+    const who = (trip.members || []).map(m => `<div class="leg"><div>${esc(m.name)}
+        <span class="tag">${esc(m.role)}</span></div>
+        <button class="btn sm" data-revoke="${esc(m.person)}">remove</button></div>`).join('');
+    $('#detail').innerHTML += `<div class="note"><b>Who else sees this</b>${who ||
+        '<div class="m">nobody yet</div>'}
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px">
+        <input id="share-name" placeholder="name" style="width:110px">
+        <select id="share-role">${['assistant','organiser','finance','host','contact']
+          .map(r => `<option value="${r}">${r}</option>`).join('')}</select>
+        <button class="btn sm" id="share-go">Share</button></div>
+      <div id="share-out" class="m"></div></div>`;
+    $('#share-go').onclick = async () => {
+      let r;
+      try { r = await api('/api/share', {trip_id: id, name: $('#share-name').value,
+                                         role: $('#share-role').value}); }
+      catch (e) { return bubble('Downstream', `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
+      const link = location.origin + r.link;
+      bubble('Downstream', `Give <b>${esc(r.name)}</b> this link — it is shown once, and it is a key:<br>
+        <code style="user-select:all">${esc(link)}</code><br>
+        As ${esc(r.role)} they can: ${r.can.join(', ')}.`);
+      await loadTrips();
+    };
+    $('#detail').querySelectorAll('[data-revoke]').forEach(el => el.onclick = async () => {
+      try { await api('/api/revoke', {trip_id: id, person: el.dataset.revoke}); }
+      catch (e) { return bubble('Downstream', `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
+      await loadTrips();
+    });
+  }
 
   $('#detail').querySelectorAll('[data-break]').forEach(el =>
     el.onclick = () => breakLeg(id, {booking_id: el.dataset.break}, '/api/cancel'));

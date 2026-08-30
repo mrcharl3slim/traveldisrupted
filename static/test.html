@@ -212,6 +212,28 @@
   </section>
 
   <section>
+    <h2>Test 6 · Let somebody else in</h2>
+    <div class="case">
+      <ol class="steps">
+        <li>With a trip open on <a href="/">/</a>, find <b>Who else sees this</b> under the
+          itinerary. Share it with a name as <code>host</code>; copy the link it shows you.</li>
+        <li>Open that link in a private window. You are now the host.</li>
+        <li>Do the same as <code>assistant</code> and as <code>finance</code>.</li>
+      </ol>
+      <div class="expect"><b>Expect:</b> the host sees every leg with its times and
+        <em>no prices anywhere</em> — not on the rows, not in the alerts, not after a delay.
+        The host has no buttons. The assistant has all of them and their name appears in
+        the record when they take a plan. Finance can change the spending cap and gets
+        <em>403</em> if they try to cancel a leg. A link you were not given shows an empty
+        list, not somebody else's trips.</div>
+      <div class="expect nope"><b>Not a bug, and worth knowing:</b> there is no login. The
+        link <em>is</em> the identity — anyone holding it is that person. Losing a link means
+        <b>remove</b> and share again; it cannot be looked up. "Forget it" in the You box
+        drops the token from this browser.</div>
+    </div>
+  </section>
+
+  <section>
     <h2>Known limits — please do not file these</h2>
     <table>
       <thead><tr><th>What you will see</th><th>Why</th></tr></thead>

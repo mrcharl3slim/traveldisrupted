@@ -456,6 +456,40 @@ trip had hidden:
 The old scripted demo — one late flight, eleven bookings, EUR 282 — still runs
 at `/`, from the same fixtures, asserting the same numbers.
 
+## Who else is in
+
+Eight roles in the brief — traveller, spouse, family organiser, executive
+assistant, corporate travel manager, finance approver, destination host,
+emergency contact — and "each sees and can do only what is necessary".
+`roles.py` names the *necessary* first, as six capabilities (`view`, `money`,
+`act`, `book`, `abandon`, `share`, plus `rules` so finance can set the cap
+without being able to spend), and a role is a name for a set. A host and an
+emergency contact share one set; they stay two names because *"I shared this
+with my emergency contact"* has to read back as that.
+
+**There is no login, and it is said so.** Identity is a token somebody was
+handed: the owner shares a trip with *Priya, assistant* and gets back a link
+with a token in it, shown once and never readable back. Whoever holds the link
+is Priya. A token in a URL is a key, and a key can be copied — the honest shape
+for a product with no accounts, stated rather than dressed up. No token is the
+anonymous traveller every request used to be, so nothing that already worked
+needs one; a token nobody issued is refused, not quietly treated as anonymous.
+
+**404, then 403.** A person not let in cannot tell the trip exists. A person let
+in as a role can do what that role needs and nothing more: finance can raise the
+cap and cannot cancel a leg; an organiser can take a plan and cannot call the
+whole trip off; a host can see when and where and nothing with a currency on it.
+
+**Money is redacted by key, not by endpoint.** A role without `money` gets the
+same payloads with every monetary field blanked — walked recursively — so a new
+endpoint cannot leak a price by forgetting to strip it. `MONEY_KEYS` is the one
+list to keep current, and a test breaks the trip as the owner and then reads it
+as the host through every read there is, hunting for any number that survived.
+
+Every act is recorded with the name that did it: `acted.by: the assistant`,
+`abandoned.by: Charles`, `by: the agent`. Profiles are per person. The watch
+serves everybody and asks on nobody's behalf.
+
 ## Who is asking
 
 Until `profile.py` every preference lived on the trip it was said on: *cheapest*

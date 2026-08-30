@@ -26,7 +26,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path[:0] = [str(ROOT), str(ROOT / "data"), str(ROOT / "ports")]
 
-from fastapi import FastAPI, HTTPException, Request           # noqa: E402
+from fastapi import Depends, FastAPI, Header, HTTPException, Request  # noqa: E402
 from fastapi.responses import FileResponse, JSONResponse      # noqa: E402
 from pydantic import BaseModel                                # noqa: E402
 
@@ -52,6 +52,7 @@ import plan as plan_mod                                      # noqa: E402
 from plan import Gap, Lane, generate                          # noqa: E402
 import permit                                                 # noqa: E402
 import profile as profile_mod                                 # noqa: E402
+import roles                                                  # noqa: E402
 
 STATIC = ROOT / "static"
 
@@ -101,6 +102,43 @@ async def _always_json(_request: Request, exc: Exception) -> JSONResponse:
 #: anybody pastes. Real accounts are the next thing this needs; saying that
 #: plainly beats implying an authentication layer that is not here.
 OWNER = "anon"
+
+
+def _who(authorization: str = Header(""),
+         x_downstream_token: str = Header("")) -> roles.Person:
+    """Who is asking. A token they were handed, or the anonymous traveller.
+
+    There is no login; see roles.py. A request with no token is the same
+    anonymous traveller every request used to be, so nothing that worked
+    before needs one. A token nobody issued is refused rather than quietly
+    treated as anonymous -- somebody holding a stale or mistyped link should
+    be told, not shown a stranger's empty list.
+    """
+    token = x_downstream_token.strip()
+    if authorization.lower().startswith("bearer "):
+        token = authorization[7:].strip()
+    if not token:
+        return roles.ANON
+    found = store_module.store().person(token)
+    if not found:
+        raise HTTPException(401, "that link is not one I handed out")
+    return roles.Person(found["id"], found["name"], token)
+
+
+def _access(trip_id: str, who: roles.Person, need: str):
+    """The stored trip and this person's role on it, or the right refusal.
+
+    404 for no membership at all -- a trip you were not let into is a trip
+    that, to you, does not exist, and 403 would confirm the id is real. 403
+    for a role that may see it and may not do this.
+    """
+    saved = store_module.store().get(trip_id)
+    role = roles.role_of(saved.payload, saved.owner, who) if saved else ""
+    if not role:
+        raise HTTPException(404, "no trip with that id")
+    if not roles.can(role, need):
+        raise HTTPException(403, f"a {role} on this trip cannot do that")
+    return saved, role
 
 
 class Paste(BaseModel):
@@ -687,7 +725,7 @@ def detect(now: datetime | None = None) -> int:
     was called off, and a trip asked about less than DETECT_EVERY ago.
     """
     found = 0
-    for saved in store_module.store().list(OWNER, limit=50):
+    for saved in store_module.store().live(limit=50):
         payload = saved.payload
         if payload.get("disruption") or payload.get("abandoned"):
             continue
@@ -746,7 +784,7 @@ async def _watch() -> None:
 
 
 @app.get("/api/alerts")
-def alerts(trip: str) -> dict:
+def alerts(trip: str, who: roles.Person = Depends(_who)) -> dict:
     """Everything this trip still has to be told, and what it was already told.
 
     Fire times in the past are included. A traveller opening the page at 03:00
@@ -754,9 +792,7 @@ def alerts(trip: str) -> dict:
     they can still make; a schedule that hides what it failed to deliver is the
     one bug in a notifier nobody catches.
     """
-    saved = store_module.store().get(trip)
-    if saved is None:
-        raise HTTPException(404, "no trip with that id")
+    saved, role = _access(trip, who, roles.VIEW)
     watched, _disruption, schedule = _alerts(saved)
     if watched is None:
         return {"trip_id": trip, "watching": False,
@@ -764,7 +800,7 @@ def alerts(trip: str) -> dict:
                 "channels": notify.channels(), "alerts": []}
 
     now = datetime.now(watched.in_order()[0].start.tzinfo)
-    return {
+    return roles.redact({
         "trip_id": trip,
         "watching": True,
         "now": _when(now),
@@ -783,7 +819,7 @@ def alerts(trip: str) -> dict:
             "message": a.message,
             "passed": a.at <= now,
         } for a in schedule],
-    }
+    }, role)
 
 
 @app.get("/health")
@@ -819,7 +855,7 @@ def health() -> dict:
 
 
 @app.post("/api/trip")
-def add_trip(body: Paste) -> dict:
+def add_trip(body: Paste, who: roles.Person = Depends(_who)) -> dict:
     """Pasted or forwarded confirmations -> a stored, checked trip.
 
     Problems and warnings come back with the trip rather than blocking it: a
@@ -834,7 +870,7 @@ def add_trip(body: Paste) -> dict:
         raise HTTPException(422, {"problems": result.problems})
 
     saved = store_module.store().save(
-        OWNER, {"bookings": ingest.to_dicts(result.trip.bookings)},
+        who.id, {"bookings": ingest.to_dicts(result.trip.bookings)},
         body.label or "Untitled trip")
     return {
         "trip_id": saved.id,
@@ -1078,9 +1114,9 @@ def _appt_in(raw: dict):
     )
 
 
-def _loaded_trips() -> list[tuple[str, Trip, str]]:
+def _loaded_trips(who: roles.Person = roles.ANON) -> list[tuple[str, Trip, str]]:
     out = []
-    for saved in store_module.store().list(OWNER, limit=25):
+    for saved in store_module.store().list(who.id, limit=25):
         try:
             out.append((saved.id, _load(saved.id), saved.label))
         except HTTPException:
@@ -1088,7 +1124,7 @@ def _loaded_trips() -> list[tuple[str, Trip, str]]:
     return out
 
 
-def _appointment_turn(body: Chat) -> dict:
+def _appointment_turn(body: Chat, who: roles.Person = roles.ANON) -> dict:
     """The other half of the conversation: something to be at, not to buy.
 
     Same shape as a booking turn -- ask what is missing, then act -- because it
@@ -1163,7 +1199,7 @@ def _appointment_turn(body: Chat) -> dict:
     # "the Ritz Carlton" is far more likely to tap "New York" than to spell it.
     if pending and pending["field"] == "place" and settled.day:
         known = []
-        for _tid, trip, _label in _loaded_trips():
+        for _tid, trip, _label in _loaded_trips(who):
             rows = [b for b in trip.in_order() if b.start]
             if rows and rows[0].start.date() <= settled.day <= max(
                     (b.end or b.start) for b in rows).date():
@@ -1197,7 +1233,7 @@ def _appointment_turn(body: Chat) -> dict:
 
     # Which itinerary. Never guessed: putting a meeting on the wrong trip
     # produces a confident feasibility answer about the wrong week.
-    trips = _loaded_trips()
+    trips = _loaded_trips(who)
     options = appt_mod.candidates(settled, [(tid, trip) for tid, trip, _ in trips])
     if settled.trip_id and settled.trip_id in {t[0] for t in trips}:
         options = [settled.trip_id]
@@ -1233,6 +1269,8 @@ def _appointment_turn(body: Chat) -> dict:
 
     trip_id = options[0]
     trip = next(t for tid, t, _ in trips if tid == trip_id)
+    # Adding to somebody else's trip is a capability, not a courtesy.
+    _access(trip_id, who, roles.BOOK)
     verdict = appt_mod.assess(trip, settled)
 
     saved = store_module.store().get(trip_id)
@@ -1268,7 +1306,7 @@ def replace_dataclass(obj, **changes):
 
 
 @app.post("/api/chat")
-def chat(body: Chat) -> dict:
+def chat(body: Chat, who: roles.Person = Depends(_who)) -> dict:
     """One exchange with the agent.
 
     Answers are applied before the graph runs, so a turn that answers the last
@@ -1282,7 +1320,7 @@ def chat(body: Chat) -> dict:
     if (body.state.get("kind") == "appointment"
             or (not body.state and converse.classify(
                 {"text": body.text})["kind"] == "appointment")):
-        return _appointment_turn(body)
+        return _appointment_turn(body, who)
 
     req = _req_in(body.state) if body.state else None
 
@@ -1315,7 +1353,7 @@ def chat(body: Chat) -> dict:
 
     try:
         state = converse.turn(body.text, req, model=_model.get_model(),
-                              profile=_profile())
+                              profile=_profile(who))
     except PortError as exc:
         raise HTTPException(503, str(exc)) from exc
 
@@ -1372,7 +1410,7 @@ def _chat_payload(state, out, asks, pending, unread) -> dict:
 
 
 @app.post("/api/chat/choose")
-def choose(body: Choice) -> dict:
+def choose(body: Choice, who: roles.Person = Depends(_who)) -> dict:
     """The chosen options become an itinerary, stored under its own id.
 
     Re-searched rather than held: the offers were never kept on the server, so
@@ -1428,14 +1466,14 @@ def choose(body: Choice) -> dict:
 
     assembled, _ = flow.select(picked, stays)
     saved = store_module.store().save(
-        OWNER,
+        who.id,
         {"bookings": ingest.to_dicts(assembled.bookings),
          # The preference travels with the trip. When this itinerary breaks in
          # a week, nobody has to ask the traveller what they cared about at the
          # moment their flight is cancelled.
          "preference": req.preference,
          # And so do the rules for acting on it, for the same reason.
-         "permissions": _default_rules(body.permissions),
+         "permissions": _default_rules(body.permissions, who),
          "request": _req_out(req)},
         body.label or req.summary())
 
@@ -1451,16 +1489,30 @@ def choose(body: Choice) -> dict:
 
 
 @app.get("/api/itineraries")
-def itineraries() -> dict:
-    """Everything this traveller has booked, and which of them are broken."""
+def itineraries(who: roles.Person = Depends(_who)) -> dict:
+    """Everything this person owns or was let into, and which are broken.
+
+    Each row says what this person may do with it, and a role that may not
+    see money gets the row with every price blanked -- by key, recursively,
+    so a field added tomorrow cannot leak by being forgotten here.
+    """
     rows = []
-    for saved in store_module.store().list(OWNER, limit=25):
+    for saved in store_module.store().list(who.id, limit=25):
         try:
             trip = _load(saved.id)
         except HTTPException:
             continue
+        role = roles.role_of(saved.payload, saved.owner, who)
         disruption = flow.from_dict(saved.payload.get("disruption"))
-        rows.append({
+        rows.append(roles.redact({
+            "role": role,
+            "can": sorted(c for c in (roles.VIEW, roles.MONEY, roles.ACT, roles.BOOK,
+                                      roles.ABANDON, roles.SHARE, roles.RULES)
+                          if roles.can(role, c)),
+            "members": ([{"person": m["person"], "name": m.get("name", ""),
+                          "role": m.get("role", "")}
+                         for m in saved.payload.get("members") or []]
+                        if roles.can(role, roles.SHARE) else None),
             "trip_id": saved.id,
             "label": saved.label,
             "created": saved.created.isoformat(),
@@ -1487,12 +1539,13 @@ def itineraries() -> dict:
             "checked": saved.payload.get("checked"),
             "bookings": _bookings_out(trip, disruption,
                                       saved.payload.get("abandoned")),
-        })
-    return {"itineraries": rows}
+        }, role))
+    return {"itineraries": rows, "me": {"id": who.id, "name": who.name,
+                                        "anonymous": who.anonymous}}
 
 
 @app.post("/api/act")
-def act(body: Act) -> dict:
+def act(body: Act, who: roles.Person = Depends(_who)) -> dict:
     """Take the plan. This is where the lanes stop being labels.
 
     AUTO actions are performed, TAP and CALL are handed over, and the stored
@@ -1502,9 +1555,7 @@ def act(body: Act) -> dict:
     """
     from base import PortError
 
-    saved = store_module.store().get(body.trip_id)
-    if saved is None:
-        raise HTTPException(404, "no trip with that id")
+    saved, _role = _access(body.trip_id, who, roles.ACT)
     trip = _load(body.trip_id)
     preference = saved.payload.get("preference", "")
 
@@ -1540,7 +1591,7 @@ def act(body: Act) -> dict:
     unknown = [r for r in body.reject if r not in known]
     if unknown:
         raise HTTPException(422, f"no such action on this plan: {', '.join(unknown)}")
-    return _take(body.trip_id, trip, recovery, plan, by="the traveller",
+    return _take(body.trip_id, trip, recovery, plan, by=who.name,
                  skip=set(body.reject))
 
 
@@ -1576,7 +1627,7 @@ def _take(trip_id: str, trip: Trip, recovery, plan, by: str,
                         "declined": [d.label for d in declined],
                         "resolved": resolved,
                         "permission": recovery.verdict.why
-                        if recovery.verdict and by != "the traveller" else ""}
+                        if recovery.verdict and by == "the agent" else ""}
     if resolved:
         # This itinerary is no longer the broken one, so the watch stops
         # counting down deadlines that have been dealt with.
@@ -1657,7 +1708,7 @@ def _bookings_out(trip: Trip, disruption=None, abandoned=None) -> list[dict]:
 
 
 @app.post("/api/select")
-def select(body: Selection) -> dict:
+def select(body: Selection, who: roles.Person = Depends(_who)) -> dict:
     """Chosen offers -> a stored trip, plus every reason it could not be taken.
 
     Problems come back WITH the trip rather than instead of it. A selection with
@@ -1708,8 +1759,8 @@ def select(body: Selection) -> dict:
 
     assembled, _ = flow.select(picked, stays)
     saved = store_module.store().save(
-        OWNER, {"bookings": ingest.to_dicts(assembled.bookings),
-                "permissions": _default_rules(body.permissions)},
+        who.id, {"bookings": ingest.to_dicts(assembled.bookings),
+                 "permissions": _default_rules(body.permissions, who)},
         body.label or "Booked here")
 
     # Answer with the trip AS IT READS BACK, not as it was assembled. Booking
@@ -1773,7 +1824,8 @@ def _respond(trip_id: str, saved, trip: Trip, disruption, injected: bool):
     return recovery, taken
 
 
-def _injected(trip_id: str, booking_id: str, make) -> dict:
+def _injected(trip_id: str, booking_id: str, make,
+              who: roles.Person = roles.ANON) -> dict:
     """Answer the whole question about one injected disruption.
 
     Shared by both buttons because everything after the signal is identical --
@@ -1785,13 +1837,13 @@ def _injected(trip_id: str, booking_id: str, make) -> dict:
     """
     from base import PortError
 
+    saved, _role = _access(trip_id, who, roles.ACT)
     trip = _load(trip_id)
     try:
         trip.by_id(booking_id)
     except KeyError as exc:
         raise HTTPException(404, "no booking with that id on this trip") from exc
 
-    saved = store_module.store().get(trip_id)
     # A trip nobody is taking cannot be delayed or cancelled. Letting it be
     # would start the watch counting down deadlines on bookings the traveller
     # has already been told are gone.
@@ -1884,14 +1936,14 @@ def _why(trip: Trip, recovery) -> str:
 
 
 @app.post("/api/cancel")
-def cancel(body: Cancellation) -> dict:
+def cancel(body: Cancellation, who: roles.Person = Depends(_who)) -> dict:
     """One leg is not going, and the traveller has just found out."""
     return _injected(body.trip_id, body.booking_id,
-                     lambda trip: flow.cancel(trip, body.booking_id))
+                     lambda trip: flow.cancel(trip, body.booking_id), who)
 
 
 @app.post("/api/delay")
-def delay(body: Delay) -> dict:
+def delay(body: Delay, who: roles.Person = Depends(_who)) -> dict:
     """One leg is going late. Not a small cancellation -- a different world.
 
     The engine has always modelled this and only the scripted demo could reach
@@ -1901,7 +1953,7 @@ def delay(body: Delay) -> dict:
     if body.minutes < 1:
         raise HTTPException(422, "a delay has to be at least a minute")
     return _injected(body.trip_id, body.booking_id,
-                     lambda trip: flow.delay(trip, body.booking_id, body.minutes))
+                     lambda trip: flow.delay(trip, body.booking_id, body.minutes), who)
 
 
 def _load(trip_id: str) -> Trip:
@@ -1918,11 +1970,11 @@ def _perms(saved) -> permit.Permissions:
     return permit.Permissions.from_dict((saved.payload if saved else {}).get("permissions"))
 
 
-def _profile() -> profile_mod.Profile:
-    return profile_mod.Profile.from_dict(store_module.store().profile(OWNER))
+def _profile(who: roles.Person = roles.ANON) -> profile_mod.Profile:
+    return profile_mod.Profile.from_dict(store_module.store().profile(who.id))
 
 
-def _default_rules(given: dict) -> dict:
+def _default_rules(given: dict, who: roles.Person = roles.ANON) -> dict:
     """The rules a new trip starts with: what was sent, else the profile's.
 
     A trip booked with no rules at all used to start with nothing
@@ -1933,16 +1985,16 @@ def _default_rules(given: dict) -> dict:
     """
     if given:
         return permit.Permissions.from_dict(given).to_dict()
-    return _profile().permissions.to_dict()
+    return _profile(who).permissions.to_dict()
 
 
 @app.get("/api/profile")
-def read_profile() -> dict:
-    return {"profile": _profile().to_dict(), "empty": _profile().empty}
+def read_profile(who: roles.Person = Depends(_who)) -> dict:
+    return {"profile": _profile(who).to_dict(), "empty": _profile(who).empty}
 
 
 @app.post("/api/profile")
-def write_profile(body: ProfileIn) -> dict:
+def write_profile(body: ProfileIn, who: roles.Person = Depends(_who)) -> dict:
     """Say once what would otherwise be asked on every trip.
 
     Everything here is applied somewhere specific and shown when it is: the
@@ -1958,36 +2010,106 @@ def write_profile(body: ProfileIn) -> dict:
         "preference": body.preference, "home": found.code if found else "",
         "permissions": {"auto_limit": body.auto_limit, "never": body.never,
                         "always_ask": body.always_ask}})
-    store_module.store().save_profile(OWNER, kept.to_dict())
+    store_module.store().save_profile(who.id, kept.to_dict())
     return {"profile": kept.to_dict(), "empty": kept.empty}
 
 
 @app.post("/api/permissions")
-def permissions(body: Permit) -> dict:
+def permissions(body: Permit, who: roles.Person = Depends(_who)) -> dict:
     """Change what the agent may do about this trip on its own.
 
     Per trip, because there is no traveller profile for it to live on. The
     moment there is one this moves there and nothing about how it is judged
     changes -- see permit.py.
     """
-    saved = store_module.store().get(body.trip_id)
-    if saved is None:
-        raise HTTPException(404, "no trip with that id")
+    saved, _role = _access(body.trip_id, who, roles.RULES)
     perms = permit.Permissions.from_dict(
         {"auto_limit": body.auto_limit, "never": body.never, "always_ask": body.always_ask})
     stored = dict(saved.payload)
     stored["permissions"] = perms.to_dict()
     store_module.store().update(body.trip_id, stored)
     if body.remember:
-        kept = _profile()
-        store_module.store().save_profile(OWNER, {
+        kept = _profile(who)
+        store_module.store().save_profile(who.id, {
             **kept.to_dict(), "permissions": perms.to_dict()})
     return {"trip_id": body.trip_id, "permissions": perms.to_dict(),
             "remembered": body.remember}
 
 
+class NewPerson(BaseModel):
+    name: str
+
+
+class Share(BaseModel):
+    trip_id: str
+    name: str
+    role: str
+
+
+class Revoke(BaseModel):
+    trip_id: str
+    person: str
+
+
+@app.post("/api/people")
+def people(body: NewPerson) -> dict:
+    """Become somebody. A name and a token; the token is shown once.
+
+    This is the whole of sign-up, and it is said plainly on /test: there are
+    no accounts, a token is a key, and a key can be copied.
+    """
+    person = roles.new_person(body.name)
+    store_module.store().add_person(person.id, person.token, person.name)
+    return {"id": person.id, "name": person.name, "token": person.token}
+
+
+@app.get("/api/me")
+def me(who: roles.Person = Depends(_who)) -> dict:
+    return {"id": who.id, "name": who.name, "anonymous": who.anonymous,
+            "roles": {r: sorted(c) for r, c in roles.ROLES.items()}}
+
+
+@app.post("/api/share")
+def share(body: Share, who: roles.Person = Depends(_who)) -> dict:
+    """Let somebody in, as a role. Owner only.
+
+    Returns the newcomer's token and a link carrying it, ONCE: the token is
+    not stored anywhere it can be read back from, so a link lost is a link
+    to revoke and reissue, never one to look up.
+    """
+    if body.role not in roles.ROLES or body.role == "owner":
+        raise HTTPException(422, f"role must be one of "
+                                 f"{', '.join(r for r in roles.ROLES if r != 'owner')}")
+    saved, _role = _access(body.trip_id, who, roles.SHARE)
+    person = roles.new_person(body.name)
+    store_module.store().add_person(person.id, person.token, person.name)
+    stored = dict(saved.payload)
+    stored["members"] = list(stored.get("members") or []) + [
+        {"person": person.id, "name": person.name, "role": body.role,
+         "added_by": who.name, "at": datetime.now(timezone.utc).isoformat()}]
+    store_module.store().update(body.trip_id, stored)
+    return {"trip_id": body.trip_id, "person": person.id, "name": person.name,
+            "role": body.role, "token": person.token,
+            "can": sorted(roles.ROLES[body.role]),
+            "link": f"/?token={person.token}"}
+
+
+@app.post("/api/revoke")
+def revoke(body: Revoke, who: roles.Person = Depends(_who)) -> dict:
+    saved, _role = _access(body.trip_id, who, roles.SHARE)
+    stored = dict(saved.payload)
+    before = stored.get("members") or []
+    stored["members"] = [m for m in before if m.get("person") != body.person]
+    if len(stored["members"]) == len(before):
+        raise HTTPException(404, "nobody by that id on this trip")
+    store_module.store().update(body.trip_id, stored)
+    return {"trip_id": body.trip_id, "removed": body.person,
+            "members": [{"person": m["person"], "name": m.get("name", ""),
+                         "role": m.get("role", "")} for m in stored["members"]]}
+
+
 @app.post("/api/abandon")
-def abandon(body: Abandon) -> dict:
+def abandon(body: Abandon, who: roles.Person = Depends(_who)) -> dict:
     """What cancelling the whole trip costs, and then doing it.
 
     Nothing here is a disruption. Nothing broke -- the traveller changed their
@@ -1996,9 +2118,7 @@ def abandon(body: Abandon) -> dict:
     booking, in the lane that can actually perform it, and `act.perform` to run
     them, because from there "who does this and did they" is the same question.
     """
-    saved = store_module.store().get(body.trip_id)
-    if saved is None:
-        raise HTTPException(404, "no trip with that id")
+    saved, _role = _access(body.trip_id, who, roles.ABANDON)
     if saved.payload.get("abandoned"):
         raise HTTPException(409, "that trip has already been cancelled")
 
@@ -2035,6 +2155,7 @@ def abandon(body: Abandon) -> dict:
     # still theirs to make -- and there is no undoing a delete either.
     stored["abandoned"] = {
         "at": now.isoformat(),
+        "by": who.name,
         "reason": body.reason,
         "refund": payload["refund"],
         "lost": payload["lost"],
@@ -2056,7 +2177,8 @@ def abandon(body: Abandon) -> dict:
 
 
 @app.get("/api/state")
-def state(base: str = "today", trip: str = "") -> dict:
+def state(base: str = "today", trip: str = "",
+          who: roles.Person = Depends(_who)) -> dict:
     """The whole assessment. Same two engine calls the CLI makes.
 
     Without ``trip`` this answers about the built-in scenario, which is what the
@@ -2064,10 +2186,13 @@ def state(base: str = "today", trip: str = "") -> dict:
     """
     from base import PortError
 
+    role = "owner"
+    if trip:
+        _saved, role = _access(trip, who, roles.VIEW)
     loaded = _load(trip) if trip else None
 
     try:
-        return _assemble(_base(base), loaded, trip)
+        return roles.redact(_assemble(_base(base), loaded, trip), role)
     except PortError as exc:
         raise HTTPException(503, str(exc)) from exc
 
