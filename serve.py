@@ -642,7 +642,11 @@ def health() -> dict:
         # Configured vs actually working. /health is the one place that must
         # not report an intention as a fact.
         "model_status": _model.effective(),
-        "storage": "postgres" if store_module.store().durable else "memory (lost on restart)",
+        "storage": store_module.status()["using"],
+        # Configured and not working is a third state, and it is the one worth
+        # seeing. Reporting only "memory" makes a database that is down look
+        # exactly like a deployment that never wanted one.
+        "storage_status": store_module.status(),
         "watch": {
             "running": os.environ.get("DOWNSTREAM_WATCH", "1") != "0",
             "every_seconds": int(TICK.total_seconds()),

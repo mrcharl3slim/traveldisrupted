@@ -177,15 +177,56 @@ class PostgresStore:
 
 _store = None
 
+#: Why the configured database is not being used, when one was configured and
+#: could not be reached. Empty when there is nothing to explain -- either
+#: Postgres is running or nobody asked for it. Read by /health, which is the
+#: whole point: the difference between "memory because that is the setup" and
+#: "memory because the database is down" is invisible from the outside and is
+#: the only one that matters to somebody whose trip vanished.
+unavailable = ""
+
 
 def store():
-    """The one store this process uses. Postgres if configured, memory if not."""
-    global _store
+    """The one store this process uses. Postgres if configured, memory if not.
+
+    A DATABASE_URL that cannot be reached falls back to memory rather than
+    taking the process with it. It used to raise, and `store()` is on the path
+    of every request that touches a trip -- so a database that was merely
+    asleep, which is the normal state of a free instance, turned the whole app
+    into a 500 rather than into a slightly less durable one. Losing restarts is
+    bad; losing the app is worse, and the first is recoverable by looking at
+    /health while the second looks like the software being broken.
+
+    Loud, though. The fallback is recorded and reported, because a product that
+    quietly stops persisting is how somebody pastes an itinerary on Tuesday and
+    finds it gone on Wednesday with nothing anywhere admitting why.
+    """
+    global _store, unavailable
     if _store is None:
         url = os.environ.get("DATABASE_URL", "").strip()
-        if url:
-            # Render hands out postgres:// ; psycopg wants postgresql://
-            _store = PostgresStore(url.replace("postgres://", "postgresql://", 1))
-        else:
+        if not url:
             _store = MemoryStore()
+        else:
+            try:
+                # Render hands out postgres:// ; psycopg wants postgresql://
+                _store = PostgresStore(url.replace("postgres://", "postgresql://", 1))
+                unavailable = ""
+            except Exception as exc:                       # noqa: BLE001
+                # The driver's own words. "could not connect" and "password
+                # authentication failed" need different fixes, and a single
+                # "storage unavailable" sends you to the wrong one.
+                unavailable = f"{type(exc).__name__}: {exc}".strip()[:300]
+                _store = MemoryStore()
     return _store
+
+
+def status() -> dict:
+    """What storage is actually doing, in the shape /health reports it."""
+    live = store()
+    configured = "postgres" if os.environ.get("DATABASE_URL", "").strip() else "memory"
+    return {
+        "configured": configured,
+        "durable": live.durable,
+        "using": "postgres" if live.durable else "memory (lost on restart)",
+        "why_not": unavailable,
+    }

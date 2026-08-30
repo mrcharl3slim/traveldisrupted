@@ -195,8 +195,9 @@
             <td>SBB publishes no free fare API. The number is ours and says so everywhere
               it appears — including in totals.</td></tr>
         <tr><td>Trips vanish after a while</td>
-            <td>Storage says <em>memory</em> in the box above. A free instance sleeps and
-              takes them with it.</td></tr>
+            <td>Only if storage says <em>memory</em> in the box above. On
+              <em>postgres</em> they survive restarts and sleeps — if one disappears
+              anyway, that <b>is</b> worth filing, with the trip id.</td></tr>
         <tr><td>A replacement leg says <em>not paid</em></td>
             <td>Deliberate. Nothing here can take money, and a plan must not look like a
               purchase.</td></tr>
@@ -239,6 +240,12 @@ fetch('/health').then(r => r.json()).then(h => {
         h.model_status.ready ? h.model : 'not started'}</span>`
     + `   storage  <span class="pill ${h.storage.startsWith('postgres') ? 'ok' : 'warn'}">${
         h.storage}</span>`
+    // Configured and not working is a third state and the only one worth
+    // reading out. "memory" alone makes a database that is down look exactly
+    // like a deployment that never wanted one.
+    + ((h.storage_status && h.storage_status.why_not)
+        ? `<br><br>a database is configured and is not answering:<br>· ${
+            h.storage_status.why_not}` : '')
     + (h.degraded.length
         ? `<br><br>degraded — a live call failed and a recording was used:<br>`
           + h.degraded.map(d => '· ' + d).join('<br>') : '')

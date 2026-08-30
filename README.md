@@ -19,7 +19,14 @@ python -m pytest tests/ -q        # 226 tests, no keys, no network
 ```
 
 `/health` reports `ports_mode`, `model_status` and `storage`, and the front page
-prints them. `model_status.ready` is the one worth reading: `label` is what was
+prints them. `storage` has three states, not two: `postgres`, `memory` because
+nobody asked for a database, and `memory` **because one was asked for and is not
+answering** — which `storage_status.why_not` names in the driver's own words. A
+`DATABASE_URL` that cannot be reached now falls back rather than raising: `store()`
+is on the path of every request that touches a trip, so a database that was merely
+asleep used to turn the whole app into a 500 rather than into a slightly less
+durable one. Losing restarts is recoverable by reading `/health`; losing the app
+looks like broken software. `model_status.ready` is the one worth reading: `label` is what was
 configured and `ready` is whether it started — a Bedrock key with no model
 access says "bedrock:claude-haiku-4-5" in confident blue otherwise, while every
 call quietly falls back to a template.
