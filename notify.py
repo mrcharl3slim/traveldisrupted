@@ -30,7 +30,7 @@ TIMEOUT = 6
 #: Sent as one line, because a notification that needs scrolling is a document.
 def render(alert, trip_id: str = "") -> str:
     when = f"{alert.closes:%d %b %H:%M}"
-    head = "MISSED" if alert.kind == "final" else f"T-{alert.lead}"
+    head = {"final": "MISSED", "found": "DETECTED"}.get(alert.kind, f"T-{alert.lead}")
     tail = f"  ({trip_id})" if trip_id else ""
     return f"[{head}] {alert.message}  · deadline {when}{tail}"
 

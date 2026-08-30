@@ -441,6 +441,18 @@ function openTrip(id, quiet){
         </div>` : ''}</div>
     </div>`;
   }).join('');
+  // What the watch did while nobody was looking. A trip the agent acted on
+  // has to say so in the panel, or the traveller finds a new pending leg on
+  // their itinerary with no idea who put it there.
+  if (trip.acted && trip.acted.by === 'the agent')
+    $('#detail').innerHTML += `<div class="note" style="border-left:3px solid var(--ok)">
+      <b>Taken for you</b> — ${esc(trip.acted.plan)}${trip.acted.permission
+        ? ', ' + esc(trip.acted.permission) : ''}. ${esc((trip.acted.changed || []).join('; '))}</div>`;
+  else if (trip.detected && trip.disrupted)
+    $('#detail').innerHTML += `<div class="note" style="border-left:3px solid var(--warn)">
+      <b>Found by the watch</b> — recommended ${esc(trip.detected.plan)}, waiting for
+      your approval. Press a leg's Late or Cancel to see the plans again.</div>`;
+
   // What the agent may do on its own about this trip. Under the legs, above
   // "cancel the whole trip": the rules are about the trip as it stands.
   if (!trip.abandoned) {

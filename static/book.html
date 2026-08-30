@@ -395,7 +395,7 @@ async function restore(){
   TRIP = {trip_id: found.trip_id, label: found.label, total: found.total,
           problems: found.problems || [], durable: found.durable,
           abandoned: found.abandoned, permissions: found.permissions,
-          bookings: found.bookings};
+          acted: found.acted, detected: found.detected, bookings: found.bookings};
   paintTrip();
   try { WATCH = await api(`/api/alerts?trip=${encodeURIComponent(id)}`); }
   catch (e) { WATCH = null; }
@@ -606,7 +606,16 @@ function paintOutcome(){
 function paintRules(){
   const r = (TRIP && TRIP.permissions) || {auto_limit: 0, never: []};
   if (TRIP && TRIP.abandoned) { $('#trip-rules').innerHTML = ''; return; }
-  $('#trip-rules').innerHTML = `
+  // What the watch did while this page was closed, before the rules that let it.
+  const acted = TRIP.acted && TRIP.acted.by === 'the agent'
+    ? `<div class="banner" style="border-left:3px solid var(--ok);margin-bottom:10px">
+         <b>Taken for you while you were away:</b> ${esc(TRIP.acted.plan)}${
+         TRIP.acted.permission ? ' — ' + esc(TRIP.acted.permission) : ''}.</div>`
+    : (TRIP.detected && !TRIP.abandoned && !OUT
+        ? `<div class="banner warn" style="margin-bottom:10px"><b>Found by the watch:</b>
+           a leg is disrupted; recommended ${esc(TRIP.detected.plan)}, waiting for your
+           approval. Press Late or Cancel on the leg to see the plans.</div>` : '');
+  $('#trip-rules').innerHTML = acted + `
     <div class="row" style="align-items:center">
       <div><label>Act without asking up to</label>
         <input id="rule-limit" type="number" min="0" step="10" value="${Number(r.auto_limit) || 0}"></div>

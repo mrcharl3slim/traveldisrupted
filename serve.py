@@ -612,9 +612,110 @@ def sweep(now: datetime | None = None) -> int:
     return fired
 
 
+#: How often one trip is asked about. The status feed is a paid, rate-limited
+#: call per flight, and a flight's status does not change minute to minute;
+#: asking every tick would spend the whole allowance re-learning that nothing
+#: has happened.
+DETECT_EVERY = timedelta(minutes=10)
+
+
+class _Found:
+    """A detection, in the shape `notify.deliver` speaks. One sentence: what
+    was found, and what the agent did or is waiting for."""
+
+    def __init__(self, disruption, trip: Trip, recovery, taken):
+        source = trip.by_id(disruption.booking_id)
+        late = disruption.delay(trip)
+        self.kind = "found"
+        self.lead = 0
+        self.closes = disruption.new_end
+        self.at = disruption.new_end
+        self.title = source.title
+        self.booking_id = source.id
+        self.worth = 0.0
+        self.key = f"found:{source.id}"
+        what = ("cancelled" if disruption.cancelled
+                else f"delayed {int(late.total_seconds() // 3600)}h "
+                     f"{int(late.total_seconds() // 60 % 60):02d}m")
+        best = recovery.best
+        if taken:
+            outcome = (f"taken {best.name} ({taken['permission']}); "
+                       + (("still yours: " + "; ".join(d["label"] for d in taken["pending"]))
+                          if taken["pending"] else "nothing left to do"))
+        elif best is not None and best.id != "noop":
+            outcome = f"recommended {best.name}, waiting for your approval"
+        else:
+            outcome = "nothing downstream is out of reach"
+        self.message = f"{source.title} {what} — {outcome}"
+
+
+def detect(now: datetime | None = None) -> int:
+    """One pass asking the status feed about every live trip. Returns how many
+    disruptions it found.
+
+    THIS IS WHERE THE AGENT SPEAKS FIRST. Until it existed, the loop below only
+    counted down deadlines on disruptions a person had already pressed a
+    button about; the feed was consulted when somebody opened the page and at
+    no other time, so a flight cancelled at 02:00 was found at 07:30 by
+    whoever looked. Now the feed is asked, the answer goes through exactly the
+    path the buttons use -- `_respond` -- and if the traveller's rules allow
+    it, the plan is taken before anybody is awake.
+
+    Skips what it has no business touching: a trip already being watched (its
+    disruption is known; the deadline sweep owns it from here), a trip that
+    was called off, and a trip asked about less than DETECT_EVERY ago.
+    """
+    found = 0
+    for saved in store_module.store().list(OWNER, limit=50):
+        payload = saved.payload
+        if payload.get("disruption") or payload.get("abandoned"):
+            continue
+        when = now or datetime.now(timezone.utc)
+        mark = payload.get("checked")
+        if mark and when - datetime.fromisoformat(mark) < DETECT_EVERY:
+            continue
+        bookings, _problems, _sources = ingest.to_bookings(payload)
+        if not bookings:
+            continue
+        trip = Trip(bookings)
+        local = when.astimezone(trip.in_order()[0].start.tzinfo)
+        try:
+            disruption, _quiet = _detect(trip, local)
+        except Exception as exc:                        # noqa: BLE001
+            # One trip's bad status call must not end the pass for the rest.
+            print(f"detect: {saved.id}: {type(exc).__name__}: {exc}")
+            disruption = None
+
+        stamped = dict(store_module.store().get(saved.id).payload)
+        stamped["checked"] = when.isoformat()
+        store_module.store().update(saved.id, stamped)
+        if disruption is None:
+            continue
+
+        fresh = store_module.store().get(saved.id)
+        try:
+            recovery, taken = _respond(saved.id, fresh, trip, disruption, injected=False)
+        except Exception as exc:                        # noqa: BLE001
+            print(f"detect: {saved.id}: replan failed: {type(exc).__name__}: {exc}")
+            continue
+        found += 1
+        # Told once, now. The deadline sweep takes over from here -- but a
+        # traveller whose flight was found cancelled at 02:00 and whose first
+        # word about it is a T-60 reminder at 05:00 has been let down by the
+        # notifier, not by the engine.
+        notify.deliver(_Found(disruption, trip, recovery, taken), saved.id)
+        after = dict(store_module.store().get(saved.id).payload)
+        after["detected"] = {"at": when.isoformat(),
+                             "plan": recovery.best.name if recovery.best else "",
+                             "taken": bool(taken)}
+        store_module.store().update(saved.id, after)
+    return found
+
+
 async def _watch() -> None:
     while True:
         try:
+            detect()
             sweep()
         except Exception as exc:                        # noqa: BLE001
             # Never let one bad pass end the watch. A notifier that dies
@@ -686,6 +787,11 @@ def health() -> dict:
             "channels": notify.channels(),
             "durable": False,
             "caveat": "in-process: it stops when the instance sleeps",
+            # It asks the status feed too, not only counts down. Said here
+            # because "the watch is running" used to mean less than it sounds.
+            "detects": True,
+            "detect_every_seconds": int(DETECT_EVERY.total_seconds()),
+            "detection_window_days": DETECTION_WINDOW.days,
         },
         "fixtures": sorted(p.name for p in (ROOT / "fixtures").glob("*")),
     }
@@ -1352,6 +1458,8 @@ def itineraries() -> dict:
             "abandoned": saved.payload.get("abandoned"),
             "permissions": _perms(saved).to_dict(),
             "acted": saved.payload.get("acted"),
+            "detected": saved.payload.get("detected"),
+            "checked": saved.payload.get("checked"),
             "bookings": _bookings_out(trip, disruption,
                                       saved.payload.get("abandoned")),
         })
@@ -1581,6 +1689,46 @@ def select(body: Selection) -> dict:
     }
 
 
+def _respond(trip_id: str, saved, trip: Trip, disruption, injected: bool):
+    """Record a disruption, work out the answer, and act on it if allowed.
+
+    One path for a pressed button and for the status feed, because the only
+    thing that differs is where the signal came from -- and that is recorded,
+    not branched on. Everything after the signal is the same question: what
+    breaks, what to do, and whether the traveller's rules let the agent do it
+    without waiting.
+
+    Returns the recovery and, when the agent took the plan, what it did.
+    """
+    perms = _perms(saved)
+    recovery = flow.replan(trip, disruption,
+                           preference=saved.payload.get("preference", ""),
+                           permissions=perms)
+
+    # Written down first, so the watch has something to watch a minute after
+    # the page that started it was closed. A traveller pressing "cancelled" is
+    # an event, and an unrecorded event did not happen.
+    stored = dict(saved.payload)
+    stored["disruption"] = flow.to_dict(recovery.disruption, injected=injected)
+    stored.pop("watermark", None)      # a new disruption starts a new clock
+    stored.pop("last_sent", None)
+    store_module.store().update(trip_id, stored)
+
+    # THE AGENT ACTS, when it has been allowed to. The best plan is taken
+    # without a click if the traveller's rules permit it -- which is the whole
+    # difference between a delay at 02:00 answered at 02:00 and one answered
+    # at 07:30 when somebody wakes up and presses a button. Inaction is never
+    # taken; a plan that costs money is taken only within the cap; and what
+    # was always going to need a person (the tap, the call) still does, and is
+    # reported as waiting rather than as done.
+    best = recovery.best
+    taken = None
+    if best is not None and best.id != "noop" and recovery.verdict and recovery.verdict.auto:
+        taken = _take(trip_id, trip, recovery, best, by="the agent")
+        taken["permission"] = recovery.verdict.why
+    return recovery, taken
+
+
 def _injected(trip_id: str, booking_id: str, make) -> dict:
     """Answer the whole question about one injected disruption.
 
@@ -1607,21 +1755,9 @@ def _injected(trip_id: str, booking_id: str, make) -> dict:
         raise HTTPException(409, "that trip has been cancelled")
     perms = _perms(saved)
     try:
-        recovery = flow.replan(trip, make(trip),
-                               preference=saved.payload.get("preference", ""),
-                               permissions=perms)
+        recovery, taken = _respond(trip_id, saved, trip, make(trip), injected=True)
     except PortError as exc:
         raise HTTPException(503, str(exc)) from exc
-
-    # Written down, so the watch has something to watch a minute after the page
-    # that started it was closed. Live status is a query and can be asked again;
-    # a traveller pressing "cancelled" is an event, and an unrecorded event did
-    # not happen.
-    stored = dict(saved.payload)
-    stored["disruption"] = flow.to_dict(recovery.disruption)
-    stored.pop("watermark", None)      # a new disruption starts a new clock
-    stored.pop("last_sent", None)
-    store_module.store().update(trip_id, stored)
 
     # The clock the engine used, carried on the Recovery. Passing new_end here
     # was right only while every injected disruption was a cancellation: for a
@@ -1643,18 +1779,8 @@ def _injected(trip_id: str, booking_id: str, make) -> dict:
     # it had two, the row it was holding and the signal in this response, and
     # the second does not survive a refresh.
     payload["bookings"] = _bookings_out(trip, recovery.disruption)
-
-    # THE AGENT ACTS, when it has been allowed to. The best plan is taken
-    # without a click if the traveller's rules permit it -- which is the whole
-    # difference between a delay at 02:00 answered at 02:00 and one answered
-    # at 07:30 when somebody wakes up and presses a button. Inaction is never
-    # taken; a plan that costs money is taken only within the cap; and what
-    # was always going to need a person (the tap, the call) still does, and is
-    # reported as waiting rather than as done.
-    best = recovery.best
-    if best is not None and best.id != "noop" and recovery.verdict and recovery.verdict.auto:
-        taken = _take(trip_id, trip, recovery, best, by="the agent")
-        payload["auto_taken"] = {**taken, "permission": recovery.verdict.why}
+    if taken:
+        payload["auto_taken"] = taken
         payload["bookings"] = taken["bookings"]
     return payload
 

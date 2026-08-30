@@ -551,6 +551,27 @@ An engine you have to open is a report. `monitor.py` is the part that speaks
 first: `schedule(trip, disruption, now)` returns every moment somebody has to be
 told something, at T-60, T-15 and the deadline itself.
 
+**And it asks, not only counts.** For a long time "the watch is running" meant
+less than it sounds: the loop counted down deadlines on disruptions a person had
+already pressed a button about, and the status feed was consulted when somebody
+opened the page and at no other time — so a flight cancelled at 02:00 was found
+at 07:30 by whoever looked. `detect()` now asks the feed about every live trip,
+hands a finding to exactly the path the buttons use (`_respond`), and if the
+traveller's rules allow it the plan is taken before anybody is awake. The record
+says `by: the agent`, the panel says *taken for you while you were away*, and one
+notification goes out at the moment of finding — `[DETECTED] LH 0346 cancelled —
+taken EC 11:33 (within your EUR 300 limit); still yours: Book EC 11:33` — because
+a traveller whose first word about a cancellation is a T-60 reminder three hours
+later has been let down by the notifier, not by the engine.
+
+Each trip is asked at most every ten minutes (`DETECT_EVERY`): the feed is a
+paid, rate-limited call per flight, and a flight's status does not change
+minute to minute. A trip already being watched belongs to the deadline sweep, a
+trip that was called off belongs to nobody, and one bad status call ends the
+pass for that trip and not for the rest. Live status reaches about a week either
+side of today, so in replay a booked trip's flights are never found — correctly;
+the tests stub the feed.
+
 An alert exists only where the clock running out takes something away — a fare
 window still worth more than it costs to use, or the last moment a replacement
 could still land in time. A deadline with nothing behind it is a fact, not an

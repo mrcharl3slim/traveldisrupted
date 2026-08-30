@@ -252,7 +252,7 @@ def learned_at(trip: Trip, disruption: Disruption) -> datetime:
     return min(disruption.new_end, trip.by_id(disruption.booking_id).start)
 
 
-def to_dict(disruption: Disruption) -> dict:
+def to_dict(disruption: Disruption, injected: bool = True) -> dict:
     """A disruption that outlives the request that created it.
 
     It has to be stored, not recomputed. Live status is a query and can be
@@ -266,7 +266,10 @@ def to_dict(disruption: Disruption) -> dict:
         "reason": disruption.reason,
         "confidence": disruption.confidence,
         "cancelled": disruption.cancelled,
-        "injected": True,
+        # Whether a person said so or a status feed did. Both are real; the
+        # page says which, because "the airline has not announced this yet"
+        # and "the airline announced this" are different things to be told.
+        "injected": injected,
     }
 
 

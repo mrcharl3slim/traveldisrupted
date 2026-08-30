@@ -247,6 +247,144 @@ def test_rules_can_be_changed_after_booking_and_are_listed(client):
     assert client.post("/api/permissions", json={"trip_id": "nope"}).status_code == 404
 
 
+# --------------------------------------------------------------------------
+# the agent speaks first
+# --------------------------------------------------------------------------
+
+
+@pytest.fixture
+def feed(monkeypatch):
+    """A status feed that says the onward hop is cancelled, for every trip it
+    is asked about, and counts how often it is asked. Live status in replay
+    has recordings for the scripted flight only, so a booked trip's flights
+    would never be found -- correctly -- and there would be nothing to test."""
+    import serve as app_module
+    from domain import Disruption
+
+    asked = []
+
+    def stub(trip, now):
+        hop = [b for b in trip.in_order() if b.kind.value == "flight"][1]
+        asked.append(hop.id)
+        return Disruption(hop.id, hop.start, "cancelled", 1.0, cancelled=True), ""
+
+    monkeypatch.setattr(app_module, "_detect", stub)
+    sent = []
+    monkeypatch.setattr(app_module.notify, "deliver",
+                        lambda alert, trip_id="", **kw:
+                        sent.append((trip_id, alert.kind, alert.message)) or ["log"])
+    return {"asked": asked, "sent": sent, "sweep": app_module.detect}
+
+
+def _row(client, trip_id):
+    return next(t for t in client.get("/api/itineraries").json()["itineraries"]
+                if t["trip_id"] == trip_id)
+
+
+def test_the_watch_finds_a_disruption_nobody_pressed_a_button_for(client, feed):
+    """Until this the loop only counted down deadlines on disruptions a person
+    had already reported; the feed was consulted when somebody opened the page
+    and at no other time, so a flight cancelled at 02:00 was found at 07:30 by
+    whoever looked."""
+    booked = _with_meeting(client, {})
+    assert not _row(client, booked["trip_id"])["disrupted"]
+
+    found = feed["sweep"](now=datetime.now(timezone.utc))
+    assert found >= 1
+    row = _row(client, booked["trip_id"])
+    assert row["disrupted"], "found and not recorded"
+    assert row["detected"] and row["detected"]["taken"] is False
+    assert row["acted"] is None, "took a plan the traveller never allowed"
+
+    kind, message = next((k, m) for t, k, m in feed["sent"] if t == booked["trip_id"])
+    assert kind == "found"
+    assert "waiting for your approval" in message
+
+
+def test_within_the_cap_the_watch_takes_the_plan_before_anybody_is_awake(client, feed):
+    """The brief's sentence, arriving from the feed rather than from a button:
+    found, decided, sent, rewritten, and one purchase link left waiting."""
+    booked = _with_meeting(client, {"auto_limit": 300})
+    feed["sweep"](now=datetime.now(timezone.utc))
+
+    row = _row(client, booked["trip_id"])
+    assert row["acted"]["by"] == "the agent"
+    assert row["detected"]["taken"] is True
+    assert not row["disrupted"], "taken, so the deadline sweep has nothing to watch"
+    assert any(b["pending"] for b in row["bookings"]), "the replacement is on the itinerary"
+
+    # The detection notice specifically. `_take` also sends the AUTO lane --
+    # the email to the property -- through the same channel, and it arrives
+    # first.
+    message = next(m for t, k, m in feed["sent"] if t == booked["trip_id"] and k == "found")
+    assert "taken" in message and "within your EUR 300 limit" in message
+    assert "still yours" in message, "the purchase still needs a person, and must say so"
+
+
+def test_a_stored_disruption_says_it_came_from_the_feed(client, feed):
+    """Both are real. "The airline has not announced this yet" and "the
+    airline announced this" are different things to be told."""
+    booked = _with_meeting(client, {})
+    feed["sweep"](now=datetime.now(timezone.utc))
+    import store as store_module
+    assert store_module.store().get(booked["trip_id"]).payload["disruption"]["injected"] is False
+
+
+def test_the_feed_is_not_asked_about_the_same_trip_every_minute(client, feed):
+    """A paid, rate-limited call per flight, and a flight's status does not
+    change minute to minute."""
+    import serve as app_module
+    booked = book(client)
+    # A trip the stub cannot strand: make the feed say "nothing" for it so it
+    # stays live and keeps being a candidate.
+    monkeypatch_feed = feed["asked"]
+    tick = datetime.now(timezone.utc)
+
+    before = len(monkeypatch_feed)
+    feed["sweep"](now=tick)
+    asked_once = len(monkeypatch_feed) - before
+    assert asked_once >= 1
+
+    feed["sweep"](now=tick + timedelta(minutes=1))
+    assert len(monkeypatch_feed) - before == asked_once, "asked again inside the window"
+    assert _row(client, booked["trip_id"])["checked"]
+
+
+def test_the_watch_leaves_alone_what_is_not_its_business(client, feed):
+    """A trip already being watched belongs to the deadline sweep; a trip
+    that was called off belongs to nobody."""
+    watched = book(client)
+    leg = [b for b in watched["bookings"] if b["kind"] == "flight"][1]
+    client.post("/api/cancel", json={"trip_id": watched["trip_id"], "booking_id": leg["id"]})
+    gone = book(client)
+    client.post("/api/abandon", json={"trip_id": gone["trip_id"], "confirm": True})
+
+    feed["sweep"](now=datetime.now(timezone.utc))
+    # Calling the trip off sent the property an email through the same channel;
+    # what must not appear is a DETECTION for either trip.
+    assert not any(t in (watched["trip_id"], gone["trip_id"]) and k == "found"
+                   for t, k, _m in feed["sent"])
+    assert _row(client, gone["trip_id"])["checked"] is None
+
+
+def test_one_bad_status_call_does_not_end_the_pass(client, monkeypatch):
+    import serve as app_module
+
+    def boom(trip, now):
+        raise RuntimeError("feed is down")
+
+    monkeypatch.setattr(app_module, "_detect", boom)
+    book(client)
+    assert app_module.detect(now=datetime.now(timezone.utc)) == 0
+
+
+def test_health_says_the_watch_detects(client):
+    watch = client.get("/health").json()["watch"]
+    assert watch["detects"] is True
+    assert watch["detect_every_seconds"] > 0
+    assert watch["detection_window_days"] == 7
+
+
 def test_pricing_a_cancellation_sends_nothing(client):
     """The only action in this product that destroys value on purpose and
     cannot be undone by pressing it again. The first call asks what it would
