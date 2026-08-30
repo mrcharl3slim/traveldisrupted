@@ -116,6 +116,86 @@ def test_the_delay_button_reaches_the_engine(client):
     assert body["plans"], "a delay has to produce options like anything else"
 
 
+def test_pricing_a_cancellation_sends_nothing(client):
+    """The only action in this product that destroys value on purpose and
+    cannot be undone by pressing it again. The first call asks what it would
+    cost; nothing leaves the building and the trip is still live."""
+    booked = book(client)
+    quote = client.post("/api/abandon", json={"trip_id": booked["trip_id"]}).json()
+
+    assert quote["confirmed"] is False
+    assert "sent" not in quote and "pending" not in quote
+    assert quote["plan"]["actions"], "priced nothing"
+
+    row = next(t for t in client.get("/api/itineraries").json()["itineraries"]
+               if t["trip_id"] == booked["trip_id"])
+    assert row["abandoned"] is None, "priced it and cancelled it anyway"
+
+
+def test_the_ledger_of_calling_it_off_balances(client):
+    """What comes back plus what is gone is what was paid. Nothing else is an
+    acceptable answer to "what does this cost me"."""
+    booked = book(client)
+    quote = client.post("/api/abandon", json={"trip_id": booked["trip_id"]}).json()
+    assert round(quote["refund"] + quote["lost"], 2) == quote["paid"]
+    assert quote["paid"] == booked["total"]
+
+
+def test_every_booking_gets_an_action_and_a_lane(client):
+    """One errand per booking, and each in the lane that can actually perform
+    it. A row with no action is a booking the traveller will discover they
+    still hold, at the airport."""
+    booked = book(client)
+    quote = client.post("/api/abandon", json={"trip_id": booked["trip_id"]}).json()
+
+    acted = {a["booking_id"] for a in quote["plan"]["actions"]}
+    assert acted == {b["id"] for b in booked["bookings"]}
+    assert all(a["lane"] in ("auto", "tap", "call") for a in quote["plan"]["actions"])
+
+
+def test_calling_it_off_performs_the_auto_lane_and_hands_over_the_rest(client):
+    """The lanes stop being labels here exactly as they do for a recovery: what
+    Downstream can send is sent, and what needs a person is handed over marked
+    pending rather than reported as done."""
+    booked = book(client)
+    done = client.post("/api/abandon", json={
+        "trip_id": booked["trip_id"], "confirm": True,
+        "reason": "the meeting moved"}).json()
+
+    assert done["confirmed"] is True
+    assert len(done["sent"]) + len(done["pending"]) == len(done["plan"]["actions"])
+    assert all(d["state"] == "pending" for d in done["pending"])
+
+    row = next(t for t in client.get("/api/itineraries").json()["itineraries"]
+               if t["trip_id"] == booked["trip_id"])
+    assert row["abandoned"]["reason"] == "the meeting moved"
+    assert row["abandoned"]["refund"] == done["refund"]
+    assert row["abandoned"]["actions"], "cancelled it and kept no record of what was owed"
+
+
+def test_a_cancelled_trip_cannot_be_cancelled_again(client):
+    """Pressing it twice must not send the property a second email or promise a
+    second refund."""
+    booked = book(client)
+    client.post("/api/abandon", json={"trip_id": booked["trip_id"], "confirm": True})
+    again = client.post("/api/abandon", json={"trip_id": booked["trip_id"], "confirm": True})
+    assert again.status_code == 409
+
+
+def test_calling_it_off_stops_the_watch(client):
+    """A trip nobody is taking has no deadlines worth counting down to."""
+    booked = book(client)
+    leg = [b for b in booked["bookings"] if b["kind"] == "flight"][0]
+    client.post("/api/cancel", json={
+        "trip_id": booked["trip_id"], "booking_id": leg["id"]})
+    assert client.get("/api/alerts",
+                      params={"trip": booked["trip_id"]}).json()["watching"]
+
+    client.post("/api/abandon", json={"trip_id": booked["trip_id"], "confirm": True})
+    assert not client.get("/api/alerts",
+                          params={"trip": booked["trip_id"]}).json()["watching"]
+
+
 def test_a_delayed_leg_says_so_on_the_itinerary(client):
     """The page showed a flight at its original times with nothing to say it
     was running three hours late, which is the one fact it was opened for.

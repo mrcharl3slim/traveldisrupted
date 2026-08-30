@@ -419,6 +419,48 @@ trip had hidden:
 The old scripted demo — one late flight, eleven bookings, EUR 282 — still runs
 at `/`, from the same fixtures, asserting the same numbers.
 
+## Calling the whole thing off
+
+Not going at all is a different question from being disrupted, and `plan.abandon`
+is a different function for it. Nothing broke — the traveller changed their mind
+— so there is no reachability to walk, no gap to search and no alternative to
+rank. Every other plan answers *what instead?*; this one answers *what now?*.
+Building a `Disruption` that did not happen so the recovery machinery would run
+would have been the engine lying to itself to reach a familiar shape.
+
+What it does share is the part worth sharing: **one action per booking, in the
+lane that can actually perform it**, and `act.perform` to run them — because
+from there, *who does this and did they* is the same question.
+
+    Downstream handles it
+      - Tell Hotel Le Marais Milano you are not coming
+    One tap, you authorise
+      - Cancel Malpensa to hotel private transfer            +EUR 48
+      - Cancel Bellagio and Lake Como day tour               +EUR 128
+    You will have to call
+      - Cancel LX 1608 - Zurich to Milan Malpensa            +EUR 38
+
+Each lane is earned rather than assigned. A room with nothing left to recover
+gets the **email**, because sending somebody to a booking portal to press cancel
+on a non-refundable rate is an errand that returns nothing, while telling the
+property is both useful and a thing this system can genuinely do. A fare whose
+provider has no consumer cancel API gets the **phone**, from the same
+`CAPABILITY` table the recovery lanes come from. A booking that was never paid
+for is dropped with a note rather than listed as an errand — sending somebody to
+a provider that has never heard of them is worse than silence.
+
+**Priced before it is done, and never in one press.** This is the only action in
+the product that destroys value on purpose and cannot be undone by pressing it
+again, so `POST /api/abandon` without `confirm` returns what it would cost and
+sends nothing. What comes back plus what is gone equals what was paid, at *this*
+moment: a window open on Tuesday is shut on Friday, and the figure is only true
+next to the time it was computed at.
+
+The trip is **kept, marked** rather than deleted. Which refunds were promised and
+which calls are still owed is exactly what a traveller comes back for, and a
+delete is no more undoable than the cancellation. The watch stops, because a trip
+nobody is taking has no deadlines worth counting down to.
+
 ## The watch
 
 An engine you have to open is a report. `monitor.py` is the part that speaks

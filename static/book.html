@@ -158,6 +158,7 @@
     <h2>5 · Your trip <span id="trip-total" class="m"></span></h2>
     <div id="trip-problems"></div>
     <div id="trip-legs"></div>
+    <div id="trip-abandon"></div>
     <div class="note">Two flights bought in two searches are two contracts. Nobody owes you
       the connection — and nothing in the engine had to be told that.</div>
   </section>
@@ -235,6 +236,8 @@ const LANES = {
 
 let IN = [], ON = [], HOTELS = [], PICK = {in:null, on:null, hotel:null};
 let TRIP = null, OUT = null, PICKED = null, WATCH = null;
+//: The priced "what would this cost" answer, held until it is taken or dropped.
+let QUOTE = null;
 
 // The recordings were made three weeks out, and replay shifts them to whatever
 // date is asked for. Defaulting to that same distance keeps the demo on live
@@ -387,7 +390,7 @@ async function restore(){
   if (!found) return remember(TRIP = null);
   TRIP = {trip_id: found.trip_id, label: found.label, total: found.total,
           problems: found.problems || [], durable: found.durable,
-          bookings: found.bookings};
+          abandoned: found.abandoned, bookings: found.bookings};
   paintTrip();
   try { WATCH = await api(`/api/alerts?trip=${encodeURIComponent(id)}`); }
   catch (e) { WATCH = null; }
@@ -443,6 +446,8 @@ function paintTrip(){
       </div>
     </div>`;
   }).join('');
+
+  paintAbandon();
 
   document.querySelectorAll('[data-cancel]').forEach(el =>
     el.onclick = () => disrupt('/api/cancel', {booking_id: el.dataset.cancel}));
@@ -551,6 +556,82 @@ function paintOutcome(){
                 : 'no money moves'}${a.deadline ? ' · before ' + at(a.deadline) : ''}</div>
             </div>`).join('') + `</div>`;
       }).join('') || '<div class="note">This plan asks nothing of anybody.</div>');
+}
+
+// --------------------------------------------------------------------------
+// calling the whole thing off
+// --------------------------------------------------------------------------
+
+// Priced before it is done, and never in one press. This is the only action on
+// the page that destroys value on purpose and cannot be undone by pressing it
+// again, so the first call asks what it would cost and sends nothing.
+function paintAbandon(){
+  const off = TRIP && TRIP.abandoned;
+  if (off) {
+    // What is still owed, kept in front of them. A cancelled trip is not a
+    // finished one while a phone call is outstanding, and the calls are the
+    // part nobody else can make.
+    const owed = (off.actions || []).filter(a => a.lane !== 'auto');
+    $('#trip-abandon').innerHTML = `<div class="banner">
+        <b>This trip is cancelled.</b> ${eur(off.refund)} is coming back and
+        ${eur(off.lost)} is gone.</div>`
+      + (owed.length ? `<div class="note">Still yours to do — `
+          + owed.map(a => esc(a.label)).join(' · ') + `</div>` : '');
+    return;
+  }
+  $('#trip-abandon').innerHTML = QUOTE
+    ? quoteHtml()
+    : `<div class="note" style="display:flex;justify-content:space-between;
+         align-items:center;gap:14px">Not going at all?
+       <button class="btn bad" id="abandon">Cancel the whole trip</button></div>`;
+  const go = $('#abandon');
+  if (go) go.onclick = () => priceAbandon();
+  wireQuote();
+}
+
+function quoteHtml(){
+  const q = QUOTE;
+  const lanes = Object.entries(LANES).map(([key, [title, who]]) => {
+    const acts = q.plan.lanes[key];
+    if (!acts.length) return '';
+    return `<div class="lane"><h3>${esc(title)}</h3><div class="who">${esc(who)}</div>`
+      + acts.map(a => `<div class="act">
+          <div>${esc(a.label)}</div>
+          <div class="n">${esc(a.note || '')}</div>
+          <div class="cash">${a.cash_in ? 'returns ' + eur(a.cash_in) : 'no money moves'}${
+            a.deadline ? ' · before ' + at(a.deadline) : ''}</div>
+        </div>`).join('') + `</div>`;
+  }).join('');
+  return `<div class="banner warn"><b>Cancelling the whole trip.</b>
+      ${eur(q.paid)} paid · <b>${eur(q.refund)}</b> comes back ·
+      <b>${eur(q.lost)}</b> is gone. Worked out at ${at(q.as_of)} — a window
+      open now is shut later, so this is only true next to that time.</div>
+    ${lanes}
+    <div class="note" style="display:flex;gap:10px;align-items:center">
+      <button class="btn bad" id="abandon-go">Yes, cancel it all</button>
+      <button class="btn" id="abandon-no">Keep the trip</button></div>`;
+}
+
+function wireQuote(){
+  const yes = $('#abandon-go'), no = $('#abandon-no');
+  if (no) no.onclick = () => { QUOTE = null; paintAbandon(); };
+  if (yes) yes.onclick = async () => {
+    yes.disabled = true;
+    let done;
+    try { done = await api('/api/abandon', {trip_id: TRIP.trip_id, confirm: true}); }
+    catch (e) { yes.disabled = false; return fail('#trip-problems', e); }
+    QUOTE = null;
+    TRIP = Object.assign({}, TRIP, {abandoned: {
+      refund: done.refund, lost: done.lost, actions: done.plan.lanes
+        ? [].concat(...Object.values(done.plan.lanes)) : []}});
+    paintTrip();
+  };
+}
+
+async function priceAbandon(){
+  try { QUOTE = await api('/api/abandon', {trip_id: TRIP.trip_id}); }
+  catch (e) { return fail('#trip-problems', e); }
+  paintAbandon();
 }
 
 restore();

@@ -439,6 +439,108 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
     )
 
 
+def abandon(trip: Trip, now: datetime) -> Plan:
+    """The traveller is not going. What has to happen to each booking, and who
+    can do it.
+
+    NOT A DISRUPTION, and the difference is the whole reason this is its own
+    function rather than a `Disruption` with a flag. Nothing broke; the
+    traveller changed their mind. There is no reachability to walk, no gap to
+    search and no alternative to rank -- every other plan in this file answers
+    "what instead?" and this one answers "what now?". Reusing `build` would
+    have meant inventing a disruption that did not happen so the machinery
+    would run, which is the engine lying to itself to reach a familiar shape.
+
+    What it does share is the part worth sharing: one `Action` per booking, in
+    the lane that can actually perform it, with the money and the deadline the
+    policy already knows. `act.perform` then runs it exactly as it runs a
+    recovery, because from there the question -- who does this and did they --
+    is identical.
+
+    ONE ACTION EACH, and the ledger falls out of them. `cash_in` is what the
+    policy still returns at ``now``, so cancelling on Tuesday and cancelling on
+    Friday are different numbers and the page can say which. What is not
+    recovered is `wasted`, so `total_damage` is what abandoning the trip costs
+    -- the same arithmetic that prices a recovery, asked about a decision
+    instead of an accident.
+    """
+    actions: list[Action] = []
+    wasted_ids: set[str] = set()
+    wasted = 0.0
+
+    for b in trip.in_order():
+        # Nothing was bought, so there is nothing to cancel. A replacement the
+        # traveller approved and never paid for leaves with the trip, and
+        # listing it as an errand would send somebody to a provider that has
+        # never heard of them.
+        if b.pending:
+            actions.append(Action(
+                verb="drop", booking_id=b.id, lane=Lane.AUTO,
+                label=f"Drop {b.title}",
+                note="never purchased — nothing to cancel"))
+            continue
+
+        # A promise, not a purchase. There is no provider to cancel with and no
+        # money to get back; the whole of the act is telling the person, which
+        # is the one thing here that can genuinely be done for them.
+        if b.commitment:
+            actions.append(Action(
+                verb="notify", booking_id=b.id,
+                lane=lane_for(b.provider, "notify"),
+                label=f"Tell {b.who or 'them'} you are not coming"
+                      + (f" — {b.title}" if b.title else ""),
+                note="no fare, nothing to refund"))
+            continue
+
+        recover = b.recoverable_at(now)
+        cut = b.policy.next_cutoff(now)
+        lost = round(max(0.0, b.price - recover), 2)
+
+        # A room with nothing left to recover. Sending somebody to a booking
+        # portal to press cancel on a non-refundable rate is an errand that
+        # returns nothing; the act that still matters is telling the property,
+        # and unlike the portal it is one this system can actually perform.
+        # Where the rate IS still worth something the portal is the right
+        # place, because that is where the money is.
+        if b.kind is Kind.LODGING and not recover and b.mitigation:
+            wasted_ids.add(b.id)
+            wasted += b.price
+            actions.append(Action(
+                verb="notify", booking_id=b.id,
+                lane=lane_for(b.provider, "notify"),
+                label=f"Tell {_property(b)} you are not coming",
+                price_source=b.price_source,
+                note=f"{b.currency} {b.price:,.0f} is not refundable — this "
+                     "releases the room, it does not recover the rate"))
+            continue
+        # The FULL fare goes in the waste column and the refund offsets it in
+        # `cash_in`, which is how `build` keeps its books -- `total_damage`
+        # subtracts one from the other. Booking the net figure here instead
+        # took the refund off twice and reported a trip costing EUR 1,516 to
+        # abandon that actually costs EUR 2,234.
+        if b.price:
+            wasted_ids.add(b.id)
+            wasted += b.price
+
+        actions.append(Action(
+            verb="cancel", booking_id=b.id,
+            lane=lane_for(b.provider, "cancel"),
+            label=f"Cancel {b.title}",
+            cash_in=recover,
+            deadline=cut.closes if cut else None,
+            price_source=b.price_source,
+            note=(cut.label if cut else "")
+                 or (f"{b.currency} {lost:,.0f} is not refundable" if lost
+                     else "nothing was at stake")))
+
+    return Plan(
+        id="abandon", name="Cancel the whole trip", tagline="", key="abandon",
+        actions=actions,
+        arrives_at=None, arrives_where=None,
+        wasted_ids=wasted_ids, wasted=round(wasted, 2),
+    )
+
+
 def _preference_key(plan: "Plan", preference: str):
     """Order two plans of equal damage by what the traveller said mattered.
 

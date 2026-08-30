@@ -48,6 +48,7 @@ from base import MODE, degraded, shifted                      # noqa: E402
 from demo_trip import (DEFAULT_BASE, anchor, as_written, build_trip,   # noqa: E402
                         resolve_base)
 from graph import Impact, propagate                           # noqa: E402
+import plan as plan_mod                                      # noqa: E402
 from plan import Gap, Lane, generate                          # noqa: E402
 
 STATIC = ROOT / "static"
@@ -229,6 +230,21 @@ class Choice(BaseModel):
     return_mode: str = "flight"
 
 
+class Abandon(BaseModel):
+    """Cancel the whole trip.
+
+    Two steps, and not because a form wants a confirm box: this is the one
+    action in the product that destroys value on purpose and cannot be undone
+    by pressing it again. `confirm=false` prices it -- every booking, what each
+    is still worth, who can cancel it and by when -- and does nothing. Only the
+    second call sends anything.
+    """
+
+    trip_id: str
+    confirm: bool = False
+    reason: str = ""
+
+
 class Act(BaseModel):
     trip_id: str
     booking_id: str
@@ -374,6 +390,11 @@ def _plan(p, best: bool) -> dict:
                      if p.tightest else None),
         "lanes": {key: [_action(a) for a in p.lane(lane)]
                   for lane, key in LANE_KEY.items()},
+        # The same actions in the order they were built, which for a whole-trip
+        # cancellation is itinerary order and is the order a person checks them
+        # off in. `lanes` regroups by who does the work and loses that, and
+        # both readings are wanted -- one to act from, one to read down.
+        "actions": [_action(a) for a in p.actions],
     }
 
 
@@ -1286,6 +1307,10 @@ def itineraries() -> dict:
             # they cannot be taken -- is worse than none.
             "problems": infeasible(trip),
             "durable": store_module.store().durable,
+            # A cancelled trip is still a trip: which refunds were promised and
+            # which calls are still owed is exactly what the traveller comes
+            # back for. It reads as cancelled and it does not read as live.
+            "abandoned": saved.payload.get("abandoned"),
             "bookings": _bookings_out(trip, disruption),
         })
     return {"itineraries": rows}
@@ -1563,6 +1588,71 @@ def _load(trip_id: str) -> Trip:
     if not bookings:
         raise HTTPException(422, {"problems": problems})
     return Trip(bookings)
+
+
+@app.post("/api/abandon")
+def abandon(body: Abandon) -> dict:
+    """What cancelling the whole trip costs, and then doing it.
+
+    Nothing here is a disruption. Nothing broke -- the traveller changed their
+    mind -- so there is no impact to propagate and no alternative to rank. What
+    survives from the recovery path is the part worth keeping: one action per
+    booking, in the lane that can actually perform it, and `act.perform` to run
+    them, because from there "who does this and did they" is the same question.
+    """
+    saved = store_module.store().get(body.trip_id)
+    if saved is None:
+        raise HTTPException(404, "no trip with that id")
+    if saved.payload.get("abandoned"):
+        raise HTTPException(409, "that trip has already been cancelled")
+
+    trip = _load(body.trip_id)
+    now = datetime.now(timezone.utc)
+    plan = plan_mod.abandon(trip, now)
+
+    payload = {
+        "trip_id": body.trip_id,
+        "label": saved.label,
+        "confirmed": body.confirm,
+        "plan": _plan(plan, best=True),
+        # What the traveller gets back and what the decision costs, both, at
+        # THIS moment: a window that is open on Tuesday is shut on Friday, and
+        # the figure is only true next to the time it was computed at.
+        "refund": round(-plan.net_cash, 2),
+        "lost": plan.total_damage,
+        "paid": round(sum(b.price for b in trip.bookings), 2),
+        "as_of": _when(now),
+        "bookings": _bookings_out(trip),
+    }
+    if not body.confirm:
+        return payload
+
+    lines: list[str] = []
+    done = act_mod.perform(plan, trip, body.trip_id, log=lines.append)
+
+    stored = dict(saved.payload)
+    # The trip is KEPT, marked. Deleting it would take with it the one thing
+    # the traveller now needs -- which refunds were promised, which calls are
+    # still theirs to make -- and there is no undoing a delete either.
+    stored["abandoned"] = {
+        "at": now.isoformat(),
+        "reason": body.reason,
+        "refund": payload["refund"],
+        "lost": payload["lost"],
+        "actions": [_action(a) for a in plan.actions],
+    }
+    # Whatever was broken is beside the point now, and the watch must stop
+    # counting down deadlines on a trip nobody is taking.
+    stored.pop("disruption", None)
+    stored.pop("watermark", None)
+    stored.pop("last_sent", None)
+    store_module.store().update(body.trip_id, stored)
+
+    return {**payload,
+            "summary": act_mod.summarise(done, []),
+            "sent": [d.__dict__ for d in done if d.state == "sent"],
+            "pending": [d.__dict__ for d in done if d.state == "pending"],
+            "log": lines}
 
 
 @app.get("/api/state")
