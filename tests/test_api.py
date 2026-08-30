@@ -201,6 +201,28 @@ def test_the_errand_on_a_row_is_the_one_for_that_booking(client):
         assert b["cancelled"]["booking_id"] == b["id"]
 
 
+def test_every_door_a_tester_is_given_opens(client):
+    """Four URLs go to people who did not build this. A 404 on any of them is
+    the first thing they will see and the last thing they will report."""
+    for path in ("/", "/demo", "/book", "/test"):
+        assert client.get(path).status_code == 200, path
+
+
+def test_the_test_guide_reads_the_instance_rather_than_asserting_it(client):
+    """Which routes exist at all depends on whether this instance is talking to
+    providers or replaying recordings, and that changes per deploy. A guide that
+    states it in prose goes stale silently and sends everybody hunting the wrong
+    bug, so the page reads /health and /health has to keep answering."""
+    page = client.get("/test").text
+    assert "/health" in page, "the guide stopped reading the instance"
+
+    health = client.get("/health").json()
+    assert health["ports_mode"] in ("replay", "live", "record")
+    for key in ("model_status", "storage", "degraded", "shifted"):
+        assert key in health, f"the guide renders {key} and health stopped sending it"
+    assert "ready" in health["model_status"]
+
+
 def test_the_quote_carries_what_a_page_needs_to_argue_it(client):
     """The chat panel prices this into the thread rather than into a sidebar,
     which means the answer has to name the trip, group the work by who does it,

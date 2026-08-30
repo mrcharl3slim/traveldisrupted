@@ -3,6 +3,13 @@
 Cross-provider disruption replanning. Detection is commodity; this is the part
 that is not.
 
+`/test` is the page to send anybody who did not build this: what the app is, four
+things to try with what each should produce, the limits that are deliberate and
+not worth filing, and what to put in a bug report. It reads `/health` rather than
+asserting anything, because whether an instance is talking to providers or
+replaying recordings decides which routes exist at all — and a guide that states
+that in prose goes stale silently and sends the whole team hunting the wrong bug.
+
 ```bash
 python serve.py                   # the web app, first free port from 8000
 python cli.py                     # the same numbers, in a terminal

@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Downstream — how to test it</title>
+<style>
+  :root{
+    --bg:#0b0f14; --card:#141b23; --edge:#232d38; --ink:#e8eef4; --dim:#93a1b0; --faint:#5d6b7a;
+    --ok:#3fb950; --bad:#f85149; --warn:#e3b341; --key:#58a6ff;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  .wrap{max-width:860px;margin:0 auto;padding:26px 22px 100px}
+  header{display:flex;justify-content:space-between;align-items:baseline;gap:20px;flex-wrap:wrap}
+  h1{font-size:20px;margin:0;letter-spacing:-.01em}
+  h2{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--faint);
+     margin:0 0 14px;font-weight:600}
+  h3{font-size:15px;margin:0 0 4px}
+  .sub{color:var(--dim);font-size:13px}
+  a{color:var(--key);text-decoration:none}
+  a:hover{text-decoration:underline}
+  p{margin:0 0 12px}
+  section{background:var(--card);border:1px solid var(--edge);border-radius:11px;
+          padding:22px;margin-top:18px}
+  code{font:13px var(--mono);background:#0e151d;border:1px solid var(--edge);
+       border-radius:5px;padding:1px 6px}
+  .lede{font-size:17px;color:var(--ink)}
+  .note{color:var(--dim);font-size:14px;margin-top:10px}
+  .m{color:var(--faint);font:12px var(--mono)}
+
+  .doors{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+  .door{background:#0e151d;border:1px solid var(--edge);border-left:3px solid var(--key);
+        border-radius:9px;padding:14px 16px}
+  .door .m{margin-top:6px;display:block;line-height:1.5}
+
+  ol.steps{margin:0;padding-left:20px}
+  ol.steps li{margin-bottom:6px}
+  .case{border-top:1px solid var(--edge);padding-top:18px;margin-top:18px}
+  .case:first-of-type{border-top:0;padding-top:0;margin-top:0}
+  .expect{background:#0e151d;border:1px solid var(--edge);border-left:3px solid var(--ok);
+          border-radius:9px;padding:12px 15px;margin-top:10px;font-size:14.5px}
+  .expect b{color:var(--ok)}
+  .nope{border-left-color:var(--warn)}
+  .nope b{color:var(--warn)}
+
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:4px}
+  th{text-align:left;font:11px var(--mono);letter-spacing:.1em;text-transform:uppercase;
+     color:var(--faint);padding:7px 10px 7px 0;border-bottom:1px solid var(--edge)}
+  td{padding:8px 10px 8px 0;border-bottom:1px solid var(--edge);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+
+  .banner{background:#0e151d;border:1px solid var(--edge);border-radius:9px;
+          padding:12px 15px;font:12.5px var(--mono);color:var(--dim)}
+  .pill{display:inline-block;font:11px var(--mono);text-transform:uppercase;letter-spacing:.08em;
+        border:1px solid var(--edge);border-radius:5px;padding:2px 7px;color:var(--dim)}
+  .pill.ok{color:var(--ok);border-color:#1d4429}
+  .pill.warn{color:var(--warn);border-color:#4d4423}
+  ul{margin:0 0 12px;padding-left:20px}
+  li{margin-bottom:5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Downstream — how to test it</h1>
+      <div class="sub">Read the box below first — it decides what will and will not work today.</div>
+    </div>
+    <div class="sub"><a href="/">the agent →</a> · <a href="/book">the builder →</a></div>
+  </header>
+
+  <section>
+    <h2>What this thing is</h2>
+    <p class="lede">Detecting that a flight is late is commodity. Downstream does the part
+      after: what <em>else</em> in the trip breaks, what it costs, and what to do
+      instead — across airlines, railways and hotels that do not talk to each other.</p>
+    <p>You build a real itinerary from live inventory, then break it and watch the
+      consequences fall out of the same data. Nothing about the outcome is scripted.</p>
+    <div class="expect nope"><b>Nothing is ever bought.</b> Every provider account here is a
+      test account that cannot take money. If you find a way to spend a real euro, that is
+      the most important bug you will file all day.</div>
+  </section>
+
+  <section>
+    <h2>What this instance is doing right now</h2>
+    <div id="live" class="banner">reading /health…</div>
+    <div class="note" id="live-note"></div>
+  </section>
+
+  <section>
+    <h2>Three ways in</h2>
+    <div class="doors">
+      <div class="door"><h3><a href="/">/ — the agent</a></h3>
+        <span class="m">Type a sentence. It asks only what changes the answer,
+          then searches and offers.</span></div>
+      <div class="door"><h3><a href="/book">/book — the builder</a></h3>
+        <span class="m">Pick legs from tables. Faster to get to a broken trip,
+          and it shows the raw fares.</span></div>
+      <div class="door"><h3><a href="/demo">/demo — the scripted one</a></h3>
+        <span class="m">One fixed October trip, always the same numbers.
+          Read-only. Good for a first look.</span></div>
+    </div>
+    <div class="note">Trips you make in one door appear in the other — they are the same
+      store. <code>/demo</code> is separate and cannot be edited.</div>
+  </section>
+
+  <section>
+    <h2>Test 1 · Book a trip</h2>
+    <div class="case">
+      <ol class="steps">
+        <li>Open <a href="/">/</a> and type
+          <code>one way zurich to milan on 18 september with a hotel, cheapest</code></li>
+        <li>Answer whatever it asks. Every question says why it is being asked — if one
+          does not change the answer, that is a bug.</li>
+        <li>Check the confirmation card. Dates are spelled out in full on purpose.
+          Say <b>no</b> and correct something, then say yes.</li>
+        <li>Pick a flight <em>or a train</em>, pick a room, confirm.</li>
+      </ol>
+      <div class="expect"><b>Expect:</b> trains and flights in one list, ranked by what you
+        asked for. Under <em>cheapest</em> the €72 train sorts above every fare; under
+        <em>fastest</em> a 55-minute flight wins. Both are correct.</div>
+      <div class="expect nope"><b>Not a bug:</b> answering a question with something it
+        cannot read leaves the question open and says so. That is deliberate — a silently
+        dropped answer is worse.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Test 2 · Break one leg</h2>
+    <div class="case">
+      <p>Open the itinerary in the right-hand panel (or the trip section on
+        <a href="/book">/book</a>). Every flight has three controls: a duration,
+        <b>Late</b>, and <b>Cancel</b>.</p>
+      <ol class="steps">
+        <li>Try <b>30m late</b> first. Then the same leg at <b>6h</b> or <b>12h</b>.</li>
+        <li>Then <b>Cancel</b> a leg and compare.</li>
+        <li>Pick a recovery plan and press <b>Take this plan</b>.</li>
+      </ol>
+      <div class="expect"><b>Expect:</b> a small delay costs nothing — the connection
+        absorbs it. Past the buffer, the onward leg breaks and the room goes at risk.
+        A cancellation strands you where you started; a delay lands you late.
+        Those are different worlds and the plans differ.</div>
+      <div class="expect nope"><b>Not a bug:</b> the replacement flight is marked
+        <em>not paid</em>. It is an intention, not a purchase, and it is not allowed to
+        look like one.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Test 3 · Add a meeting</h2>
+    <div class="case">
+      <p>In the same box on <a href="/">/</a>, type something nobody sold you:</p>
+      <p><code>meeting with the Milan team on 19 September at 10am at their office</code></p>
+      <div class="expect"><b>Expect:</b> it chases exactly three things — who, when, where —
+        and guesses none of them. Once saved it is checked against your flights: a meeting
+        you cannot reach is reported, and it is <em>counted, never priced</em>. There is no
+        euro figure on a missed meeting because we would have to invent one.</div>
+      <div class="expect nope"><b>Worth trying:</b> give it a location it cannot place
+        (<code>at the Ritz Carlton</code>). It should ask which city, because the city is
+        the clock — not decoration.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Test 4 · Call the whole trip off</h2>
+    <div class="case">
+      <ol class="steps">
+        <li>Press <b>Cancel the whole trip</b> under the itinerary.</li>
+        <li>Read the price before you confirm. Then confirm.</li>
+      </ol>
+      <div class="expect"><b>Expect:</b> one errand per booking, sorted by who can do it —
+        emailed for you, one tap, or a phone call. What comes back plus what is gone equals
+        what you paid. Every row then reads as cancelled and names its errand.</div>
+      <div class="expect nope"><b>Not a bug:</b> the number moves depending on when you
+        press it. A free-cancellation window open this morning is shut tonight, and the
+        page says which moment it was worked out at.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Known limits — please do not file these</h2>
+    <table>
+      <thead><tr><th>What you will see</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>“No inventory recorded for that route”</td>
+            <td>In <span class="pill">replay</span> only recorded routes exist. See the box
+              at the top for which. On <span class="pill">live</span> any route works.</td></tr>
+        <tr><td>Trains only between Zurich and Milan</td>
+            <td>The only rail API we can reach is the Swiss timetable. It does not know
+              about Madrid.</td></tr>
+        <tr><td>A train fare is marked <em>estimated</em></td>
+            <td>SBB publishes no free fare API. The number is ours and says so everywhere
+              it appears — including in totals.</td></tr>
+        <tr><td>Trips vanish after a while</td>
+            <td>Storage says <em>memory</em> in the box above. A free instance sleeps and
+              takes them with it.</td></tr>
+        <tr><td>A replacement leg says <em>not paid</em></td>
+            <td>Deliberate. Nothing here can take money, and a plan must not look like a
+              purchase.</td></tr>
+        <tr><td>“You will have to call”</td>
+            <td>That provider has no consumer API. Saying so is the feature — the
+              alternative is claiming we did something we cannot.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Filing a bug</h2>
+    <p>Four things, and it is almost always enough:</p>
+    <ul>
+      <li><b>The page and what you typed</b> — the exact sentence, not a summary of it.</li>
+      <li><b>What you expected and what you got.</b> A number being <em>wrong</em> is more
+        useful than a number being <em>odd</em> — tell us which one you can check by hand.</li>
+      <li><b>The trip id</b>, from the address bar on <code>/book</code>
+        (<code>?trip=…</code>).</li>
+      <li><b>The line from the box at the top of this page</b>, copied. It says which
+        providers answered and which were replayed, and that changes the answer.</li>
+    </ul>
+    <div class="note">A screenshot of the whole page beats a crop. Half the interesting
+      failures are two numbers that disagree with each other.</div>
+  </section>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+
+// The one thing a tester cannot guess and most needs: which world this instance
+// is in. Read live rather than written down, because it changes per deploy and a
+// paragraph claiming "replay" over a live instance sends everybody hunting the
+// wrong bug.
+fetch('/health').then(r => r.json()).then(h => {
+  const live = h.ports_mode === 'live';
+  $('#live').innerHTML =
+      `providers  <span class="pill ${live ? 'ok' : ''}">${h.ports_mode}</span>`
+    + `   model  <span class="pill ${h.model_status.ready ? 'ok' : 'warn'}">${
+        h.model_status.ready ? h.model : 'not started'}</span>`
+    + `   storage  <span class="pill ${h.storage.startsWith('postgres') ? 'ok' : 'warn'}">${
+        h.storage}</span>`
+    + (h.degraded.length
+        ? `<br><br>degraded — a live call failed and a recording was used:<br>`
+          + h.degraded.map(d => '· ' + d).join('<br>') : '')
+    + (h.shifted.length
+        ? `<br><br>shifted — a recording was replayed under a different date:<br>`
+          + h.shifted.slice(0, 3).map(d => '· ' + d).join('<br>') : '');
+
+  $('#live-note').innerHTML = live
+    ? `<b>Live.</b> Real searches against real providers, so any route you type should
+       return something. If one fails it falls back to a recording and says
+       <em>degraded</em> in the banner — that is the app being honest, not breaking.`
+    : `<b>Replay.</b> Every answer comes from a committed recording, so only these exist:
+       flights <code>SIN→ZRH</code> and <code>ZRH→MXP</code>, trains
+       <code>Zurich→Milan</code>, hotels in <code>Milan</code>. Any date works — dates are
+       shifted to match. Anything else will say it has no inventory, and that is correct.`;
+}).catch(() => {
+  $('#live').textContent = 'could not read /health — the instance may be asleep. '
+    + 'Load it once more; a free instance takes about thirty seconds to wake.';
+});
+</script>
+</body>
+</html>

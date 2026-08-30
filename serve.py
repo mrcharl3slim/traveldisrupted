@@ -1715,6 +1715,19 @@ def demo() -> FileResponse:
     return FileResponse(STATIC / "index.html")
 
 
+@app.get("/test")
+def test_guide() -> FileResponse:
+    """What the app is and how to break it, for somebody who did not build it.
+
+    A page rather than a document because the one fact a tester most needs --
+    whether this instance is talking to real providers or replaying recordings
+    -- changes per deploy and decides which routes exist at all. Written down
+    in a README it goes stale silently and sends everybody hunting the wrong
+    bug; read from /health it cannot.
+    """
+    return FileResponse(STATIC / "test.html")
+
+
 @app.get("/book")
 def book() -> FileResponse:
     """Build a trip from live inventory, then break it.
