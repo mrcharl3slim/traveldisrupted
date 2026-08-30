@@ -1311,7 +1311,8 @@ def itineraries() -> dict:
             # which calls are still owed is exactly what the traveller comes
             # back for. It reads as cancelled and it does not read as live.
             "abandoned": saved.payload.get("abandoned"),
-            "bookings": _bookings_out(trip, disruption),
+            "bookings": _bookings_out(trip, disruption,
+                                      saved.payload.get("abandoned")),
         })
     return {"itineraries": rows}
 
@@ -1388,7 +1389,7 @@ def act(body: Act) -> dict:
     }
 
 
-def _bookings_out(trip: Trip, disruption=None) -> list[dict]:
+def _bookings_out(trip: Trip, disruption=None, abandoned=None) -> list[dict]:
     """The trip's rows, with the deviation attached to the one it happened to.
 
     KEPT SEPARATE FROM start AND end, deliberately. Those are what was booked
@@ -1403,7 +1404,22 @@ def _bookings_out(trip: Trip, disruption=None) -> list[dict]:
     so the panel showed a flight at its original times with nothing to say it
     was running three hours late -- which is the one fact the traveller opened
     the page for.
+
+    ``abandoned`` is the same rule for the whole trip. A cancelled itinerary
+    kept every row reading like a live booking -- the hotel most visibly of
+    all, because it is the row with no buttons on it to look disabled -- so
+    somebody who had just called the trip off was still looking at a room they
+    were told they had. Each row now carries the errand that applies to it, and
+    a row that carries one is not a booking any more.
     """
+    #: Kept apart from `disruption` on purpose. A provider cancelling a flight
+    #: and a traveller calling the trip off are different events with different
+    #: consequences, and folding them into one field would have the page report
+    #: the airline as having done something the traveller did.
+    errands = {a["booking_id"]: a
+               for a in ((abandoned or {}).get("actions") or [])
+               if a.get("booking_id")}
+
     def deviation(b: Booking) -> dict | None:
         if disruption is None or disruption.booking_id != b.id:
             return None
@@ -1425,6 +1441,7 @@ def _bookings_out(trip: Trip, disruption=None) -> list[dict]:
              "commitment": b.commitment, "who": b.who,
              "price_source": b.price_source,
              "disruption": deviation(b),
+             "cancelled": errands.get(b.id),
              "ticket_group": b.ticket_group, "policy": b.policy.source}
             for b in trip.in_order()]
 
@@ -1524,6 +1541,11 @@ def _injected(trip_id: str, booking_id: str, make) -> dict:
         raise HTTPException(404, "no booking with that id on this trip") from exc
 
     saved = store_module.store().get(trip_id)
+    # A trip nobody is taking cannot be delayed or cancelled. Letting it be
+    # would start the watch counting down deadlines on bookings the traveller
+    # has already been told are gone.
+    if saved is not None and saved.payload.get("abandoned"):
+        raise HTTPException(409, "that trip has been cancelled")
     try:
         recovery = flow.replan(trip, make(trip),
                                preference=saved.payload.get("preference", ""))
@@ -1649,6 +1671,7 @@ def abandon(body: Abandon) -> dict:
     store_module.store().update(body.trip_id, stored)
 
     return {**payload,
+            "bookings": _bookings_out(trip, None, stored["abandoned"]),
             "summary": act_mod.summarise(done, []),
             "sent": [d.__dict__ for d in done if d.state == "sent"],
             "pending": [d.__dict__ for d in done if d.state == "pending"],

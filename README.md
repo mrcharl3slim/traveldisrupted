@@ -459,7 +459,17 @@ next to the time it was computed at.
 The trip is **kept, marked** rather than deleted. Which refunds were promised and
 which calls are still owed is exactly what a traveller comes back for, and a
 delete is no more undoable than the cancellation. The watch stops, because a trip
-nobody is taking has no deadlines worth counting down to.
+nobody is taking has no deadlines worth counting down to, and `/api/cancel` and
+`/api/delay` refuse it for the same reason.
+
+**Kept is not the same as unchanged.** Every row carries the errand that applies
+to *it* — `done for you — Tell the Grand Visconti Palace you are not coming`, or
+`yours to do — Cancel LH 0346 · EUR 1,032 back` — and a row carrying an errand is
+not a booking any more: struck through, tagged, and no buttons on it. The first
+version marked the trip and left the rows alone, and the hotel gave it away.
+Flights at least had disabled-looking controls; the room is the row with nothing
+on it to look wrong, so somebody who had just called the trip off was still
+looking at a bed they had been told they had.
 
 ## The watch
 

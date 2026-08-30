@@ -420,8 +420,14 @@ function paintTrip(){
     // still flying and the traveller is still on it, so it keeps its colour
     // and gains a time.
     const hit = b.disruption;
-    const gone = hit && hit.cancelled;
-    const late = hit && !hit.cancelled && hit.delay_minutes > 0;
+    // The trip was called off, and this row is the errand that follows from
+    // it. Every row kept reading like a live booking -- the hotel most visibly
+    // of all, because it has no buttons on it to look disabled -- so somebody
+    // who had just cancelled was still looking at a room they were told they
+    // had.
+    const off = b.cancelled;
+    const gone = off || (hit && hit.cancelled);
+    const late = !off && hit && !hit.cancelled && hit.delay_minutes > 0;
     return `
     <div class="leg ${b.kind === 'lodging' ? 'lodging' : 'flight'} ${
       gone ? 'gone' : ''} ${late ? 'late' : ''}">
@@ -433,10 +439,14 @@ function paintTrip(){
           ${b.ticket_group ? ' · ticket ' + esc(b.ticket_group.slice(-6)) : ''}</div>
         ${late ? `<div class="m late-line">now in at <b>${at(hit.now_arrives)}</b>
           — was ${at(hit.was)}</div>` : ''}
+        ${off ? `<div class="m ${off.lane === 'auto' ? '' : 'late-line'}">${
+          off.lane === 'auto' ? 'done for you — ' : 'yours to do — '}${esc(off.label)}${
+          off.cash_in ? ' · ' + eur(off.cash_in) + ' back' : ''}${
+          off.deadline ? ' · before ' + at(off.deadline) : ''}</div>` : ''}
       </div>
       <div style="text-align:right;white-space:nowrap">
         <div class="m">${esc(b.currency)} ${Math.round(b.price).toLocaleString()}</div>
-        ${b.kind === 'flight' ? `<div class="break">
+        ${b.kind === 'flight' && !off ? `<div class="break">
           <select class="btn sm" data-mins="${esc(b.id)}">${DELAYS.map(m =>
             `<option value="${m}"${m === 180 ? ' selected' : ''}>${
               m < 60 ? m + 'm' : (m / 60) + 'h'} late</option>`).join('')}</select>
@@ -574,9 +584,9 @@ function paintAbandon(){
     const owed = (off.actions || []).filter(a => a.lane !== 'auto');
     $('#trip-abandon').innerHTML = `<div class="banner">
         <b>This trip is cancelled.</b> ${eur(off.refund)} is coming back and
-        ${eur(off.lost)} is gone.</div>`
-      + (owed.length ? `<div class="note">Still yours to do — `
-          + owed.map(a => esc(a.label)).join(' · ') + `</div>` : '');
+        ${eur(off.lost)} is gone.` + (owed.length
+          ? ` ${owed.length} of these ${owed.length === 1 ? 'is' : 'are'} still
+              yours to do — each is named on its own row.` : '') + `</div>`;
     return;
   }
   $('#trip-abandon').innerHTML = QUOTE
@@ -621,9 +631,10 @@ function wireQuote(){
     try { done = await api('/api/abandon', {trip_id: TRIP.trip_id, confirm: true}); }
     catch (e) { yes.disabled = false; return fail('#trip-problems', e); }
     QUOTE = null;
-    TRIP = Object.assign({}, TRIP, {abandoned: {
-      refund: done.refund, lost: done.lost, actions: done.plan.lanes
-        ? [].concat(...Object.values(done.plan.lanes)) : []}});
+    TRIP = Object.assign({}, TRIP, {
+      bookings: done.bookings || TRIP.bookings,
+      abandoned: {refund: done.refund, lost: done.lost,
+                  actions: done.plan.actions || []}});
     paintTrip();
   };
 }

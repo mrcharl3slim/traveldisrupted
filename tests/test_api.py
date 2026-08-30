@@ -173,6 +173,57 @@ def test_calling_it_off_performs_the_auto_lane_and_hands_over_the_rest(client):
     assert row["abandoned"]["actions"], "cancelled it and kept no record of what was owed"
 
 
+def test_every_row_reads_as_cancelled_once_the_trip_is(client):
+    """The hotel gave it away. A cancelled itinerary kept every row reading
+    like a live booking, and the room is the row with no buttons on it to look
+    disabled -- so somebody who had just called the trip off was still looking
+    at a bed they had been told they had."""
+    booked = book(client)
+    client.post("/api/abandon", json={"trip_id": booked["trip_id"], "confirm": True})
+
+    row = next(t for t in client.get("/api/itineraries").json()["itineraries"]
+               if t["trip_id"] == booked["trip_id"])
+    assert all(b["cancelled"] for b in row["bookings"]), "a row survived the cancellation"
+
+    stay = next(b for b in row["bookings"] if b["kind"] == "lodging")
+    assert stay["cancelled"]["label"], "the room is cancelled and says nothing about it"
+    assert stay["cancelled"]["lane"] in ("auto", "tap", "call")
+
+
+def test_the_errand_on_a_row_is_the_one_for_that_booking(client):
+    """Every row carries its own, not the trip's summary. "Cancel the flight"
+    under the hotel is worse than nothing on it at all."""
+    booked = book(client)
+    done = client.post("/api/abandon", json={
+        "trip_id": booked["trip_id"], "confirm": True}).json()
+
+    for b in done["bookings"]:
+        assert b["cancelled"]["booking_id"] == b["id"]
+
+
+def test_a_cancelled_trip_cannot_be_disrupted(client):
+    """Delaying a flight on a trip nobody is taking would start the watch
+    counting down deadlines the traveller has already been told are gone."""
+    booked = book(client)
+    leg = [b for b in booked["bookings"] if b["kind"] == "flight"][0]
+    client.post("/api/abandon", json={"trip_id": booked["trip_id"], "confirm": True})
+
+    for path, body in (("/api/cancel", {}), ("/api/delay", {"minutes": 90})):
+        response = client.post(path, json={
+            "trip_id": booked["trip_id"], "booking_id": leg["id"], **body})
+        assert response.status_code == 409, path
+
+
+def test_a_live_trip_has_no_errands_on_its_rows(client):
+    """The other half. `cancelled` is None until somebody cancels, or every
+    booking ever made reads as an obligation."""
+    booked = book(client)
+    assert all(b["cancelled"] is None for b in booked["bookings"])
+    quote = client.post("/api/abandon", json={"trip_id": booked["trip_id"]}).json()
+    assert all(b["cancelled"] is None for b in quote["bookings"]), (
+        "priced it and marked the rows anyway")
+
+
 def test_a_cancelled_trip_cannot_be_cancelled_again(client):
     """Pressing it twice must not send the property a second email or promise a
     second refund."""

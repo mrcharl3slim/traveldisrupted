@@ -413,8 +413,11 @@ function openTrip(id, quiet){
     // it -- so a flight running three hours late showed its original times
     // with nothing to say so, which is the one fact the panel was opened for.
     const hit = b.disruption;
-    const gone = hit && hit.cancelled;
-    const late = hit && !hit.cancelled && hit.delay_minutes > 0;
+    // The trip was called off. Same rule as book.html: a row carrying an
+    // errand is not a booking any more, whatever it used to be.
+    const off = b.cancelled;
+    const gone = off || (hit && hit.cancelled);
+    const late = !off && hit && !hit.cancelled && hit.delay_minutes > 0;
     return `
     <div class="leg ${b.pending ? 'pending' : ''} ${gone ? 'gone' : ''} ${late ? 'late' : ''}">
       <div>${esc(b.title)}
@@ -424,9 +427,11 @@ function openTrip(id, quiet){
         ${b.commitment ? '<span class="tag">commitment</span>' : ''}
         <div class="m">${span(b.starts, b.ends)}${b.who ? ' · ' + esc(b.who) : ''}</div>
         ${late ? `<div class="m late-line">now in at <b>${at(hit.now_arrives)}</b>
-          — was ${at(hit.was)}</div>` : ''}</div>
+          — was ${at(hit.was)}</div>` : ''}
+        ${off ? `<div class="m">${off.lane === 'auto' ? 'done for you — '
+          : 'yours to do — '}${esc(off.label)}</div>` : ''}</div>
       <div class="n" style="white-space:nowrap">${eur(b.price)}
-        ${b.kind === 'flight' ? `<div class="break">
+        ${b.kind === 'flight' && !off ? `<div class="break">
           <select class="btn sm" data-mins="${esc(b.id)}">${DELAYS.map(m =>
             `<option value="${m}"${m === 180 ? ' selected' : ''}>${
               m < 60 ? m + 'm' : (m / 60) + 'h'}</option>`).join('')}</select>
