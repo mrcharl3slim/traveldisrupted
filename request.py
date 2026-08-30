@@ -90,6 +90,10 @@ class Request:
     shown: bool = False
     raw: str = ""
     filled: tuple[str, ...] = ()        # what the traveller settled, for the UI
+    #: Which slots were filled from the traveller's profile rather than from
+    #: this conversation. The card names them, because a slot filled without
+    #: asking is safe only when the traveller can see that it was.
+    from_profile: tuple[str, ...] = ()
 
     # -- what is still missing ------------------------------------------
     def gaps(self) -> list[Ask]:
@@ -169,9 +173,13 @@ class Request:
 
     def card(self) -> list[dict]:
         """What the system has recorded, laid out to be checked line by line."""
+        def mark(name: str, note: str) -> str:
+            if name not in self.from_profile:
+                return note
+            return f"{note} · from your profile" if note else "from your profile"
         out = [
             {"label": "From", "value": places.label(self.origin) or "—",
-             "note": self.origin},
+             "note": mark("origin", self.origin)},
             {"label": "To", "value": places.label(self.destination) or "—",
              "note": self.destination},
             {"label": "Out", "value": (f"{self.depart:%A %d %B}"
@@ -190,7 +198,8 @@ class Request:
                         "note": places.label(self.destination)})
         else:
             out.append({"label": "Hotel", "value": "not needed"})
-        out.append({"label": "Sort by", "value": self.preference or "cheapest"})
+        out.append({"label": "Sort by", "value": self.preference or "cheapest",
+                    "note": mark("preference", "")})
         return out
 
     @property

@@ -128,6 +128,10 @@
         <h2>Your itineraries</h2>
         <div id="trips"><div class="note">Nothing booked yet.</div></div>
       </div>
+      <div class="box" id="you-box">
+        <h2>You</h2>
+        <div id="you"></div>
+      </div>
       <div class="box" id="detail-box" hidden>
         <h2 id="detail-title">Itinerary</h2>
         <div id="detail"></div>
@@ -377,6 +381,38 @@ async function confirm(button){
   await loadTrips();
 }
 
+// Who is asking, said once. Everything here is applied somewhere specific
+// and shown when it is: home and sort order fill blanks on the confirmation
+// card marked "from your profile"; the rules become each new trip's starting
+// rules. Nothing is inferred from past trips.
+async function loadProfile(){
+  let p;
+  try { p = (await api('/api/profile')).profile; } catch (e) { return; }
+  const r = p.permissions || {auto_limit: 0, never: []};
+  $('#you').innerHTML = `
+    <div class="m" style="margin-bottom:8px">Said once, applied to every trip and shown
+      on the card as <em>from your profile</em>. Anything you type still wins.</div>
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center">
+      <span class="m">home</span><input id="you-home" placeholder="singapore" value="${esc(p.home_label || '')}">
+      <span class="m">sort by</span>
+        <select id="you-pref"><option value="">ask me</option>${
+          ['cheapest','fastest','direct'].map(x =>
+            `<option value="${x}"${p.preference === x ? ' selected' : ''}>${x}</option>`).join('')}</select>
+      <span class="m">act up to €</span><input id="you-limit" type="number" min="0" step="10" value="${Number(r.auto_limit) || 0}">
+      <span class="m">never</span><input id="you-never" placeholder="rail, ryanair" value="${esc((r.never || []).join(', '))}">
+    </div>
+    <div class="chips" style="margin-top:8px"><button class="btn sm" id="you-save">Save</button></div>`;
+  $('#you-save').onclick = async () => {
+    try {
+      await api('/api/profile', {home: $('#you-home').value.trim(),
+        preference: $('#you-pref').value,
+        auto_limit: Number($('#you-limit').value) || 0,
+        never: $('#you-never').value.split(',').map(x => x.trim()).filter(Boolean)});
+    } catch (e) { return bubble('Downstream', `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
+    await loadProfile();
+  };
+}
+
 async function loadTrips(){
   TRIPS = (await api('/api/itineraries')).itineraries;
   $('#trips').innerHTML = TRIPS.length ? TRIPS.map(t => `
@@ -469,12 +505,16 @@ function openTrip(id, quiet){
         <span class="m">never</span>
         <input id="rule-never" placeholder="rail, ryanair" style="width:130px"
                value="${esc((r.never || []).join(', '))}">
-        <button class="btn sm" id="rule-save">Save</button></div></div>`;
+        <button class="btn sm" id="rule-save">Save</button>
+        <label class="m" style="display:inline;text-transform:none;letter-spacing:0">
+          <input type="checkbox" id="rule-remember"> for every trip</label></div></div>`;
     $('#rule-save').onclick = async () => {
       try {
         await api('/api/permissions', {trip_id: id,
           auto_limit: Number($('#rule-limit').value) || 0,
-          never: $('#rule-never').value.split(',').map(x => x.trim()).filter(Boolean)});
+          never: $('#rule-never').value.split(',').map(x => x.trim()).filter(Boolean),
+          remember: $('#rule-remember').checked});
+        if ($('#rule-remember').checked) await loadProfile();
       } catch (e) { return bubble('Downstream',
         `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
       await loadTrips();
@@ -702,6 +742,7 @@ api('/health').then(h => {
        ? `<div class="banner warn">${esc(h.model_status.label)} is configured but
           did not start — running on arithmetic. ${esc(h.model_status.why_not)}</div>`
        : ''));
+  loadProfile();
   loadTrips();
 }).catch(e => bubble('Downstream', `<span style="color:var(--bad)">${esc(e.message)}</span>`));
 </script>

@@ -51,6 +51,7 @@ from graph import Impact, propagate                           # noqa: E402
 import plan as plan_mod                                      # noqa: E402
 from plan import Gap, Lane, generate                          # noqa: E402
 import permit                                                 # noqa: E402
+import profile as profile_mod                                 # noqa: E402
 
 STATIC = ROOT / "static"
 
@@ -239,6 +240,20 @@ class Permit(BaseModel):
     """The traveller's rules for one trip. See permit.py for what they mean."""
 
     trip_id: str
+    auto_limit: float = 0.0
+    never: list[str] = []
+    always_ask: list[str] = []
+    #: Keep these as the default for every future trip too. Off by default: a
+    #: rule set on one trip is about that trip until the traveller says
+    #: otherwise.
+    remember: bool = False
+
+
+class ProfileIn(BaseModel):
+    """Who the traveller is, as far as they choose to say. See profile.py."""
+
+    preference: str = ""
+    home: str = ""
     auto_limit: float = 0.0
     never: list[str] = []
     always_ask: list[str] = []
@@ -944,6 +959,7 @@ def _req_out(req) -> dict:
         "hotel_out": req.hotel_out.isoformat() if req.hotel_out else None,
         "preference": req.preference, "summary": req.summary(),
         "ready": req.ready,
+        "from_profile": list(req.from_profile),
     }
 
 
@@ -979,6 +995,8 @@ def _req_in(raw: dict):
                     if str(raw.get("preference") or "").lower()
                     in request_mod.PREFERENCES else ""),
         raw=str(raw.get("raw") or "")[:2000],
+        from_profile=tuple(str(f) for f in (raw.get("from_profile") or [])
+                           if f in ("origin", "preference")),
     )
 
 
@@ -1290,7 +1308,8 @@ def chat(body: Chat) -> dict:
             req = request_mod.answer(req, pending[0].field, body.text)
 
     try:
-        state = converse.turn(body.text, req, model=_model.get_model())
+        state = converse.turn(body.text, req, model=_model.get_model(),
+                              profile=_profile())
     except PortError as exc:
         raise HTTPException(503, str(exc)) from exc
 
@@ -1410,7 +1429,7 @@ def choose(body: Choice) -> dict:
          # moment their flight is cancelled.
          "preference": req.preference,
          # And so do the rules for acting on it, for the same reason.
-         "permissions": permit.Permissions.from_dict(body.permissions).to_dict(),
+         "permissions": _default_rules(body.permissions),
          "request": _req_out(req)},
         body.label or req.summary())
 
@@ -1665,7 +1684,7 @@ def select(body: Selection) -> dict:
     assembled, _ = flow.select(picked, stays)
     saved = store_module.store().save(
         OWNER, {"bookings": ingest.to_dicts(assembled.bookings),
-                "permissions": permit.Permissions.from_dict(body.permissions).to_dict()},
+                "permissions": _default_rules(body.permissions)},
         body.label or "Booked here")
 
     # Answer with the trip AS IT READS BACK, not as it was assembled. Booking
@@ -1874,6 +1893,50 @@ def _perms(saved) -> permit.Permissions:
     return permit.Permissions.from_dict((saved.payload if saved else {}).get("permissions"))
 
 
+def _profile() -> profile_mod.Profile:
+    return profile_mod.Profile.from_dict(store_module.store().profile(OWNER))
+
+
+def _default_rules(given: dict) -> dict:
+    """The rules a new trip starts with: what was sent, else the profile's.
+
+    A trip booked with no rules at all used to start with nothing
+    pre-authorised, every time, however often the traveller had set a cap
+    before. The profile is where that cap now lives; the trip copies it at
+    booking and owns its copy from then on, so changing the profile later
+    does not silently change a trip already under way.
+    """
+    if given:
+        return permit.Permissions.from_dict(given).to_dict()
+    return _profile().permissions.to_dict()
+
+
+@app.get("/api/profile")
+def read_profile() -> dict:
+    return {"profile": _profile().to_dict(), "empty": _profile().empty}
+
+
+@app.post("/api/profile")
+def write_profile(body: ProfileIn) -> dict:
+    """Say once what would otherwise be asked on every trip.
+
+    Everything here is applied somewhere specific and shown when it is: the
+    home city and the sort order fill blanks on the confirmation card marked
+    "from your profile", and the rules become each new trip's starting rules.
+    Nothing is inferred from past behaviour -- a profile that rewrites itself
+    is one the traveller cannot check.
+    """
+    found = places.find(body.home) if body.home.strip() else None
+    if body.home.strip() and not found:
+        raise HTTPException(422, f"I do not know a place called {body.home!r}")
+    kept = profile_mod.Profile.from_dict({
+        "preference": body.preference, "home": found.code if found else "",
+        "permissions": {"auto_limit": body.auto_limit, "never": body.never,
+                        "always_ask": body.always_ask}})
+    store_module.store().save_profile(OWNER, kept.to_dict())
+    return {"profile": kept.to_dict(), "empty": kept.empty}
+
+
 @app.post("/api/permissions")
 def permissions(body: Permit) -> dict:
     """Change what the agent may do about this trip on its own.
@@ -1890,7 +1953,12 @@ def permissions(body: Permit) -> dict:
     stored = dict(saved.payload)
     stored["permissions"] = perms.to_dict()
     store_module.store().update(body.trip_id, stored)
-    return {"trip_id": body.trip_id, "permissions": perms.to_dict()}
+    if body.remember:
+        kept = _profile()
+        store_module.store().save_profile(OWNER, {
+            **kept.to_dict(), "permissions": perms.to_dict()})
+    return {"trip_id": body.trip_id, "permissions": perms.to_dict(),
+            "remembered": body.remember}
 
 
 @app.post("/api/abandon")

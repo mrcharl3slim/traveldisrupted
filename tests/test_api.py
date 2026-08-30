@@ -248,6 +248,67 @@ def test_rules_can_be_changed_after_booking_and_are_listed(client):
 
 
 # --------------------------------------------------------------------------
+# who is asking
+# --------------------------------------------------------------------------
+
+
+@pytest.fixture
+def profile(client):
+    """A profile for the run of one test, and none afterwards: the store is
+    module-scoped and a profile left behind would fill blanks in every test
+    that follows, which is exactly the property being tested."""
+    client.post("/api/profile", json={"preference": "cheapest", "home": "singapore",
+                                      "auto_limit": 300, "never": ["rail"]})
+    yield client.get("/api/profile").json()["profile"]
+    client.post("/api/profile", json={})
+
+
+def test_the_profile_fills_the_blanks_and_the_card_says_so(client, profile):
+    turn = client.post("/api/chat", json={"text": "one way to zurich on 18 september, no hotel"}).json()
+    assert turn["state"]["origin"] == "SIN"
+    assert turn["state"]["preference"] == "cheapest"
+    assert set(turn["state"]["from_profile"]) == {"origin", "preference"}
+    assert [a["field"] for a in turn["asks"]] == ["confirm"], "asked what it already knew"
+    card = {r["label"]: r.get("note", "") for r in turn["confirm"]}
+    assert "from your profile" in card["From"] and "from your profile" in card["Sort by"]
+
+
+def test_a_new_trip_starts_with_the_profile_s_rules(client, profile):
+    booked = book(client)
+    row = next(t for t in client.get("/api/itineraries").json()["itineraries"]
+               if t["trip_id"] == booked["trip_id"])
+    assert row["permissions"]["auto_limit"] == 300
+    assert row["permissions"]["never"] == ["rail"]
+
+
+def test_rules_sent_with_the_booking_beat_the_profile_s(client, profile):
+    inbound = client.get("/api/search/flights", params={
+        "origin": "SIN", "destination": "ZRH", "on": DAY}).json()["offers"][0]
+    booked = client.post("/api/select", json={
+        "flights": [{"origin": "SIN", "destination": "ZRH", "on": DAY,
+                     "offer_key": inbound["key"]}],
+        "permissions": {"auto_limit": 50}}).json()
+    row = next(t for t in client.get("/api/itineraries").json()["itineraries"]
+               if t["trip_id"] == booked["trip_id"])
+    assert row["permissions"]["auto_limit"] == 50 and row["permissions"]["never"] == []
+
+
+def test_a_trip_s_rules_can_be_remembered_for_next_time(client):
+    booked = book(client)
+    assert client.get("/api/profile").json()["profile"]["permissions"]["auto_limit"] == 0
+    client.post("/api/permissions", json={"trip_id": booked["trip_id"],
+                                          "auto_limit": 120, "remember": True})
+    assert client.get("/api/profile").json()["profile"]["permissions"]["auto_limit"] == 120
+    client.post("/api/profile", json={})
+
+
+def test_a_home_the_engine_cannot_place_is_refused_not_stored(client):
+    response = client.post("/api/profile", json={"home": "narnia"})
+    assert response.status_code == 422
+    assert client.get("/api/profile").json()["empty"]
+
+
+# --------------------------------------------------------------------------
 # the agent speaks first
 # --------------------------------------------------------------------------
 

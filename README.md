@@ -433,6 +433,35 @@ trip had hidden:
 The old scripted demo — one late flight, eleven bookings, EUR 282 — still runs
 at `/`, from the same fixtures, asserting the same numbers.
 
+## Who is asking
+
+Until `profile.py` every preference lived on the trip it was said on: *cheapest*
+was answered again on every booking, the spending cap was set again on every
+itinerary, and the rules that made the agent autonomous evaporated with the next
+trip. A profile is the same three things said once — **how to rank**, **where
+trips usually start**, and **what the agent may do unasked** — and applied at
+exactly the point the conversation would otherwise have asked.
+
+**Only what the engine uses.** The brief lists loyalty programmes, dietary needs,
+mobility, pace; none of those changes what this engine does today, and a profile
+field nothing reads is a promise the page cannot keep. Three fields, each applied
+somewhere specific and shown when it is.
+
+**Stated, not inferred, and it loses to the sentence.** The profile is applied
+*last* in `converse.read` — after the parse and after the model — and only to
+blanks: *"one way to Zurich"* from a Singapore home starts in Singapore; *"Zurich
+to Milan"* leaves Singapore out of it; *"fly me to Singapore"* asks where from
+rather than booking SIN to SIN. The card names every filled slot — `From:
+Singapore · from your profile` — because a slot filled without asking is safe
+only when the traveller can see that it was. Inferring the home city from past
+trips would be the brief's outcome-learning loop, and it is deliberately not
+done: a profile that quietly rewrites itself is one the traveller cannot check.
+
+**A trip copies the rules and owns its copy.** New trips start with the profile's
+permissions; changing the profile later does not silently change a trip already
+under way, and a trip's own rules can be kept *for every trip* with one
+checkbox. Stored per owner in its own table, next to the trips.
+
 ## What the agent may do on its own
 
 Two questions decide whether anything happens without a click, and until

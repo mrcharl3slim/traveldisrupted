@@ -622,6 +622,8 @@ function paintRules(){
       <div><label>Never choose</label>
         <input id="rule-never" class="wide" placeholder="rail, ryanair" value="${esc((r.never || []).join(', '))}"></div>
       <div><button class="btn" id="rule-save">Save rules</button></div>
+      <div><label style="display:inline;text-transform:none;letter-spacing:0">
+        <input type="checkbox" id="rule-remember"> for every trip</label></div>
       <div class="m" style="max-width:360px">${(Number(r.auto_limit) || 0) > 0
         ? `Within ${eur(r.auto_limit)} the agent takes the best plan the moment a leg
            breaks — sends what it can, rewrites the trip, leaves the purchase link
@@ -633,7 +635,8 @@ function paintRules(){
     try {
       r = await api('/api/permissions', {trip_id: TRIP.trip_id,
         auto_limit: Number($('#rule-limit').value) || 0,
-        never: $('#rule-never').value.split(',').map(x => x.trim()).filter(Boolean)});
+        never: $('#rule-never').value.split(',').map(x => x.trim()).filter(Boolean),
+        remember: $('#rule-remember').checked});
     } catch (e) { return fail('#trip-problems', e); }
     TRIP = Object.assign({}, TRIP, {permissions: r.permissions});
     paintRules();

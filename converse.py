@@ -49,6 +49,10 @@ class State(TypedDict, total=False):
     text: str
     today: date
     model: Any
+    #: Who is asking, as far as they have told us. Applied to blanks in `read`
+    #: and to nothing else: a profile fills what the sentence did not say, and
+    #: never argues with what it did.
+    profile: Any
     req: request_mod.Request
     kind: str
     asks: list
@@ -124,12 +128,31 @@ def read(s: State) -> State:
                  else getattr(base, f.name) if _set(getattr(base, f.name))
                  else getattr(fresh, f.name))
         for f in fields(base) if f.name not in ("raw", "filled", "travellers",
-                                                "confirmed", "shown")
+                                                "confirmed", "shown",
+                                                "from_profile")
     })
     merged = replace(merged,
                      travellers=max(base.travellers, fresh.travellers),
                      raw=s.get("text", "") or base.raw)
-    return {"req": request_mod.enrich(merged, s.get("model"), s.get("today"))}
+    merged = request_mod.enrich(merged, s.get("model"), s.get("today"))
+
+    # LAST, AFTER THE SENTENCE AND THE MODEL. The profile is the traveller's
+    # standing answer to two questions this conversation would otherwise ask
+    # -- where from, and how to sort -- and it must lose to anything they say
+    # now. "Zurich to Milan" from somebody whose home is Singapore leaves
+    # Singapore out of it. Marked, so the card can say where the value came
+    # from; a slot filled without asking is safe only when that is visible.
+    profile = s.get("profile")
+    if profile is not None:
+        marks = list(merged.from_profile)
+        if not merged.origin and profile.home and profile.home != merged.destination:
+            merged = replace(merged, origin=profile.home)
+            marks.append("origin")
+        if not merged.preference and profile.preference:
+            merged = replace(merged, preference=profile.preference)
+            marks.append("preference")
+        merged = replace(merged, from_profile=tuple(dict.fromkeys(marks)))
+    return {"req": merged}
 
 
 def classify(s: State) -> State:
@@ -479,10 +502,10 @@ _GRAPH = None
 
 
 def turn(text: str, req: request_mod.Request | None = None,
-         model=None, today: date | None = None) -> State:
+         model=None, today: date | None = None, profile=None) -> State:
     """One exchange. Re-entered from the top with the state so far."""
     global _GRAPH
     if _GRAPH is None:
         _GRAPH = build()
     return _GRAPH.invoke({"text": text, "req": req, "model": model,
-                          "today": today or date.today()})
+                          "today": today or date.today(), "profile": profile})

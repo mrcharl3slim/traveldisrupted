@@ -33,6 +33,11 @@ CREATE TABLE IF NOT EXISTS trips (
     payload    JSONB NOT NULL
 );
 CREATE INDEX IF NOT EXISTS trips_owner_idx ON trips (owner, created DESC);
+CREATE TABLE IF NOT EXISTS profiles (
+    owner      TEXT PRIMARY KEY,
+    updated    TIMESTAMPTZ NOT NULL,
+    payload    JSONB NOT NULL
+);
 """
 
 
@@ -58,6 +63,7 @@ class MemoryStore:
 
     def __init__(self) -> None:
         self._trips: dict[str, Saved] = {}
+        self._profiles: dict[str, dict] = {}
         self._lock = threading.Lock()
 
     def save(self, owner: str, payload: dict, label: str = "") -> Saved:
@@ -106,6 +112,17 @@ class MemoryStore:
                 return False
             del self._trips[trip_id]
             return True
+
+    # -- the traveller, as opposed to their trips ------------------------
+    def profile(self, owner: str) -> dict:
+        """The owner's profile, or an empty dict -- which is a real answer:
+        nobody has said anything yet, and nothing is applied."""
+        return dict(self._profiles.get(owner, {}))
+
+    def save_profile(self, owner: str, payload: dict) -> dict:
+        with self._lock:
+            self._profiles[owner] = dict(payload)
+        return dict(payload)
 
 
 class PostgresStore:
@@ -173,6 +190,21 @@ class PostgresStore:
             result = conn.execute(
                 "DELETE FROM trips WHERE id = %s AND owner = %s", (trip_id, owner))
             return result.rowcount > 0
+
+    def profile(self, owner: str) -> dict:
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT payload FROM profiles WHERE owner = %s", (owner,)).fetchone()
+        return dict(row[0]) if row else {}
+
+    def save_profile(self, owner: str, payload: dict) -> dict:
+        with self._conn() as conn:
+            conn.execute(
+                "INSERT INTO profiles (owner, updated, payload) VALUES (%s, %s, %s)"
+                " ON CONFLICT (owner) DO UPDATE SET payload = EXCLUDED.payload,"
+                " updated = EXCLUDED.updated",
+                (owner, datetime.now(timezone.utc), json.dumps(payload)))
+        return dict(payload)
 
 
 _store = None

@@ -125,6 +125,23 @@ def test_one_traveller_never_sees_another_s_trips(fresh):
     assert db.get(mine.id) is not None
 
 
+def test_a_profile_is_empty_until_somebody_says_something(fresh):
+    db = fresh(None)
+    assert db.profile("nobody") == {}
+    db.save_profile("nobody", {"home": "SIN"})
+    assert db.profile("nobody") == {"home": "SIN"}
+
+
+@needs_db
+def test_a_profile_outlives_the_process_and_is_replaced_not_duplicated(fresh):
+    db = fresh(DATABASE_URL)
+    db.save_profile("owner-profile", {"home": "SIN", "preference": "cheapest"})
+    db.save_profile("owner-profile", {"home": "ZRH"})
+    again = fresh(DATABASE_URL)
+    assert again.profile("owner-profile") == {"home": "ZRH"}
+    assert again.profile("owner-nobody") == {}
+
+
 @needs_db
 def test_the_watch_asks_the_database_for_its_work(fresh):
     """A watch that loads every itinerary anybody ever pasted, once a minute,
