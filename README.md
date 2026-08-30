@@ -452,7 +452,11 @@ a provider that has never heard of them is worse than silence.
 **Priced before it is done, and never in one press.** This is the only action in
 the product that destroys value on purpose and cannot be undone by pressing it
 again, so `POST /api/abandon` without `confirm` returns what it would cost and
-sends nothing. What comes back plus what is gone equals what was paid, at *this*
+sends nothing. In the chat it is priced **into the thread** rather than into the
+sidebar the button sits in: every other consequence in this product is argued in
+the conversation — what breaks, what it costs, what the options are — and the one
+decision that destroys value on purpose should not be the exception that happens
+quietly off to one side. What comes back plus what is gone equals what was paid, at *this*
 moment: a window open on Tuesday is shut on Friday, and the figure is only true
 next to the time it was computed at.
 

@@ -1640,7 +1640,10 @@ def abandon(body: Abandon) -> dict:
         # What the traveller gets back and what the decision costs, both, at
         # THIS moment: a window that is open on Tuesday is shut on Friday, and
         # the figure is only true next to the time it was computed at.
-        "refund": round(-plan.net_cash, 2),
+        # `or 0.0` because negating a zero net gives -0.0, and a page that
+        # renders it faithfully tells the traveller they are getting "−€0"
+        # back from a trip with nothing to recover.
+        "refund": round(-plan.net_cash, 2) or 0.0,
         "lost": plan.total_damage,
         "paid": round(sum(b.price for b in trip.bookings), 2),
         "as_of": _when(now),

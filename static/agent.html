@@ -440,6 +440,18 @@ function openTrip(id, quiet){
         </div>` : ''}</div>
     </div>`;
   }).join('');
+  // Calling the whole thing off. Under the legs rather than beside them: it is
+  // not a bigger version of "cancel this flight", it is a different decision,
+  // and putting it in the row of per-leg buttons invites the wrong one.
+  $('#detail').innerHTML += trip.abandoned
+    ? `<div class="note">This trip is cancelled. ${eur(trip.abandoned.refund)}
+       is coming back, ${eur(trip.abandoned.lost)} is gone.</div>`
+    : `<div class="note" style="display:flex;justify-content:space-between;
+         align-items:center;gap:10px">Not going at all?
+       <button class="btn bad sm" id="abandon">Cancel the whole trip</button></div>`;
+  const off = $('#abandon');
+  if (off) off.onclick = () => priceAbandon(id);
+
   $('#detail').querySelectorAll('[data-break]').forEach(el =>
     el.onclick = () => breakLeg(id, {booking_id: el.dataset.break}, '/api/cancel'));
   $('#detail').querySelectorAll('[data-late]').forEach(el =>
@@ -506,6 +518,75 @@ async function breakLeg(tripId, what, path){
   el.querySelector('.do-it').onclick = () => takePlan(el.querySelector('.do-it'), chosen);
   await loadTrips();
 }
+
+// --------------------------------------------------------------------------
+// calling the whole trip off
+// --------------------------------------------------------------------------
+
+// Priced into the conversation rather than into the panel. Every other
+// consequence in this product is argued in the thread -- what breaks, what it
+// costs, what the options are -- and the one decision that destroys value on
+// purpose should not be the exception that happens quietly in a sidebar.
+async function priceAbandon(tripId){
+  let quote;
+  try { quote = await api('/api/abandon', {trip_id: tripId}); }
+  catch (e) { return bubble('Downstream',
+    `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
+
+  bubble('You', `I am not going on this trip at all.`);
+
+  let html = `Cancelling <b>${esc(quote.label)}</b> costs you
+    <b>${eur(quote.lost)}</b> of the ${eur(quote.paid)} you paid.
+    <b>${eur(quote.refund)}</b> comes back.
+    <div class="note">Worked out at ${at(quote.as_of)} — a window that is open
+      now is shut later, so this is only true next to that time.</div>`;
+
+  // Grouped by who does the work, because that is the only grouping that tells
+  // the traveller what is left for them once they press yes.
+  for (const [key, title] of [['auto', 'Downstream handles it'],
+                              ['tap', 'One tap, you authorise'],
+                              ['call', 'You will have to call']]) {
+    const acts = quote.plan.lanes[key];
+    if (!acts.length) continue;
+    html += `<div class="note"><b>${title}</b>${acts.map(a => `
+      <div class="leg"><div>${esc(a.label)}<div class="m">${esc(a.note || '')}</div></div>
+        <span class="n">${a.cash_in ? eur(a.cash_in) + ' back' : '—'}</span></div>`).join('')}</div>`;
+  }
+  html += `<div class="chips">
+      <button class="btn bad abandon-go">Yes, cancel it all</button>
+      <button class="btn abandon-no">Keep the trip</button></div>`;
+
+  const el = bubble('Downstream', html);
+  el.querySelector('.abandon-no').onclick = () =>
+    bubble('Downstream', 'Left as it is — nothing was cancelled.');
+  el.querySelector('.abandon-go').onclick = (e) => confirmAbandon(e.target, tripId);
+}
+
+async function confirmAbandon(button, tripId){
+  button.disabled = true;
+  let done;
+  try { done = await api('/api/abandon', {trip_id: tripId, confirm: true}); }
+  catch (e) { button.disabled = false; return bubble('Downstream',
+    `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
+
+  // Sent and pending shown apart, exactly as taking a recovery plan shows
+  // them. A system that blurs the two has started lying about the useful part.
+  let html = `Cancelled. ${esc(done.summary)} <b>${eur(done.refund)}</b> is
+    coming back and <b>${eur(done.lost)}</b> is gone.`;
+  if (done.sent.length)
+    html += `<div class="note"><b>Done</b>${done.sent.map(d =>
+      `<div class="leg"><div>${esc(d.label)}<div class="m">via ${
+        esc(d.channels.join(', ') || 'no channel took it')}</div></div>
+        <span class="tag ok">sent</span></div>`).join('')}</div>`;
+  if (done.pending.length)
+    html += `<div class="note"><b>Waiting on you</b>${done.pending.map(d =>
+      `<div class="leg"><div>${esc(d.label)}<div class="m">${esc(d.note || '')}</div></div>
+        <span class="tag warn">${esc(d.lane)}</span></div>`).join('')}</div>`;
+
+  bubble('Downstream', html);
+  await loadTrips();          // re-opens the panel on the trip that is open
+}
+
 
 async function takePlan(button, planId){
   button.disabled = true;

@@ -201,6 +201,29 @@ def test_the_errand_on_a_row_is_the_one_for_that_booking(client):
         assert b["cancelled"]["booking_id"] == b["id"]
 
 
+def test_the_quote_carries_what_a_page_needs_to_argue_it(client):
+    """The chat panel prices this into the thread rather than into a sidebar,
+    which means the answer has to name the trip, group the work by who does it,
+    and say what moment it was true at."""
+    booked = book(client)
+    quote = client.post("/api/abandon", json={"trip_id": booked["trip_id"]}).json()
+
+    assert quote["label"] == booked["label"]
+    assert set(quote["plan"]["lanes"]) == {"auto", "tap", "call"}
+    assert quote["as_of"] and quote["as_of"]["iso"]
+    assert sum(len(v) for v in quote["plan"]["lanes"].values()) \
+        == len(quote["plan"]["actions"])
+
+
+def test_nothing_to_recover_is_zero_and_not_minus_zero(client):
+    """Negating a zero net gives -0.0, and a page that renders it faithfully
+    tells the traveller they are getting "-EUR 0" back."""
+    booked = book(client)
+    quote = client.post("/api/abandon", json={"trip_id": booked["trip_id"]}).json()
+    import math
+    assert not math.copysign(1, quote["refund"]) < 0 or quote["refund"] != 0
+
+
 def test_a_cancelled_trip_cannot_be_disrupted(client):
     """Delaying a flight on a trip nobody is taking would start the watch
     counting down deadlines the traveller has already been told are gone."""
