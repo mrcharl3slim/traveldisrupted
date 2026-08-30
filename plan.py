@@ -85,6 +85,11 @@ class Action:
     #: said "ESTIMATE", so no row was ever flagged and the footnote below the
     #: table claimed a caveat the table never showed.
     price_source: str = ""
+    #: Who this is with -- the carrier for a purchase, the booking's provider
+    #: for everything else. The permission engine reads it to honour "never
+    #: Ryanair", and it has to be on the action because by the time a plan is
+    #: judged the offer that named the carrier is gone.
+    provider: str = ""
 
 
 @dataclass
@@ -104,6 +109,15 @@ class Plan:
     at_risk_ids: set[str] = field(default_factory=set)
     at_risk: float = 0.0
     tightest: tuple[str, timedelta] | None = None
+    #: The commitments -- meetings, the reason the trip exists -- this plan
+    #: keeps and the ones it loses. Counted, never priced, exactly as the
+    #: impact graph counts them; but counted HERE too, because they rank.
+    #: See `generate`.
+    saved_ids: set[str] = field(default_factory=set)
+    missed_ids: set[str] = field(default_factory=set)
+    #: "flight" or "rail" for a plan that buys something, "" for inaction.
+    #: What the permission engine's "never rail" is a statement about.
+    mode: str = ""
 
     @property
     def cash_out(self) -> float:
@@ -289,6 +303,9 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
             at_risk_ids={n.id for n in baseline.nodes
                          if n.severity is Severity.AT_RISK},
             at_risk=baseline.at_risk_value,
+            saved_ids={n.id for n in baseline.nodes
+                       if n.booking.commitment and n.attended},
+            missed_ids={n.id for n in baseline.missed},
         )
 
     if not _can_board(baseline, offer):
@@ -306,6 +323,13 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
     at_risk_ids: set[str] = set()
     at_risk = 0.0
     tightest: tuple[str, timedelta] | None = None
+    # Commitments this plan keeps, including the ones the disruption never
+    # threatened: a plan is judged on the whole trip's goals, not only on the
+    # ones that were at stake, or a plan that saves one meeting by losing
+    # another would look like a rescue.
+    saved_ids: set[str] = {n.booking.id for n in under.values()
+                           if n.booking.commitment and n.attended}
+    missed_ids: set[str] = set()
 
     broken = [n for n in baseline.nodes
               if n.severity in (Severity.BROKEN, Severity.AT_RISK)]
@@ -401,6 +425,20 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
             if buffer is not None and (tightest is None or buffer < tightest[1]):
                 tightest = (b.id, buffer)
             continue
+
+        # --- a commitment this plan does not reach ------------------------
+        # No fare to waste and no slot to move: the one thing that can be done
+        # is to tell the person, and that is a thing this system can genuinely
+        # do. It goes in `missed_ids` rather than `wasted_ids` because it is
+        # not money, and it is what `generate` ranks on before money.
+        if b.commitment:
+            missed_ids.add(b.id)
+            actions.append(Action(
+                verb="notify", booking_id=b.id,
+                lane=lane_for(b.provider, "notify"), provider=b.provider,
+                label=f"Tell {b.who or 'them'} you will miss {b.title}",
+                note="this plan does not get you there in time"))
+            continue
         window = b.policy.best_window(now)
         if window and window.net > 0:
             actions.append(Action(
@@ -414,6 +452,7 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
     if offer is not None:
         actions.insert(1, Action(
             verb="buy", booking_id=None, lane=lane_for(offer.carrier, "buy"),
+            provider=offer.carrier,
             label=f"Book {offer.label}, EUR {offer.price:,.0f}",
             cash_out=offer.price,
             price_source=getattr(offer, "price_source", "quoted"),
@@ -435,6 +474,8 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
         delivered=delivered, wasted_ids=wasted_ids, wasted=wasted,
         at_risk_ids=at_risk_ids, at_risk=at_risk,
         tightest=tightest,
+        saved_ids=saved_ids, missed_ids=missed_ids,
+        mode=getattr(offer, "mode", "flight") if offer is not None else "",
         key=getattr(offer, "key", "") if offer is not None else "",
     )
 
@@ -594,14 +635,28 @@ def generate(trip: Trip, disruption: Disruption, now: datetime,
     whole argument: it is not a rhetorical baseline, it is a candidate that
     loses.
 
+    GOALS BEFORE MONEY. A plan that keeps the meeting outranks every plan that
+    loses it, whatever they cost. Until this, the sort was damage-first and a
+    missed commitment carried an exposure of zero, so the ranking was
+    money-first and meeting-blind: a EUR 120 flight that saved the board
+    meeting lost to a EUR 95 one that missed it, and the engine recommended
+    missing the reason the trip existed to save twenty-five euros.
+
+    The principle that a commitment is never PRICED still holds -- there is no
+    euro figure for a meeting anywhere in this file. It is ranked on, which is
+    different: lexicographic, count of missed commitments first, then damage.
+    The cost of keeping the meeting is then a real number the page shows next
+    to the cheaper plan that loses it, rather than a weight somebody typed.
+
     ``preference`` is whatever the traveller said mattered when they booked.
-    It breaks ties and nothing more -- see `_preference_key`.
+    It breaks ties in damage and nothing more -- see `_preference_key`.
     """
     baseline = propagate(trip, disruption, now)
     built = [build(trip, disruption, now, baseline, o) for o in [None, *offers]]
     plans = [p for p in built if p is not None]
     latest = datetime.max.replace(tzinfo=now.tzinfo)
-    return sorted(plans, key=lambda p: (round(p.total_damage, 2),
+    return sorted(plans, key=lambda p: (len(p.missed_ids),
+                                        round(p.total_damage, 2),
                                         _preference_key(p, preference),
                                         p.arrives_at or latest))
 

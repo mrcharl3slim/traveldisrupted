@@ -441,6 +441,34 @@ function openTrip(id, quiet){
         </div>` : ''}</div>
     </div>`;
   }).join('');
+  // What the agent may do on its own about this trip. Under the legs, above
+  // "cancel the whole trip": the rules are about the trip as it stands.
+  if (!trip.abandoned) {
+    const r = trip.permissions || {auto_limit: 0, never: []};
+    $('#detail').innerHTML += `<div class="note">
+      <div class="m" style="margin-bottom:6px">${(Number(r.auto_limit) || 0) > 0
+        ? `Within ${eur(r.auto_limit)} I act the moment a leg breaks and leave the
+           purchase link for you. Nothing is bought.`
+        : `Nothing is pre-authorised — every plan that costs money waits for you.`}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <span class="m">up to €</span>
+        <input id="rule-limit" type="number" min="0" step="10" style="width:80px"
+               value="${Number(r.auto_limit) || 0}">
+        <span class="m">never</span>
+        <input id="rule-never" placeholder="rail, ryanair" style="width:130px"
+               value="${esc((r.never || []).join(', '))}">
+        <button class="btn sm" id="rule-save">Save</button></div></div>`;
+    $('#rule-save').onclick = async () => {
+      try {
+        await api('/api/permissions', {trip_id: id,
+          auto_limit: Number($('#rule-limit').value) || 0,
+          never: $('#rule-never').value.split(',').map(x => x.trim()).filter(Boolean)});
+      } catch (e) { return bubble('Downstream',
+        `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
+      await loadTrips();
+    };
+  }
+
   // Calling the whole thing off. Under the legs rather than beside them: it is
   // not a bigger version of "cancel this flight", it is a different decision,
   // and putting it in the row of per-leg buttons invites the wrong one.
@@ -497,16 +525,34 @@ async function breakLeg(tripId, what, path){
 
   if (d.warning) html += `<div class="banner warn">${esc(d.warning)}</div>`;
 
+  // The agent acted, or is waiting. Said before the table, because it is the
+  // thing that changed while the traveller was not looking.
+  if (d.auto_taken) {
+    const t = d.auto_taken;
+    html += `<div class="banner"><b>I have taken ${esc(t.plan)}</b> — ${esc(t.permission)}.
+      ${esc(t.summary)}.${t.pending.length
+        ? ' Still yours: ' + t.pending.map(x => esc(x.label)).join(' · ') + '.' : ''}</div>`;
+  }
+  if (d.why) html += `<div class="note">${esc(d.why)}</div>`;
+  if ((d.excluded || []).length)
+    html += `<div class="note"><span class="m">Not shown, by your rules: ${
+      d.excluded.map(x => esc(x.name) + ' (' + esc(x.why) + ')').join(' · ')}</span></div>`;
+
   html += `<table><thead><tr><th>Plan</th><th class="n">Tonight</th>
     <th class="n">Total damage</th><th>Arrives</th></tr></thead><tbody>`
     + d.plans.slice(0, 6).map(p => `
       <tr class="pick ${p.best ? 'best' : ''}" data-plan="${esc(p.key || p.id)}">
-        <td>${esc(p.name)}${p.best ? '<span class="tag ok">recommended</span>' : ''}</td>
+        <td>${esc(p.name)}${p.best ? '<span class="tag ok">recommended</span>' : ''}${
+          (p.saves || []).length ? '<span class="tag">keeps the meeting</span>'
+          : (p.misses || []).length ? '<span class="tag warn">misses the meeting</span>' : ''}${
+          p.id !== 'noop' && p.auto ? '<span class="tag ok">pre-authorised</span>' : ''}</td>
         <td class="n ${p.net_cash < 0 ? 'neg' : ''}">${p.net_cash ? eur(p.net_cash) : '—'}</td>
         <td class="n">${eur(p.total_damage)}</td>
         <td>${p.arrives_at ? esc(p.arrives_where) + ' ' + at(p.arrives_at) : '—'}</td>
       </tr>`).join('') + `</tbody></table>
-    <div class="chips"><button class="btn key do-it" disabled>Take this plan</button></div>`;
+    <div class="chips">${d.auto_taken
+      ? '<span class="m">Taken already — pick a different row only if you want to change it.</span>'
+      : '<button class="btn key do-it" disabled>Take this plan</button>'}</div>`;
 
   const el = bubble('Downstream', html);
   let chosen = null;
@@ -514,9 +560,11 @@ async function breakLeg(tripId, what, path){
     chosen = tr.dataset.plan;
     el.querySelectorAll('tr[data-plan]').forEach(r =>
       r.classList.toggle('sel', r.dataset.plan === chosen));
-    el.querySelector('.do-it').disabled = false;
+    const go = el.querySelector('.do-it');
+    if (go) go.disabled = false;
   });
-  el.querySelector('.do-it').onclick = () => takePlan(el.querySelector('.do-it'), chosen);
+  const doIt = el.querySelector('.do-it');
+  if (doIt) doIt.onclick = () => takePlan(doIt, chosen);
   await loadTrips();
 }
 

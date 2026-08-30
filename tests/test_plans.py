@@ -85,6 +85,50 @@ def test_a_plan_is_scored_by_the_walk_that_scores_inaction():
     assert best.total_damage < noop.total_damage
 
 
+def test_a_plan_that_keeps_the_meeting_outranks_a_cheaper_one_that_loses_it():
+    """Goals before money. The sort was damage-first and a missed commitment
+    carried an exposure of zero, so the ranking was money-first and
+    meeting-blind: a EUR 120 flight that saved the board meeting lost to a EUR
+    95 one that missed it -- and to doing nothing, at EUR 0. The engine
+    recommended missing the reason the trip existed to save twenty-five euros.
+
+    The commitment is still never PRICED. It is ranked on, which is different:
+    the EUR 25 is then a real number the page shows next to the plan that
+    loses the meeting, rather than a weight somebody typed."""
+    day = datetime(2026, 10, 12, tzinfo=CEST)
+
+    def at(hour, minute=0):
+        return day.replace(hour=hour, minute=minute)
+
+    trip = Trip([
+        Booking(id="l1", kind=Kind.FLIGHT, provider="LX", title="ZRH to MXP",
+                start=at(9), end=at(10, 10), origin="ZRH", destination="MXP",
+                price=170.0),
+        Booking(id="m1", kind=Kind.ACTIVITY, provider="calendar",
+                title="Board meeting", start=at(14), end=at(15), origin="MILAN",
+                price=0.0, commitment=True, who="the board"),
+    ])
+    cancelled = Disruption("l1", at(8, 30), "cancelled", 1.0, cancelled=True)
+    cheap_late = Offer("cheap-late", "ZRH", "MXP", at(15), at(16, 10), 95.0)
+    dear_early = Offer("dear-early", "ZRH", "MXP", at(11), at(12, 10), 120.0)
+
+    ranked = generate(trip, cancelled, at(8, 30), [cheap_late, dear_early])
+    assert [p.id for p in ranked] == ["dear-early", "noop", "cheap-late"]
+    assert ranked[0].saved_ids == {"m1"} and not ranked[0].missed_ids
+    assert all("m1" in p.missed_ids for p in ranked[1:])
+    # And a missed meeting produces the one action that is possible for it.
+    assert any(a.verb == "notify" and a.booking_id == "m1"
+               for a in ranked[2].actions)
+    assert ranked[0].total_damage == 120.0, "still priced honestly, still ranked first"
+
+
+def test_the_demo_ranking_is_untouched_by_goal_awareness(ranked):
+    """The scripted trip has no commitments, so nothing about its order or its
+    figures may move. EUR 282, -EUR 14 and EUR 176 are asserted elsewhere; this
+    pins that the sort key's new leading term is zero for every plan."""
+    assert all(not p.missed_ids for p in ranked)
+
+
 def test_a_plan_that_arrives_too_late_still_loses_the_leg():
     """The other half: forgiveness has to be earned. Same trip, a replacement
     landing after the onward hop has gone."""

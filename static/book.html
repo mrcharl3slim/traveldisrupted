@@ -81,6 +81,7 @@
   .late-line{color:var(--warn)}
   .tag.bad{border-color:#4d2326;color:#ffb4ae}
   .tag.warn{border-color:#4d4423;color:#f0d68c}
+  .tag.ok{border-color:#1d4429;color:var(--ok)}
   .leg .t{font-size:14px}
 
   .lane{margin-top:18px}
@@ -159,6 +160,7 @@
     <h2>5 · Your trip <span id="trip-total" class="m"></span></h2>
     <div id="trip-problems"></div>
     <div id="trip-legs"></div>
+    <div id="trip-rules" class="note"></div>
     <div id="trip-abandon"></div>
     <div class="note">Two flights bought in two searches are two contracts. Nobody owes you
       the connection — and nothing in the engine had to be told that.</div>
@@ -176,6 +178,7 @@
         <div class="figfoot" id="f-saved-foot"></div></div>
     </div>
     <div id="gap" class="banner"></div>
+    <div id="agent-note"></div>
     <table style="margin-top:18px"><thead><tr>
       <th>Option</th><th class="n">Tonight</th><th class="n">Total damage</th><th>Arrives</th>
     </tr></thead><tbody id="t-plans"></tbody></table>
@@ -391,7 +394,8 @@ async function restore(){
   if (!found) return remember(TRIP = null);
   TRIP = {trip_id: found.trip_id, label: found.label, total: found.total,
           problems: found.problems || [], durable: found.durable,
-          abandoned: found.abandoned, bookings: found.bookings};
+          abandoned: found.abandoned, permissions: found.permissions,
+          bookings: found.bookings};
   paintTrip();
   try { WATCH = await api(`/api/alerts?trip=${encodeURIComponent(id)}`); }
   catch (e) { WATCH = null; }
@@ -458,6 +462,7 @@ function paintTrip(){
     </div>`;
   }).join('');
 
+  paintRules();
   paintAbandon();
 
   document.querySelectorAll('[data-cancel]').forEach(el =>
@@ -511,6 +516,18 @@ function paintWatch(){
 }
 
 function paintOutcome(){
+  // The agent acted, or is waiting. Said first, because it is the thing that
+  // changed while the traveller was not looking.
+  const taken = OUT.auto_taken;
+  $('#agent-note').innerHTML = (taken
+    ? `<div class="banner" style="border-left:3px solid var(--ok)"><b>Taken for you:</b>
+         ${esc(taken.plan)} — ${esc(taken.permission)}. ${esc(taken.summary)}.
+         ${taken.pending.length ? 'Still yours: ' + taken.pending.map(d => esc(d.label)).join(' · ') : ''}</div>`
+    : '')
+    + (OUT.why ? `<div class="note" style="margin-top:8px">${esc(OUT.why)}</div>` : '')
+    + ((OUT.excluded || []).length
+        ? `<div class="m" style="margin-top:6px">Not shown, by your rules: ${
+            OUT.excluded.map(x => esc(x.name) + ' (' + esc(x.why) + ')').join(' · ')}</div>` : '');
   const s = OUT.signal, i = OUT.impact;
   $('#s-out').hidden = false; $('#s-hand').hidden = false;
 
@@ -534,10 +551,16 @@ function paintOutcome(){
       + `${OUT.searched.length} live replacements searched`
     : 'nothing downstream is out of reach — no search needed, which is the normal answer';
 
+  // Two tags a row can earn: what it does to the goals, and whether the
+  // traveller's rules let the agent take it unasked. Neither is the ranking's
+  // opinion; both are facts the ranking used.
+  const goal = p => (p.saves || []).length ? '<span class="tag">keeps the meeting</span>'
+    : (p.misses || []).length ? '<span class="tag warn">misses the meeting</span>' : '';
+  const may = p => p.id !== 'noop' && p.auto ? '<span class="tag ok">pre-authorised</span>' : '';
   $('#t-plans').innerHTML = OUT.plans.map(p => `
     <tr class="pick ${p.best ? 'best' : ''} ${PICKED === p.id ? 'sel' : ''}" data-plan="${esc(p.id)}">
       <td>${esc(p.name)}${p.estimated ? '<span class="star"> *</span>' : ''}
-        ${p.best ? '<span class="badge">recommended</span>' : ''}</td>
+        ${p.best ? '<span class="badge">recommended</span>' : ''} ${goal(p)} ${may(p)}</td>
       <td class="n ${p.net_cash < 0 ? 'neg' : 'pos'}">${p.net_cash ? eur(p.net_cash) : '—'}</td>
       <td class="n">${eur(p.total_damage)}</td>
       <td>${p.arrives_at ? esc(p.arrives_where) + ' ' + at(p.arrives_at) : '—'}</td>
@@ -561,12 +584,51 @@ function paintOutcome(){
         return `<div class="lane"><h3>${esc(title)}</h3><div class="who">${esc(who)}</div>`
           + acts.map(a => `
             <div class="act">
-              <div>${esc(a.label)}${a.estimated ? '<span class="badge est">estimated fare</span>' : ''}</div>
+              <div>${esc(a.label)}${a.estimated ? '<span class="badge est">estimated fare</span>' : ''}${
+                a.approval && a.approval !== 'auto'
+                  ? ` <span class="tag ${a.approval === 'pre-authorised' ? 'ok' : 'warn'}"
+                       title="${esc(a.approval_why || '')}">${esc(a.approval)}</span>` : ''}</div>
               <div class="n">${esc(a.note)}</div>
               <div class="cash">${a.net ? (a.net > 0 ? 'costs ' : 'returns ') + eur(Math.abs(a.net))
                 : 'no money moves'}${a.deadline ? ' · before ' + at(a.deadline) : ''}</div>
             </div>`).join('') + `</div>`;
       }).join('') || '<div class="note">This plan asks nothing of anybody.</div>');
+}
+
+// --------------------------------------------------------------------------
+// what the agent may do on its own
+// --------------------------------------------------------------------------
+
+// Two questions decide whether something happens without a click: CAN we
+// (the provider's lane, shown on every action) and MAY we (these rules). The
+// default is that nothing is pre-authorised, so a trip booked without touching
+// this box behaves exactly as it did before the box existed.
+function paintRules(){
+  const r = (TRIP && TRIP.permissions) || {auto_limit: 0, never: []};
+  if (TRIP && TRIP.abandoned) { $('#trip-rules').innerHTML = ''; return; }
+  $('#trip-rules').innerHTML = `
+    <div class="row" style="align-items:center">
+      <div><label>Act without asking up to</label>
+        <input id="rule-limit" type="number" min="0" step="10" value="${Number(r.auto_limit) || 0}"></div>
+      <div><label>Never choose</label>
+        <input id="rule-never" class="wide" placeholder="rail, ryanair" value="${esc((r.never || []).join(', '))}"></div>
+      <div><button class="btn" id="rule-save">Save rules</button></div>
+      <div class="m" style="max-width:360px">${(Number(r.auto_limit) || 0) > 0
+        ? `Within ${eur(r.auto_limit)} the agent takes the best plan the moment a leg
+           breaks — sends what it can, rewrites the trip, leaves the purchase link
+           for you. Nothing is bought.`
+        : `Nothing is pre-authorised: every plan that costs money waits for you.`}</div>
+    </div>`;
+  $('#rule-save').onclick = async () => {
+    let r;
+    try {
+      r = await api('/api/permissions', {trip_id: TRIP.trip_id,
+        auto_limit: Number($('#rule-limit').value) || 0,
+        never: $('#rule-never').value.split(',').map(x => x.trim()).filter(Boolean)});
+    } catch (e) { return fail('#trip-problems', e); }
+    TRIP = Object.assign({}, TRIP, {permissions: r.permissions});
+    paintRules();
+  };
 }
 
 // --------------------------------------------------------------------------

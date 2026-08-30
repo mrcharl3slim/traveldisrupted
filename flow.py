@@ -30,7 +30,7 @@ inside it meant a delay could only be answered by lying about what happened.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
 import duffel
@@ -42,6 +42,7 @@ from builder import assemble, infeasible
 from domain import Disruption, Kind, Trip
 from graph import Impact, propagate
 from plan import Gap, Plan, breaks_preference, generate, recovery_gap
+import permit
 
 #: The hour a rail day starts. The timetable answers with what departs AFTER
 #: the time it is asked about, so this is not cosmetic: it decides how much of
@@ -355,6 +356,13 @@ class Recovery:
     preference: str = ""
     #: Set when the recommended plan is not the kind of trip they asked for.
     warning: str = ""
+    #: What the traveller allowed, and what that means for the best plan.
+    permissions: permit.Permissions = field(default_factory=permit.Permissions)
+    verdict: permit.Verdict | None = None
+    #: Plans the ranking produced and the traveller had ruled out. Kept, so
+    #: the page can say why the train is missing rather than leaving it to
+    #: be wondered about.
+    excluded: list = field(default_factory=list)
 
     @property
     def best(self):
@@ -370,7 +378,8 @@ class Recovery:
 
 
 def replan(trip: Trip, disruption: Disruption, now: datetime | None = None,
-           preference: str = "") -> Recovery:
+           preference: str = "",
+           permissions: permit.Permissions | None = None) -> Recovery:
     """One disruption, answered in full.
 
     Takes the disruption rather than making one, because there are three ways
@@ -386,7 +395,12 @@ def replan(trip: Trip, disruption: Disruption, now: datetime | None = None,
     now = now or learned_at(trip, disruption)
     gap = recovery_gap(trip, disruption, now)
     offers = replacements(trip, disruption, gap)
-    plans = generate(trip, disruption, now, offers, preference)
+    perms = permissions or permit.Permissions()
+    # Ranked first, then the traveller's rules applied to the ranking -- so a
+    # ruled-out plan is one that WOULD have been recommended, and the page can
+    # say so. Filtering the offers before ranking would lose that sentence.
+    plans, excluded = permit.permitted(
+        generate(trip, disruption, now, offers, preference), perms)
     return Recovery(
         disruption=disruption,
         impact=propagate(trip, disruption, now),
@@ -398,4 +412,7 @@ def replan(trip: Trip, disruption: Disruption, now: datetime | None = None,
         warning=("the only plan that saves this trip has a connection, and you "
                  "asked for direct flights"
                  if plans and breaks_preference(plans[0], preference) else ""),
+        permissions=perms,
+        verdict=permit.judge(plans[0], perms) if plans else None,
+        excluded=excluded,
     )

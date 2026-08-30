@@ -433,6 +433,62 @@ trip had hidden:
 The old scripted demo — one late flight, eleven bookings, EUR 282 — still runs
 at `/`, from the same fixtures, asserting the same numbers.
 
+## What the agent may do on its own
+
+Two questions decide whether anything happens without a click, and until
+`permit.py` the engine asked only the first. **Can we** — does the provider expose
+a way to do it? That is `plan.Lane`, a fact about the supplier: an email to a
+hotel is AUTO, a fare is a TAP into the carrier's checkout, a SWISS cancellation
+is a phone call. **May we** — has the traveller allowed it? That is a fact about
+the person, and it is the one that makes the word *autonomous* true: nothing
+here acts on its own because the software is capable of it, only because
+somebody said it could.
+
+Three rules, on the trip: a **spending cap**, a list of things **never** to
+choose (`rail`, `ryanair` — matched against what the agent would *pick*, not
+what the trip already holds, so "never Booking.com" cannot stop it phoning the
+Booking.com hotel you already have), and verbs that **always ask**. The default
+is a cap of zero, which reproduces exactly the behaviour before the file existed.
+Nothing becomes autonomous by omission.
+
+**What pre-authorised means here, precisely.** This product cannot buy anything,
+so it does not mean "we charged your card" and does not pretend to. It means the
+agent *takes the decision* the moment a leg breaks: applies the best plan, sends
+everything in the AUTO lane, rewrites the itinerary, and leaves the purchase link
+waiting. What always needed a person — the tap, the call — still does, and is
+reported as waiting rather than done. The difference is the one that matters:
+whether a two-hour delay at 02:00 is answered at 02:00 or at 07:30 when somebody
+wakes up and presses a button. The record says `by: the agent`, because an action
+taken unasked is exactly the kind a person later wants to find in the log.
+
+A plan the rules withhold is not silently missing. The page says *not shown, by
+your rules: EC 11:33 (you said never rail)*, because a ranking with the train
+quietly removed is a ranking the traveller cannot check.
+
+## Goals before money
+
+`generate` ranked by damage first, and a missed commitment carried an exposure
+of zero — so the ranking was **money-first and meeting-blind**. A EUR 120 flight
+that saved the board meeting lost to a EUR 95 one that missed it, and to doing
+nothing at EUR 0; the engine recommended missing the reason the trip existed to
+save twenty-five euros.
+
+The sort is now lexicographic: **commitments missed, then damage**, then the
+stated preference, then arrival. The principle that a meeting is never *priced*
+still holds — there is no euro figure for one anywhere in `plan.py`. It is
+*ranked on*, which is different, and the cost of keeping it then appears as a
+real number next to the cheaper plan that loses it rather than as a weight
+somebody typed:
+
+    Recommended because it keeps Meeting with the client; costs EUR 72 more than
+    doing nothing, which would miss it; within your EUR 300 limit.
+
+Every clause in that sentence is true of the plan and taken from the engine —
+which commitments it keeps, what it costs against the cheapest plan that does
+not, what the rules say. A missed meeting also produces the one action that is
+possible for it: telling the person. The scripted trip has no commitments, so
+its ranking and every figure in it are unmoved.
+
 ## Calling the whole thing off
 
 Not going at all is a different question from being disrupted, and `plan.abandon`

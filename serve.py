@@ -50,6 +50,7 @@ from demo_trip import (DEFAULT_BASE, anchor, as_written, build_trip,   # noqa: E
 from graph import Impact, propagate                           # noqa: E402
 import plan as plan_mod                                      # noqa: E402
 from plan import Gap, Lane, generate                          # noqa: E402
+import permit                                                 # noqa: E402
 
 STATIC = ROOT / "static"
 
@@ -189,6 +190,9 @@ class Selection(BaseModel):
     flights: list[Leg]
     hotels: list[Stay] = []
     label: str = ""
+    #: What the agent may do about this trip on its own. Empty means nothing:
+    #: no trip becomes autonomous because a field was left out.
+    permissions: dict = {}
 
 
 class Chat(BaseModel):
@@ -228,6 +232,16 @@ class Choice(BaseModel):
     #: a question put to the wrong shop. Defaults keep an older client working.
     flight_mode: str = "flight"
     return_mode: str = "flight"
+    permissions: dict = {}
+
+
+class Permit(BaseModel):
+    """The traveller's rules for one trip. See permit.py for what they mean."""
+
+    trip_id: str
+    auto_limit: float = 0.0
+    never: list[str] = []
+    always_ask: list[str] = []
 
 
 class Abandon(BaseModel):
@@ -369,7 +383,15 @@ def _action(a) -> dict:
     }
 
 
-def _plan(p, best: bool) -> dict:
+def _plan(p, best: bool, verdict=None) -> dict:
+    """``verdict`` is what the traveller's rules say about this plan. Absent
+    for the scripted demo, which has no traveller to have rules."""
+    def act(a) -> dict:
+        out = _action(a)
+        if verdict is not None:
+            out["approval"], out["approval_why"] = verdict.approval(a)
+        return out
+
     return {
         "id": p.id,
         "key": p.key,
@@ -388,13 +410,22 @@ def _plan(p, best: bool) -> dict:
         "tightest": ({"booking_id": p.tightest[0],
                       "minutes": int(p.tightest[1].total_seconds() // 60)}
                      if p.tightest else None),
-        "lanes": {key: [_action(a) for a in p.lane(lane)]
+        "lanes": {key: [act(a) for a in p.lane(lane)]
                   for lane, key in LANE_KEY.items()},
         # The same actions in the order they were built, which for a whole-trip
         # cancellation is itinerary order and is the order a person checks them
         # off in. `lanes` regroups by who does the work and loses that, and
         # both readings are wanted -- one to act from, one to read down.
-        "actions": [_action(a) for a in p.actions],
+        "actions": [act(a) for a in p.actions],
+        # The goals. Counted here for the same reason they rank: a plan that
+        # keeps the meeting is a different kind of plan from one that does not,
+        # whatever the two cost.
+        "saves": sorted(p.saved_ids),
+        "misses": sorted(p.missed_ids),
+        "mode": p.mode,
+        # And whether the traveller has allowed it to be taken without asking.
+        "auto": bool(verdict and verdict.auto),
+        "permission": verdict.why if verdict else "",
     }
 
 
@@ -445,7 +476,8 @@ def _assemble(basis: date | None, trip: Trip | None = None,
 
 def _assessment(trip: Trip, disruption, impact: Impact, plans: list,
                 now: datetime, basis: date | None, trip_id: str,
-                gap: Gap | None = None, injected: bool = False) -> dict:
+                gap: Gap | None = None, injected: bool = False,
+                perms: permit.Permissions | None = None) -> dict:
     """One shape for every assessment, however the disruption arrived.
 
     Live status and a traveller pressing "cancelled" produce the same Disruption
@@ -513,7 +545,8 @@ def _assessment(trip: Trip, disruption, impact: Impact, plans: list,
                              "seconds": int((cutoff[0] - now).total_seconds())}
                             if cutoff else None),
         },
-        "plans": [_plan(p, i == 0) for i, p in enumerate(plans)],
+        "plans": [_plan(p, i == 0, permit.judge(p, perms) if perms else None)
+                  for i, p in enumerate(plans)],
     }
 
 
@@ -1270,6 +1303,8 @@ def choose(body: Choice) -> dict:
          # a week, nobody has to ask the traveller what they cared about at the
          # moment their flight is cancelled.
          "preference": req.preference,
+         # And so do the rules for acting on it, for the same reason.
+         "permissions": permit.Permissions.from_dict(body.permissions).to_dict(),
          "request": _req_out(req)},
         body.label or req.summary())
 
@@ -1315,6 +1350,8 @@ def itineraries() -> dict:
             # which calls are still owed is exactly what the traveller comes
             # back for. It reads as cancelled and it does not read as live.
             "abandoned": saved.payload.get("abandoned"),
+            "permissions": _perms(saved).to_dict(),
+            "acted": saved.payload.get("acted"),
             "bookings": _bookings_out(trip, disruption,
                                       saved.payload.get("abandoned")),
         })
@@ -1349,7 +1386,7 @@ def act(body: Act) -> dict:
             trip,
             said if said and said.booking_id == body.booking_id
             else flow.cancel(trip, body.booking_id),
-            preference=preference)
+            preference=preference, permissions=_perms(saved))
     except (PortError, KeyError) as exc:
         raise HTTPException(503 if isinstance(exc, PortError) else 404, str(exc))
 
@@ -1366,30 +1403,47 @@ def act(body: Act) -> dict:
             409, "that option is no longer available — the search has moved on. "
                  "Cancel again to see what is there now.")
 
+    return _take(body.trip_id, trip, recovery, plan, by="the traveller")
+
+
+def _take(trip_id: str, trip: Trip, recovery, plan, by: str) -> dict:
+    """Take one plan: perform what can be performed, rewrite the itinerary,
+    record who decided.
+
+    One function for the button and for the agent, because the only thing
+    that differs between "the traveller pressed Take this plan" and "the
+    traveller pre-authorised up to EUR 300 and this cost EUR 72" is ``by`` --
+    and that word has to be in the record, since an action the agent took on
+    its own is exactly the kind a person later wants to find in the log.
+    """
+    saved = store_module.store().get(trip_id)
     lines: list[str] = []
-    done = act_mod.perform(plan, trip, body.trip_id, log=lines.append)
+    done = act_mod.perform(plan, trip, trip_id, log=lines.append)
     offer = next((o for o in recovery.offers if o.id == plan.id), None)
     updated, changed = act_mod.apply(plan, trip, recovery.disruption, offer)
 
     payload = dict(saved.payload)
     payload["bookings"] = ingest.to_dicts(updated.bookings)
     payload["acted"] = {"at": datetime.now(timezone.utc).isoformat(),
-                        "plan": plan.name, "changed": changed}
+                        "plan": plan.name, "changed": changed, "by": by,
+                        "permission": recovery.verdict.why
+                        if recovery.verdict and by != "the traveller" else ""}
     # The disruption is resolved: this itinerary is no longer the broken one,
     # so the watch stops counting down deadlines that have been dealt with.
     payload.pop("disruption", None)
     payload.pop("watermark", None)
-    store_module.store().update(body.trip_id, payload)
+    store_module.store().update(trip_id, payload)
 
     return {
-        "trip_id": body.trip_id,
+        "trip_id": trip_id,
         "plan": plan.name,
+        "by": by,
         "summary": act_mod.summarise(done, changed),
         "sent": [d.__dict__ for d in done if d.state == "sent"],
         "pending": [d.__dict__ for d in done if d.state == "pending"],
         "changed": changed,
         "log": lines,
-        "bookings": _bookings_out(_load(body.trip_id)),
+        "bookings": _bookings_out(_load(trip_id)),
     }
 
 
@@ -1502,7 +1556,8 @@ def select(body: Selection) -> dict:
 
     assembled, _ = flow.select(picked, stays)
     saved = store_module.store().save(
-        OWNER, {"bookings": ingest.to_dicts(assembled.bookings)},
+        OWNER, {"bookings": ingest.to_dicts(assembled.bookings),
+                "permissions": permit.Permissions.from_dict(body.permissions).to_dict()},
         body.label or "Booked here")
 
     # Answer with the trip AS IT READS BACK, not as it was assembled. Booking
@@ -1550,9 +1605,11 @@ def _injected(trip_id: str, booking_id: str, make) -> dict:
     # has already been told are gone.
     if saved is not None and saved.payload.get("abandoned"):
         raise HTTPException(409, "that trip has been cancelled")
+    perms = _perms(saved)
     try:
         recovery = flow.replan(trip, make(trip),
-                               preference=saved.payload.get("preference", ""))
+                               preference=saved.payload.get("preference", ""),
+                               permissions=perms)
     except PortError as exc:
         raise HTTPException(503, str(exc)) from exc
 
@@ -1572,17 +1629,88 @@ def _injected(trip_id: str, booking_id: str, make) -> dict:
     # down to deadlines it had already placed itself after.
     payload = _assessment(trip, recovery.disruption, recovery.impact,
                           recovery.plans, recovery.now, None,
-                          trip_id, gap=recovery.gap, injected=True)
+                          trip_id, gap=recovery.gap, injected=True, perms=perms)
     payload["searched"] = [_offer(o) for o in recovery.offers]
     payload["saved"] = recovery.saved
     payload["preference"] = recovery.preference
     payload["warning"] = recovery.warning
+    payload["why"] = _why(trip, recovery)
+    payload["permissions"] = perms.to_dict()
+    payload["excluded"] = [{"name": p.name, "why": permit.judge(p, perms).why}
+                           for p in recovery.excluded]
     # The itinerary as it now reads, with the deviation on the row it happened
     # to. Returned so the page has ONE source for what is wrong with a leg --
     # it had two, the row it was holding and the signal in this response, and
     # the second does not survive a refresh.
     payload["bookings"] = _bookings_out(trip, recovery.disruption)
+
+    # THE AGENT ACTS, when it has been allowed to. The best plan is taken
+    # without a click if the traveller's rules permit it -- which is the whole
+    # difference between a delay at 02:00 answered at 02:00 and one answered
+    # at 07:30 when somebody wakes up and presses a button. Inaction is never
+    # taken; a plan that costs money is taken only within the cap; and what
+    # was always going to need a person (the tap, the call) still does, and is
+    # reported as waiting rather than as done.
+    best = recovery.best
+    if best is not None and best.id != "noop" and recovery.verdict and recovery.verdict.auto:
+        taken = _take(trip_id, trip, recovery, best, by="the agent")
+        payload["auto_taken"] = {**taken, "permission": recovery.verdict.why}
+        payload["bookings"] = taken["bookings"]
     return payload
+
+
+def _why(trip: Trip, recovery) -> str:
+    """The recommendation, as a sentence somebody can argue with.
+
+    The brief's example is the target: "Recommended because it preserves your
+    9:00 meeting, stays within the S$1,200 limit, and avoids a 5:40 departure."
+    Everything in it has to be TRUE OF THIS PLAN and taken from the engine --
+    which commitments it keeps, what it costs against the cheapest plan that
+    does not, and what the traveller's rules say -- or it is the model writing
+    travel advice, which is the thing this product exists not to do.
+    """
+    best = recovery.best
+    if best is None:
+        return ""
+    noop = next((p.total_damage for p in recovery.plans if p.id == "noop"), 0.0)
+    parts: list[str] = []
+    kept = [trip.by_id(i).title for i in sorted(best.saved_ids)]
+    if kept:
+        parts.append("keeps " + ", ".join(kept))
+        # The price of the goal: the cheapest plan that loses one of them.
+        cheaper = [p for p in recovery.plans
+                   if len(p.missed_ids) > len(best.missed_ids)
+                   and p.total_damage < best.total_damage]
+        if cheaper:
+            low = min(cheaper, key=lambda p: p.total_damage)
+            parts.append(f"costs EUR {best.total_damage - low.total_damage:,.0f} more than "
+                         f"{'doing nothing' if low.id == 'noop' else low.name}, "
+                         "which would miss it")
+    elif best.missed_ids:
+        parts.append("no option keeps " + ", ".join(
+            trip.by_id(i).title for i in sorted(best.missed_ids)))
+    if best.id != "noop" and not (kept and best.total_damage > noop):
+        # Skipped when the sentence above already priced it against inaction.
+        parts.append(f"EUR {best.total_damage:,.0f} of damage against EUR {noop:,.0f} "
+                     "for doing nothing")
+    elif best.id == "noop":
+        # Inaction recommended is a real answer and deserves a real reason: it
+        # won because every replacement costs more than what it would rescue.
+        others = [p for p in recovery.plans if p.id != "noop"]
+        if others:
+            low = min(others, key=lambda p: p.total_damage)
+            parts.append(f"nothing worth buying: the cheapest replacement, {low.name}, "
+                         f"costs EUR {low.total_damage - noop:,.0f} more than it saves")
+        else:
+            parts.append("there is nothing to buy that would change the outcome")
+        if best.at_risk:
+            parts.append(f"EUR {best.at_risk:,.0f} is held by a phone call rather than lost")
+    if recovery.verdict and recovery.verdict.why:
+        parts.append(recovery.verdict.why)
+    if recovery.warning:
+        parts.append("but " + recovery.warning)
+    lead = "Doing nothing is recommended because " if best.id == "noop" else "Recommended because it "
+    return (lead + "; ".join(parts) + ".") if parts else ""
 
 
 @app.post("/api/cancel")
@@ -1614,6 +1742,29 @@ def _load(trip_id: str) -> Trip:
     if not bookings:
         raise HTTPException(422, {"problems": problems})
     return Trip(bookings)
+
+
+def _perms(saved) -> permit.Permissions:
+    return permit.Permissions.from_dict((saved.payload if saved else {}).get("permissions"))
+
+
+@app.post("/api/permissions")
+def permissions(body: Permit) -> dict:
+    """Change what the agent may do about this trip on its own.
+
+    Per trip, because there is no traveller profile for it to live on. The
+    moment there is one this moves there and nothing about how it is judged
+    changes -- see permit.py.
+    """
+    saved = store_module.store().get(body.trip_id)
+    if saved is None:
+        raise HTTPException(404, "no trip with that id")
+    perms = permit.Permissions.from_dict(
+        {"auto_limit": body.auto_limit, "never": body.never, "always_ask": body.always_ask})
+    stored = dict(saved.payload)
+    stored["permissions"] = perms.to_dict()
+    store_module.store().update(body.trip_id, stored)
+    return {"trip_id": body.trip_id, "permissions": perms.to_dict()}
 
 
 @app.post("/api/abandon")

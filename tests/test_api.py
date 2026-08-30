@@ -116,6 +116,137 @@ def test_the_delay_button_reaches_the_engine(client):
     assert body["plans"], "a delay has to produce options like anything else"
 
 
+# --------------------------------------------------------------------------
+# what the agent may do on its own
+# --------------------------------------------------------------------------
+
+
+def _with_meeting(client, permissions: dict) -> dict:
+    """A trip with a reason to exist: a client meeting in Milan the evening the
+    onward hop lands. Cancelling that hop then makes a replacement worth more
+    than it costs -- which is the only situation in which there is anything
+    for the agent to take."""
+    # The EARLIEST feasible onward hop, not the cheapest. Cancelling a 15:10
+    # departure leaves no train in the day and the best plan is a EUR 555
+    # flight -- correct, and useless for testing a EUR 300 cap. Cancelling a
+    # morning hop leaves the EUR 72 train, which is the scenario the rules
+    # were written for.
+    inbound = client.get("/api/search/flights", params={
+        "origin": "SIN", "destination": "ZRH", "on": DAY}).json()["offers"]
+    first = min(inbound, key=lambda o: o["arrive"]["iso"])
+    onward = client.get("/api/search/flights", params={
+        "origin": "ZRH", "destination": "MXP", "on": DAY,
+        "after": first["arrive"]["iso"]}).json()["offers"]
+    stay = client.get("/api/search/hotels", params={
+        "city": "Milan", "country": "IT",
+        "check_in": DAY, "check_out": OUT}).json()["stays"][0]
+    booked = None
+    for candidate in sorted(onward, key=lambda o: o["depart"]["iso"]):
+        response = client.post("/api/select", json={
+            "label": "with a meeting", "permissions": permissions,
+            "flights": [
+                {"origin": "SIN", "destination": "ZRH", "on": DAY,
+                 "offer_key": first["key"]},
+                {"origin": "ZRH", "destination": "MXP", "on": DAY,
+                 "offer_key": candidate["key"]}],
+            "hotels": [{"city": "Milan", "country": "IT", "check_in": DAY,
+                        "check_out": OUT, "hotel_id": stay["id"]}]}).json()
+        if not response["problems"]:
+            booked = response
+            break
+    assert booked, "no feasible morning hop in the recorded offers"
+    turn = client.post("/api/chat", json={"text": "i have a meeting"}).json()
+    replies = {"who": "the client", "day": DAY, "at": "10pm", "where": "MXP",
+               "trip": booked["trip_id"], "confirm": "yes, save it"}
+    for _ in range(8):
+        pending = [a for a in turn.get("asks", []) if not a["optional"]]
+        if not pending:
+            break
+        field = pending[0]["field"]
+        turn = client.post("/api/chat", json={
+            "state": turn["state"], "answers": {field: replies[field]}}).json()
+    assert turn.get("saved", {}).get("ready"), turn.get("reply")
+    return booked
+
+
+def _break_onward(client, booked: dict) -> dict:
+    onward = [b for b in booked["bookings"] if b["kind"] == "flight"][1]
+    return client.post("/api/cancel", json={
+        "trip_id": booked["trip_id"], "booking_id": onward["id"]}).json()
+
+
+def test_nothing_is_taken_without_rules(client):
+    """The default has to be the behaviour before permissions existed: the
+    plan is recommended and waits for a person."""
+    outcome = _break_onward(client, _with_meeting(client, {}))
+    assert outcome["plans"][0]["id"] != "noop", "the premise: something is worth taking"
+    assert outcome["plans"][0]["auto"] is False
+    assert "auto_taken" not in outcome
+    assert "not pre-authorised" in outcome["why"]
+
+
+def test_within_the_cap_the_agent_takes_the_plan_at_the_moment_of_disruption(client):
+    """The brief's whole difference: a delay at 02:00 answered at 02:00 rather
+    than at 07:30 when somebody presses a button. Applied, sent, rewritten --
+    and what always needed a person still does, reported as waiting."""
+    booked = _with_meeting(client, {"auto_limit": 300})
+    outcome = _break_onward(client, booked)
+
+    taken = outcome["auto_taken"]
+    assert taken["by"] == "the agent"
+    assert "within your EUR 300 limit" in taken["permission"]
+    assert taken["pending"], "the purchase still needs a person, and must say so"
+    assert all(d["verb"] != "buy" for d in taken["sent"]), "claimed to have bought"
+
+    row = next(t for t in client.get("/api/itineraries").json()["itineraries"]
+               if t["trip_id"] == booked["trip_id"])
+    assert row["acted"]["by"] == "the agent", "taken and not recorded as the agent's doing"
+    assert any(b["pending"] for b in row["bookings"]), "the replacement is on the itinerary"
+    assert not row["disrupted"], "the disruption is dealt with"
+
+
+def test_over_the_cap_the_agent_waits_and_says_by_how_much(client):
+    outcome = _break_onward(client, _with_meeting(client, {"auto_limit": 50}))
+    assert "auto_taken" not in outcome
+    assert "exceeds your EUR 50 limit" in outcome["why"]
+    buy = next(a for a in outcome["plans"][0]["actions"] if a["verb"] == "buy")
+    assert buy["approval"] == "needs approval"
+
+
+def test_never_removes_the_choice_and_says_so(client):
+    """The train is the best plan for this trip. Ruled out, it is not silently
+    missing -- the page is told what was withheld and why."""
+    outcome = _break_onward(client, _with_meeting(client, {"auto_limit": 300, "never": ["rail"]}))
+    assert all(p["mode"] != "rail" for p in outcome["plans"])
+    assert outcome["excluded"] and outcome["excluded"][0]["why"] == "you said never rail"
+
+
+def test_the_rationale_names_the_goal_and_its_price(client):
+    """"Recommended because it keeps the meeting; costs EUR 72 more than doing
+    nothing, which would miss it." Every clause has to be true of this plan and
+    taken from the engine."""
+    outcome = _break_onward(client, _with_meeting(client, {}))
+    why = outcome["why"]
+    assert why.startswith("Recommended because it keeps Meeting with the client")
+    assert "which would miss it" in why
+    best = outcome["plans"][0]
+    assert best["saves"] and not best["misses"]
+    noop = next(p for p in outcome["plans"] if p["id"] == "noop")
+    assert noop["misses"], "doing nothing loses the meeting, and the payload says so"
+
+
+def test_rules_can_be_changed_after_booking_and_are_listed(client):
+    booked = book(client)
+    changed = client.post("/api/permissions", json={
+        "trip_id": booked["trip_id"], "auto_limit": 120, "never": ["Rail"]}).json()
+    assert changed["permissions"]["auto_limit"] == 120
+    assert changed["permissions"]["never"] == ["rail"]
+    row = next(t for t in client.get("/api/itineraries").json()["itineraries"]
+               if t["trip_id"] == booked["trip_id"])
+    assert row["permissions"] == changed["permissions"]
+    assert client.post("/api/permissions", json={"trip_id": "nope"}).status_code == 404
+
+
 def test_pricing_a_cancellation_sends_nothing(client):
     """The only action in this product that destroys value on purpose and
     cannot be undone by pressing it again. The first call asks what it would
