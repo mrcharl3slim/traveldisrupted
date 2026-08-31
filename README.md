@@ -577,6 +577,22 @@ whether a two-hour delay at 02:00 is answered at 02:00 or at 07:30 when somebody
 wakes up and presses a button. The record says `by: the agent`, because an action
 taken unasked is exactly the kind a person later wants to find in the log.
 
+**The master kill switch** sits inside the same gate rather than beside it:
+`Permissions.disarmed`, and `judge()` short-circuits — every action on every
+plan `needs approval` with one fixed reason, the cap ignored, `never` included,
+because a disarmed machine does not filter the menu, it stops the kitchen. The
+reason is fixed on purpose: a switch that explains itself differently per
+action invites arguing with it. Read-only reaches the executor too — the AUTO
+lane's emails are **held**, handed to the person with zero channels used, since
+read-only that still emails hotels is false in exactly the case a judge would
+flip the switch to test. Deadline alerts to the traveller keep flowing: a kill
+switch that silences your own warnings is a different and worse product. Every
+flip is journalled — *who turned the machine off, and when* is the first
+question after any incident involving one — and a rules save leaves the switch
+where it was, so setting a cap cannot quietly re-arm it. Note what off means:
+`auto_limit = 0` is already manual mode for anything that costs money; disarm
+is for the rest.
+
 A plan the rules withhold is not silently missing. The page says *not shown, by
 your rules: EC 11:33 (you said never rail)*, because a ranking with the train
 quietly removed is a ranking the traveller cannot check.

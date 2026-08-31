@@ -86,7 +86,8 @@ def _link(plan: Plan, action: Action) -> str:
 
 
 def perform(plan: Plan, trip: Trip, trip_id: str = "",
-            log=print, skip: set[str] | None = None) -> list[Done]:
+            log=print, skip: set[str] | None = None,
+            armed: bool = True) -> list[Done]:
     """Run every action in the plan, each according to its lane.
 
     ``skip`` names the actions the traveller declined, by `Action.id`. A
@@ -96,6 +97,14 @@ def perform(plan: Plan, trip: Trip, trip_id: str = "",
     should have to reconstruct it later. The monitor cannot be declined -- it
     moves nothing and costs nothing, and a plan taken without it is a plan
     nobody is watching.
+
+    ``armed=False`` is the master kill switch reaching the executor: the AUTO
+    lane's sends are HELD, not sent -- zero channels used, the message handed
+    to the person instead -- because "read-only" that still emails hotels is
+    false in exactly the case somebody flips the switch to test. Deadline
+    alerts to the traveller are not routed through here and keep flowing: a
+    kill switch that silences your own warnings is a different and worse
+    product.
     """
     skip = set(skip or set())
     out: list[Done] = []
@@ -105,6 +114,11 @@ def perform(plan: Plan, trip: Trip, trip_id: str = "",
                             "declined", note=action.note))
             continue
         if action.lane is Lane.AUTO and action.verb == "notify":
+            if not armed:
+                out.append(Done(action.verb, action.label, action.lane.value,
+                                "held", note=(action.note or "") +
+                                " — kill switch on; the message is yours to send"))
+                continue
             channels = notify.deliver(_as_alert(action, trip), trip_id, log=log)
             out.append(Done(action.verb, action.label, action.lane.value,
                             "sent", channels, note=action.note))
@@ -213,6 +227,9 @@ def summarise(done: list[Done], changed: list[str]) -> str:
     declined = [d for d in done if d.state == "declined"]
     if declined:
         bits.append(f"{len(declined)} declined")
+    held = [d for d in done if d.state == "held"]
+    if held:
+        bits.append(f"{len(held)} held by the kill switch")
     removed = len([c for c in changed if c.startswith("removed")])
     added = len([c for c in changed if c.startswith("added")])
     if removed or added:

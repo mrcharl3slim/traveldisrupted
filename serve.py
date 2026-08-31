@@ -282,6 +282,10 @@ class Permit(BaseModel):
     auto_limit: float = 0.0
     never: list[str] = []
     always_ask: list[str] = []
+    #: The kill switch has its own endpoint; a rules save leaves it where it
+    #: is unless explicitly told. None means "as it was" -- saving a spending
+    #: cap must not quietly re-arm a machine somebody switched off.
+    disarmed: bool | None = None
     #: Keep these as the default for every future trip too. Off by default: a
     #: rule set on one trip is about that trip until the traveller says
     #: otherwise.
@@ -1647,7 +1651,8 @@ def _take(trip_id: str, trip: Trip, recovery, plan, by: str,
     saved = store_module.store().get(trip_id)
     skip = set(skip or set())
     lines: list[str] = []
-    done = act_mod.perform(plan, trip, trip_id, log=lines.append, skip=skip)
+    done = act_mod.perform(plan, trip, trip_id, log=lines.append, skip=skip,
+                           armed=not recovery.permissions.disarmed)
     offer = next((o for o in recovery.offers if o.id == plan.id), None)
     updated, changed = act_mod.apply(plan, trip, recovery.disruption, offer, skip=skip)
     declined = [d for d in done if d.state == "declined"]
@@ -1695,6 +1700,7 @@ def _take(trip_id: str, trip: Trip, recovery, plan, by: str,
         "summary": act_mod.summarise(done, changed),
         "sent": [d.__dict__ for d in done if d.state == "sent"],
         "pending": [d.__dict__ for d in done if d.state == "pending"],
+        "held": [d.__dict__ for d in done if d.state == "held"],
         "declined": [d.__dict__ for d in declined],
         "changed": changed,
         "log": lines,
@@ -2127,7 +2133,10 @@ def permissions(body: Permit, who: roles.Person = Depends(_who)) -> dict:
     """
     saved, _role = _access(body.trip_id, who, roles.RULES)
     perms = permit.Permissions.from_dict(
-        {"auto_limit": body.auto_limit, "never": body.never, "always_ask": body.always_ask})
+        {"auto_limit": body.auto_limit, "never": body.never,
+         "always_ask": body.always_ask,
+         "disarmed": _perms(saved).disarmed if body.disarmed is None
+                     else body.disarmed})
     stored = dict(saved.payload)
     stored["permissions"] = perms.to_dict()
     store_module.store().update(body.trip_id, stored)
@@ -2250,7 +2259,8 @@ def abandon(body: Abandon, who: roles.Person = Depends(_who)) -> dict:
         return payload
 
     lines: list[str] = []
-    done = act_mod.perform(plan, trip, body.trip_id, log=lines.append)
+    done = act_mod.perform(plan, trip, body.trip_id, log=lines.append,
+                           armed=not _perms(saved).disarmed)
     for outcome in done:
         audit.record(
             store_module.store(), body.trip_id,
@@ -2324,6 +2334,39 @@ def index() -> FileResponse:
 @app.get("/demo")
 def demo() -> FileResponse:
     return FileResponse(STATIC / "index.html")
+
+
+class Disarm(BaseModel):
+    trip_id: str
+    disarmed: bool
+
+
+@app.post("/api/disarm")
+def disarm(body: Disarm, who: roles.Person = Depends(_who)) -> dict:
+    """The master kill switch: flip it, and every action on every plan waits
+    for a person -- the cap ignored, the AUTO lane's emails held, the agent
+    recommending and touching nothing. Deadline alerts to the traveller keep
+    flowing; a switch that silences your own warnings is a worse product.
+
+    Journalled on every flip, because "who turned the machine off, and when"
+    is the first question after any incident involving one.
+    """
+    saved, _role = _access(body.trip_id, who, roles.RULES)
+    perms = _perms(saved)
+    stored = dict(saved.payload)
+    stored["permissions"] = {**perms.to_dict(), "disarmed": body.disarmed}
+    store_module.store().update(body.trip_id, stored)
+    audit.record(
+        store_module.store(), body.trip_id,
+        actor=who.name, type=audit.TOGGLED,
+        subject=f"master kill switch → {'disarmed' if body.disarmed else 'armed'}",
+        citation=permit.DISARMED if body.disarmed
+                 else f"re-armed: the trip's own rules apply again "
+                      f"(cap S${perms.auto_limit:,.0f})",
+        authorization=f"by {who.name}",
+        feed="control panel (no feed)")
+    return {"trip_id": body.trip_id, "disarmed": body.disarmed,
+            "permissions": stored["permissions"]}
 
 
 @app.get("/api/trail")

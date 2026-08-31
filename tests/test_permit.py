@@ -105,11 +105,36 @@ def test_the_auto_lane_never_needs_approval(plans):
         assert verdict.approval(a)[0] == permit.AUTO
 
 
+def test_the_kill_switch_beats_every_other_rule(plans):
+    """The acceptance, verbatim: disarmed, no plan yields AUTO or
+    PRE_AUTHORISED for any action -- the cap ignored, the AUTO-lane email
+    included -- with the one fixed reason. Fixed on purpose: a switch that
+    explains itself differently per action invites arguing with it."""
+    rules = permit.Permissions(auto_limit=1_000_000, disarmed=True)
+    for plan in plans:
+        verdict = permit.judge(plan, rules)
+        assert verdict.allowed and not verdict.auto, "read-only still means read"
+        for state, why in verdict.approvals.values():
+            assert state == permit.NEEDS_APPROVAL
+            assert why == permit.DISARMED
+
+
+def test_re_arming_restores_the_rules_as_they_were(plans):
+    best = plans[0]
+    armed = permit.Permissions(auto_limit=best.cash_out + 1)
+    off = permit.Permissions(auto_limit=best.cash_out + 1, disarmed=True)
+    assert permit.judge(best, armed).auto
+    assert not permit.judge(best, off).auto
+    assert permit.judge(best, armed).auto, "the flag is state, not a ratchet"
+
+
 def test_rules_survive_a_round_trip_and_tolerate_garbage():
     rules = permit.Permissions(auto_limit=250, never=("Rail", " ryanair "),
                                always_ask=("cancel",))
     back = permit.Permissions.from_dict(rules.to_dict())
     assert back.auto_limit == 250
+    assert permit.Permissions.from_dict(
+        permit.Permissions(disarmed=True).to_dict()).disarmed is True
     assert back.never == ("rail", "ryanair"), "normalised on the way in"
     assert back.always_ask == ("cancel",)
 

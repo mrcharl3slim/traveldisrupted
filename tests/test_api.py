@@ -248,6 +248,71 @@ def test_rules_can_be_changed_after_booking_and_are_listed(client):
 
 
 # --------------------------------------------------------------------------
+# the master kill switch
+# --------------------------------------------------------------------------
+
+
+def test_disarmed_the_agent_recommends_and_touches_nothing(client):
+    """The cap that would have auto-taken the plan is ignored; the trip is
+    assessed, judged, and left exactly as it was, with the fixed reason on
+    every line."""
+    booked = _with_meeting(client, {"auto_limit": 300})
+    client.post("/api/disarm", json={"trip_id": booked["trip_id"], "disarmed": True})
+    outcome = _break_onward(client, booked)
+
+    assert "auto_taken" not in outcome
+    assert "kill switch" in outcome["why"]
+    for plan in outcome["plans"]:
+        assert plan["auto"] is False
+        for action in plan["actions"]:
+            assert action["approval"] not in ("auto", "pre-authorised"), (
+                f"{action['label']} slipped past the switch")
+
+
+def test_disarmed_taking_a_plan_sends_nothing(client):
+    """The acceptance's sharp edge: act.perform reports zero channels used.
+    The hotel email is HELD -- handed to the person -- because read-only that
+    still emails hotels is false in the one case a judge would test."""
+    booked = _with_meeting(client, {})
+    client.post("/api/disarm", json={"trip_id": booked["trip_id"], "disarmed": True})
+    outcome = _break_onward(client, booked)
+    best = outcome["plans"][0]
+    onward = [b for b in booked["bookings"] if b["kind"] == "flight"][1]
+
+    done = client.post("/api/act", json={
+        "trip_id": booked["trip_id"], "booking_id": onward["id"],
+        "plan_key": best.get("key") or best["id"]}).json()
+
+    assert done["sent"] == [], "something was sent with the switch on"
+    assert all(not d["channels"] for d in
+               done["pending"] + done["held"] + done["declined"])
+    assert done["held"], "the email is held for the person, not dropped"
+    assert "held by the kill switch" in done["summary"]
+
+
+def test_the_toggle_is_journalled_both_ways(client):
+    booked = book(client)
+    client.post("/api/disarm", json={"trip_id": booked["trip_id"], "disarmed": True})
+    client.post("/api/disarm", json={"trip_id": booked["trip_id"], "disarmed": False})
+
+    import store as store_module
+    flips = [e for e in store_module.store().trail(booked["trip_id"])
+             if e["type"] == "toggled"]
+    assert [f["subject"].split("→")[-1].strip() for f in flips] == ["disarmed", "armed"]
+    assert all(f["citation"].strip() for f in flips)
+
+
+def test_a_rules_save_does_not_quietly_re_arm(client):
+    booked = book(client)
+    client.post("/api/disarm", json={"trip_id": booked["trip_id"], "disarmed": True})
+    client.post("/api/permissions", json={"trip_id": booked["trip_id"], "auto_limit": 500})
+    row = _row(client, booked["trip_id"])
+    assert row["permissions"]["disarmed"] is True, (
+        "saving a spending cap switched the machine back on")
+    assert row["permissions"]["auto_limit"] == 500
+
+
+# --------------------------------------------------------------------------
 # clearing the decks
 # --------------------------------------------------------------------------
 

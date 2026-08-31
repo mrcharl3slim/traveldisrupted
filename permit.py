@@ -39,6 +39,10 @@ PRE_AUTHORISED = "pre-authorised"   # within the rules; taken without asking
 NEEDS_APPROVAL = "needs approval"   # over a limit or on the always-ask list
 BLOCKED = "blocked"                 # a choice the traveller has ruled out
 
+#: The one fixed reason the kill switch ever gives. Fixed on purpose: a switch
+#: that explains itself differently per action invites arguing with it.
+DISARMED = "the master kill switch is on — everything waits for a person"
+
 
 @dataclass(frozen=True)
 class Permissions:
@@ -58,6 +62,15 @@ class Permissions:
     #: irreversible -- and it is not the default, because in this product a
     #: cancellation is already a tap or a call and never performed by us.
     always_ask: tuple[str, ...] = ()
+    #: THE MASTER KILL SWITCH. On, and every action on every plan waits for a
+    #: person -- the cap is ignored, the AUTO lane's sends are held, and the
+    #: agent recommends and touches nothing. It lives here rather than as a
+    #: subsystem because judge() is the single gate every plan already passes
+    #: through: a flag and a short-circuit. Note what off means: auto_limit's
+    #: default of zero is ALREADY manual mode for anything that costs money;
+    #: disarm is for the rest -- the emails, the pre-authorised caps somebody
+    #: set last week -- when a person wants the whole machine to stand still.
+    disarmed: bool = False
 
     @classmethod
     def from_dict(cls, raw: dict | None) -> "Permissions":
@@ -74,11 +87,13 @@ class Permissions:
             currency=str(raw.get("currency") or "SGD"),
             never=tuple(_words(raw.get("never"))),
             always_ask=tuple(_words(raw.get("always_ask"))),
+            disarmed=bool(raw.get("disarmed")),
         )
 
     def to_dict(self) -> dict:
         return {"auto_limit": self.auto_limit, "currency": self.currency,
-                "never": list(self.never), "always_ask": list(self.always_ask)}
+                "never": list(self.never), "always_ask": list(self.always_ask),
+                "disarmed": self.disarmed}
 
     @property
     def anything(self) -> bool:
@@ -131,6 +146,14 @@ def judge(plan: Plan, perms: Permissions) -> Verdict:
     always going to be theirs; what the cap decides is whether the agent waits
     for them to press a button before doing its own part.
     """
+    # The kill switch short-circuits everything, `never` included: a disarmed
+    # machine does not filter the menu, it stops the kitchen. Every action --
+    # the AUTO-lane email included -- waits for a person, with the one fixed
+    # reason, and the plans stay visible because read-only means read.
+    if perms.disarmed:
+        approvals = {a.label: (NEEDS_APPROVAL, DISARMED) for a in plan.actions}
+        return Verdict(True, False, approvals, DISARMED)
+
     blocked = _blocked(plan, perms)
     approvals: dict[str, tuple[str, str]] = {}
     ask = False

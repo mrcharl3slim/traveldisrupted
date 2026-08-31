@@ -657,12 +657,25 @@ function paintRules(){
       <div><button class="btn" id="rule-save">Save rules</button></div>
       <div><label style="display:inline;text-transform:none;letter-spacing:0">
         <input type="checkbox" id="rule-remember"> for every trip</label></div>
-      <div class="m" style="max-width:360px">${(Number(r.auto_limit) || 0) > 0
+      <div><button class="btn ${r.disarmed ? '' : 'bad'}" id="rule-kill">${
+        r.disarmed ? 'Re-arm' : 'Kill switch'}</button></div>
+      <div class="m" style="max-width:360px">${r.disarmed
+        ? `Kill switch on: everything waits for a person — the cap is ignored and
+           even the hotel emails are held for you to send.`
+        : (Number(r.auto_limit) || 0) > 0
         ? `Within ${eur(r.auto_limit)} the agent takes the best plan the moment a leg
            breaks — sends what it can, rewrites the trip, leaves the purchase link
            for you. Nothing is bought.`
         : `Nothing is pre-authorised: every plan that costs money waits for you.`}</div>
     </div>`;
+  const kill = $('#rule-kill');
+  if (kill) kill.onclick = async () => {
+    let out;
+    try { out = await api('/api/disarm', {trip_id: TRIP.trip_id, disarmed: !r.disarmed}); }
+    catch (e) { return fail('#trip-problems', e); }
+    TRIP = Object.assign({}, TRIP, {permissions: out.permissions});
+    paintRules();
+  };
   $('#rule-save').onclick = async () => {
     let r;
     try {

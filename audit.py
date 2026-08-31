@@ -37,6 +37,7 @@ ASSESSED = "assessed"      # a disruption was propagated across the trip
 JUDGED = "judged"          # the recommended plan met the traveller's rules
 PERFORMED = "performed"    # an action ran, was handed over, or was declined
 ALERTED = "alerted"        # a deadline notification left the building
+TOGGLED = "toggled"        # the master kill switch changed state
 
 #: Authorization states an entry may carry, beyond permit.py's own four.
 OBSERVED = "observed — no authorisation involved"

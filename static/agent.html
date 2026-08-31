@@ -576,7 +576,10 @@ function openTrip(id, quiet){
   if (!trip.abandoned && may(trip, 'rules')) {
     const r = trip.permissions || {auto_limit: 0, never: []};
     $('#detail').innerHTML += `<div class="note">
-      <div class="m" style="margin-bottom:6px">${(Number(r.auto_limit) || 0) > 0
+      <div class="m" style="margin-bottom:6px">${r.disarmed
+        ? `<b style="color:var(--bad)">Kill switch on.</b> Everything waits for a person —
+           the cap is ignored and even the hotel emails are held for you to send.`
+        : (Number(r.auto_limit) || 0) > 0
         ? `Within ${eur(r.auto_limit)} I act the moment a leg breaks and leave the
            purchase link for you. Nothing is bought.`
         : `Nothing is pre-authorised — every plan that costs money waits for you.`}</div>
@@ -589,7 +592,15 @@ function openTrip(id, quiet){
                value="${esc((r.never || []).join(', '))}">
         <button class="btn sm" id="rule-save">Save</button>
         <label class="m" style="display:inline;text-transform:none;letter-spacing:0">
-          <input type="checkbox" id="rule-remember"> for every trip</label></div></div>`;
+          <input type="checkbox" id="rule-remember"> for every trip</label>
+        <button class="btn sm ${r.disarmed ? '' : 'bad'}" id="rule-kill">${
+          r.disarmed ? 'Re-arm' : 'Kill switch'}</button></div></div>`;
+    $('#rule-kill').onclick = async () => {
+      try { await api('/api/disarm', {trip_id: id, disarmed: !r.disarmed}); }
+      catch (e) { return bubble('Downstream',
+        `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
+      await loadTrips();
+    };
     $('#rule-save').onclick = async () => {
       try {
         await api('/api/permissions', {trip_id: id,
