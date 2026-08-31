@@ -2588,6 +2588,25 @@ def story() -> dict:
         "errands": [{"label": a["label"], "lane": a["lane"], "cash_in": a["cash_in"],
                      "note": a["note"]} for a in quote["plan"]["actions"]]})
 
+    # -- chapter 8: everything above, on the record --------------------------
+    events = store_module.store().trail(trip_id)
+    counts: dict[str, int] = {}
+    for e in events:
+        counts[e["type"]] = counts.get(e["type"], 0) + 1
+    beats.append({
+        "title": "Everything above, on the record",
+        "said": "Every decision the story just made wrote itself down as it "
+                "happened: what was observed, what was decided, what ran, on "
+                "whose say-so — each entry citing the fare rule or the "
+                "traveller's own cap it rested on, and naming the feed that "
+                "triggered it. One entry per decision, and an entry that "
+                "cannot explain itself cannot be written: the constructor "
+                "refuses an empty timestamp, citation or authorization.",
+        "counts": counts,
+        "events": events,
+        # The token is the identity, the same trade the share links make.
+        "trail_link": f"/api/trail.txt?trip={trip_id}&token={owner.token}"})
+
     return {"trip_id": trip_id, "owner": owner.name,
             "ports": {"mode": MODE, "degraded": list(degraded)},
             "beats": beats}

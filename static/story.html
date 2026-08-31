@@ -131,6 +131,21 @@ const RENDER = {
     <div class="banner">The cheaper rows lose <b>because they miss the client</b> — goals rank
       before money, and the meeting still has no price on it anywhere.</div>`,
 
+  'Everything above, on the record': b => `
+    <div class="banner">${Object.entries(b.counts).map(([k, n]) =>
+      `${n} ${k}`).join(' · ')} — one entry per decision.
+      <a href="${esc(b.trail_link)}" target="_blank" rel="noopener">the whole trail as
+      plain text, for reading aloud →</a></div>
+    ${b.events.slice(-6).map(e => `<div class="leg" style="display:block">
+      <b>${esc(e.type)}</b> · ${esc(e.actor)} · <span class="m">${esc(e.at.slice(11, 19))}Z</span><br>
+      ${esc(e.subject)}<br>
+      <span class="m">citation: ${esc(e.citation)}</span><br>
+      <span class="m">authorization: ${esc(e.authorization)} · feed: ${esc(e.feed)}</span>
+    </div>`).join('')}
+    <div class="banner">An entry that cannot explain itself cannot be written — the
+      constructor refuses an empty timestamp, citation or authorization state. That is the
+      acceptance criterion made structural, and there is a test proving the refusal.</div>`,
+
   'And if Alex were not going at all': b => `
     ${b.errands.map(a => `<div class="leg"><div>${esc(a.label)}
         <span class="tag ${a.lane === 'auto' ? 'ok' : a.lane === 'call' ? 'bad' : 'warn'}">${esc(a.lane)}</span>

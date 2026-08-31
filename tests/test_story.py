@@ -26,9 +26,30 @@ def beat(told, title_start: str) -> dict:
     return next(b for b in told["beats"] if b["title"].startswith(title_start))
 
 
-def test_the_story_runs_and_has_all_seven_chapters(told):
-    assert len(told["beats"]) == 7
+def test_the_story_runs_and_has_all_eight_chapters(told):
+    assert len(told["beats"]) == 8
     assert told["trip_id"]
+
+
+def test_the_story_closes_on_its_own_paper_trail(told):
+    """The run just decided things; the last chapter is the record of them,
+    fetched from the same trail the panel reads -- not a re-telling."""
+    record = beat(told, "Everything above")
+    assert record["counts"].get("extracted") == 1
+    assert record["counts"].get("assessed") == 2, "the delay and the cancellation"
+    assert record["counts"].get("judged") == 2
+    assert record["counts"].get("performed", 0) >= 3
+    for e in record["events"]:
+        for field in ("at", "actor", "type", "subject",
+                      "citation", "authorization", "feed"):
+            assert str(e.get(field, "")).strip(), f"{e['type']} missing {field}"
+
+    # The link works as a bare link, token and all, and reads as sentences.
+    from fastapi.testclient import TestClient
+    import serve as app_module
+    text = TestClient(app_module.app).get(record["trail_link"])
+    assert text.status_code == 200
+    assert "citation:" in text.text and "authorization:" in text.text
 
 
 def test_the_profile_chapter_is_the_seed_the_rest_pays_off(told):
