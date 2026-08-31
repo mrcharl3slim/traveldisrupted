@@ -1,4 +1,4 @@
-# Downstream — engine
+# TripShield — engine
 
 Cross-provider disruption replanning. Detection is commodity; this is the part
 that is not.
@@ -443,7 +443,7 @@ trip had hidden:
 - **A cancelled flight is not its own replacement.** The cancellation is ours,
   not the airline's, so its seats are still in inventory and the search returns
   them. Filtered by designator, airports and departure minute.
-- **Downstream is a question about deadlines, not start times.** Walking by
+- **The downstream walk is a question about deadlines, not start times.** Walking by
   start time charged a S$1,547 long-haul that landed that morning to the
   cancellation of a S$255 onward hop.
 - **A stay is where the hotel is.** Inferring it from the itinerary filed a
@@ -707,7 +707,7 @@ What it does share is the part worth sharing: **one action per booking, in the
 lane that can actually perform it**, and `act.perform` to run them — because
 from there, *who does this and did they* is the same question.
 
-    Downstream handles it
+    TripShield handles it
       - Tell Hotel Le Marais Milano you are not coming
     One tap, you authorise
       - Cancel Malpensa to hotel private transfer            +S$72

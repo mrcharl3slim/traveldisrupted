@@ -99,7 +99,7 @@ if best.tightest:
     bid, buf = best.tightest
     print(f"  Tightest connection: {TRIP.by_id(bid).title} with "
           f"{int(buf.total_seconds() // 60)} min to spare")
-for lane, title in ((Lane.AUTO, "Downstream handles"),
+for lane, title in ((Lane.AUTO, "TripShield handles"),
                     (Lane.TAP, "One tap, you authorise"),
                     (Lane.CALL, "You'll have to call")):
     acts = best.lane(lane)

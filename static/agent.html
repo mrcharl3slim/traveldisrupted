@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Downstream</title>
+<title>TripShield</title>
 <link rel="stylesheet" href="/static/app.css?v=2">
 <style>
   /* Page-local only -- everything shared lives in app.css. */
@@ -73,7 +73,7 @@
 </head>
 <body>
 <div class="site-header"><div class="bar-inner">
-  <a class="wordmark" href="/">Downstream</a>
+  <a class="wordmark" href="/">TripShield</a>
   <nav class="site-nav">
     <a href="/" aria-current="page">agent</a> <a href="/book">book</a>
     <a href="/demo">demo</a>
@@ -84,7 +84,7 @@
 <div class="wrap">
   <header>
     <div>
-      <h1>Downstream</h1>
+      <h1>TripShield</h1>
       <div class="sub">Tell it what you want. It books it, watches it, and fixes it when it breaks.</div>
     </div>
   </header>
@@ -92,7 +92,7 @@
   <div class="cols">
     <main class="thread" id="thread">
         <div class="msg" id="starter">
-          <div class="who">Downstream</div>
+          <div class="who">TripShield</div>
           <div class="body">Tell me what you want in a sentence — a trip, or a meeting.
             I ask only what changes the answer, and every question says why.
             <div class="chips" id="starter-chips" style="margin-top:10px"></div>
@@ -212,7 +212,7 @@ async function say(text, answers){
   if (text) bubble('You', esc(text));
   let turn;
   try { turn = await api('/api/chat', {text: text || '', state: STATE, answers: answers || {}}); }
-  catch (e) { return bubble('Downstream', `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
+  catch (e) { return bubble('TripShield', `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
 
   STATE = turn.state; LAST = turn; PICK = {flight:null, ret:null, hotel:null};
 
@@ -281,7 +281,7 @@ async function say(text, answers){
       ? ` <span style="opacity:.6">— replay mode; this is a recording that has
          not been made, not a failure</span>` : ''}</div>`;
 
-  const el = bubble('Downstream', html);
+  const el = bubble('TripShield', html);
   el.querySelectorAll('.chip[data-field]').forEach(b =>
     b.onclick = () => say('', {[b.dataset.field]: b.dataset.value}));
   wireOffers(el);
@@ -343,11 +343,11 @@ async function confirm(button){
       return_price: PICK.ret ? PICK.ret.price : 0,
       return_mode: PICK.ret ? (PICK.ret.mode || 'flight') : 'flight',
       hotel_id: PICK.hotel ? PICK.hotel.id : ''});
-  } catch (e) { button.disabled = false; return bubble('Downstream',
+  } catch (e) { button.disabled = false; return bubble('TripShield',
     `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
 
   STATE = {}; PICK = {flight:null, ret:null, hotel:null};
-  bubble('Downstream',
+  bubble('TripShield',
     `Saved as <b>${esc(saved.label)}</b> — ${eur(saved.total)} across ${saved.bookings.length} bookings.`
     + ((saved.repriced || []).length
        ? `<div class="banner warn">the fare moved while you were choosing: `
@@ -420,7 +420,7 @@ async function loadProfile(){
         auto_limit: Number($('#you-limit').value) || 0,
         hold_limit: Number($('#you-hold').value) || 0,
         never: $('#you-never').value.split(',').map(x => x.trim()).filter(Boolean)});
-    } catch (e) { return bubble('Downstream', `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
+    } catch (e) { return bubble('TripShield', `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
     await loadProfile();
   };
 }
@@ -563,7 +563,7 @@ function openTrip(id, quiet){
           r.disarmed ? 'Re-arm' : 'Kill switch'}</button></div></div>`;
     $('#rule-kill').onclick = async () => {
       try { await api('/api/disarm', {trip_id: id, disarmed: !r.disarmed}); }
-      catch (e) { return bubble('Downstream',
+      catch (e) { return bubble('TripShield',
         `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
       await loadTrips();
     };
@@ -575,7 +575,7 @@ function openTrip(id, quiet){
           never: $('#rule-never').value.split(',').map(x => x.trim()).filter(Boolean),
           remember: $('#rule-remember').checked});
         if ($('#rule-remember').checked) await loadProfile();
-      } catch (e) { return bubble('Downstream',
+      } catch (e) { return bubble('TripShield',
         `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
       await loadTrips();
     };
@@ -615,16 +615,16 @@ function openTrip(id, quiet){
       let r;
       try { r = await api('/api/share', {trip_id: id, name: $('#share-name').value,
                                          role: $('#share-role').value}); }
-      catch (e) { return bubble('Downstream', `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
+      catch (e) { return bubble('TripShield', `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
       const link = location.origin + r.link;
-      bubble('Downstream', `Give <b>${esc(r.name)}</b> this link — it is shown once, and it is a key:<br>
+      bubble('TripShield', `Give <b>${esc(r.name)}</b> this link — it is shown once, and it is a key:<br>
         <code style="user-select:all">${esc(link)}</code><br>
         As ${esc(r.role)} they can: ${r.can.join(', ')}.`);
       await loadTrips();
     };
     $('#detail').querySelectorAll('[data-revoke]').forEach(el => el.onclick = async () => {
       try { await api('/api/revoke', {trip_id: id, person: el.dataset.revoke}); }
-      catch (e) { return bubble('Downstream', `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
+      catch (e) { return bubble('TripShield', `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
       await loadTrips();
     });
   }
@@ -642,7 +642,7 @@ function openTrip(id, quiet){
 async function breakLeg(tripId, what, path){
   let d;
   try { d = await api(path, Object.assign({trip_id: tripId}, what)); }
-  catch (e) { return bubble('Downstream',
+  catch (e) { return bubble('TripShield',
     `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
   RECOVERY = {trip: tripId, booking: what.booking_id, body: d};
 
@@ -698,7 +698,7 @@ async function breakLeg(tripId, what, path){
       : '<button class="btn key do-it" disabled>Take this plan</button>'}</div>`;
 
   html += `<div class="lines"></div>`;
-  const el = bubble('Downstream', html);
+  const el = bubble('TripShield', html);
   let chosen = null;
   // Approve, reject, per line. Picking a plan lays out what it would do, one
   // box each, all ticked; unticking one declines it and the rest still
@@ -739,7 +739,7 @@ async function breakLeg(tripId, what, path){
 async function priceAbandon(tripId){
   let quote;
   try { quote = await api('/api/abandon', {trip_id: tripId}); }
-  catch (e) { return bubble('Downstream',
+  catch (e) { return bubble('TripShield',
     `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
 
   bubble('You', `I am not going on this trip at all.`);
@@ -752,7 +752,7 @@ async function priceAbandon(tripId){
 
   // Grouped by who does the work, because that is the only grouping that tells
   // the traveller what is left for them once they press yes.
-  for (const [key, title] of [['auto', 'Downstream handles it'],
+  for (const [key, title] of [['auto', 'TripShield handles it'],
                               ['tap', 'One tap, you authorise'],
                               ['call', 'You will have to call']]) {
     const acts = quote.plan.lanes[key];
@@ -765,9 +765,9 @@ async function priceAbandon(tripId){
       <button class="btn bad abandon-go">Yes, cancel it all</button>
       <button class="btn abandon-no">Keep the trip</button></div>`;
 
-  const el = bubble('Downstream', html);
+  const el = bubble('TripShield', html);
   el.querySelector('.abandon-no').onclick = () =>
-    bubble('Downstream', 'Left as it is — nothing was cancelled.');
+    bubble('TripShield', 'Left as it is — nothing was cancelled.');
   el.querySelector('.abandon-go').onclick = (e) => confirmAbandon(e.target, tripId);
 }
 
@@ -775,7 +775,7 @@ async function confirmAbandon(button, tripId){
   button.disabled = true;
   let done;
   try { done = await api('/api/abandon', {trip_id: tripId, confirm: true}); }
-  catch (e) { button.disabled = false; return bubble('Downstream',
+  catch (e) { button.disabled = false; return bubble('TripShield',
     `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
 
   // Sent and pending shown apart, exactly as taking a recovery plan shows
@@ -792,7 +792,7 @@ async function confirmAbandon(button, tripId){
       `<div class="leg"><div>${esc(d.label)}<div class="m">${esc(d.note || '')}</div></div>
         <span class="tag warn">${esc(d.lane)}</span></div>`).join('')}</div>`;
 
-  bubble('Downstream', html);
+  bubble('TripShield', html);
   await loadTrips();          // re-opens the panel on the trip that is open
 }
 
@@ -803,7 +803,7 @@ async function takePlan(button, planId, reject){
   try {
     done = await api('/api/act', {trip_id: RECOVERY.trip,
       booking_id: RECOVERY.booking, plan_key: planId, reject: reject || []});
-  } catch (e) { button.disabled = false; return bubble('Downstream',
+  } catch (e) { button.disabled = false; return bubble('TripShield',
     `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
 
   // Sent and pending are shown apart on purpose. A system that blurs the two
@@ -831,7 +831,7 @@ async function takePlan(button, planId, reject){
     html += `<div class="note"><b>Your itinerary now</b>: ${
       done.changed.map(esc).join('; ')}.</div>`;
 
-  bubble('Downstream', html);
+  bubble('TripShield', html);
   await loadTrips();
 }
 
@@ -844,14 +844,10 @@ $('#send').onclick = () => {
 $('#say').addEventListener('keydown', e => { if (e.key === 'Enter') $('#send').click(); });
 
 api('/health').then(h => {
-  bubble('Downstream',
-    `Tell me where you want to go and I'll book it — then I'll watch it, and when
-     something breaks I'll tell you what it costs and what to do about it.
-     <div class="note">Tell me about meetings too — "meeting with the Milan team on
-     19 September at 10am" — and I'll work out which trip it lands on and whether
-     you can actually make it. You can book several trips; break any of them from
-     the panel on the right.</div>
-     <div class="ports">ports <b>${esc(h.ports_mode)}</b> · model
+  // Status only. The starter card above already says how to talk to it --
+  // two near-identical introductions read as a bug, not a welcome.
+  bubble('TripShield',
+    `<div class="ports" style="margin-top:0">ports <b>${esc(h.ports_mode)}</b> · model
      <b>${esc(h.model)}</b> · storage <b>${esc(h.storage)}</b></div>`
     + (h.model_status && !h.model_status.ready && h.model_status.configured !== 'none'
        ? `<div class="banner warn">${esc(h.model_status.label)} is configured but
@@ -859,7 +855,7 @@ api('/health').then(h => {
        : ''));
   loadProfile();
   loadTrips();
-}).catch(e => bubble('Downstream', `<span style="color:var(--bad)">${esc(e.message)}</span>`));
+}).catch(e => bubble('TripShield', `<span style="color:var(--bad)">${esc(e.message)}</span>`));
 </script>
 </body>
 </html>

@@ -81,7 +81,7 @@ async def lifespan(_app: FastAPI):
             task.cancel()
 
 
-app = FastAPI(title="downstream", lifespan=lifespan)
+app = FastAPI(title="tripshield", lifespan=lifespan)
 
 LANE_KEY = {Lane.AUTO: "auto", Lane.TAP: "tap", Lane.CALL: "call"}
 
