@@ -148,7 +148,7 @@
 <script>
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-const eur = n => (n < 0 ? '−' : '') + '€' + Math.abs(Math.round(n)).toLocaleString();
+const eur = n => (n < 0 ? '−' : '') + 'S$' + Math.abs(Math.round(n)).toLocaleString();
 // Times arrive pre-formatted in the trip's own timezone. Formatting them here
 // would render a Zurich arrival in the viewer's zone, which is a different
 // flight as far as the traveller is concerned.

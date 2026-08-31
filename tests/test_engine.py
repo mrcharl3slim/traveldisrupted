@@ -35,24 +35,25 @@ def test_delay_is_derived_not_stated():
 
 
 def test_the_headline_number(impact):
-    """142 + 48 + 92. If this drifts, the pitch is wrong, not the test."""
-    assert impact.do_nothing_cost == 282.0
+    """EUR (142 + 48 + 92) = EUR 282, at the declared 1.50: S$423. If this
+    drifts, the pitch is wrong, not the test."""
+    assert impact.do_nothing_cost == 423.0
     assert {n.id for n in impact.broken} == {"lx1608", "transfer", "lastsupper"}
 
 
 def test_acting_is_worth_less_than_doing_nothing_costs(impact):
-    """38 taxes + 48 transfer + (92 - 18) date change = 160.
+    """EUR 38 taxes + 48 transfer + (92 - 18) date change = EUR 160 -> S$240.
 
     Worth stating explicitly: recovery never returns the full 282. Selling
     otherwise would be a lie the fare rules do not support.
     """
-    assert impact.act_now_value == 160.0
+    assert impact.act_now_value == 240.0
 
 
 def test_missed_connection_is_reachability_not_a_flag(impact):
     """Nothing marks LX 1608 critical. 10:25 + 30 min boarding > 08:20 does."""
     assert impact.by_id("lx1608").severity is Severity.BROKEN
-    assert impact.by_id("lx1608").recoverable == 38.0
+    assert impact.by_id("lx1608").recoverable == 57.0
 
 
 def test_transfer_window_closes_while_the_traveller_is_airborne(impact):
@@ -65,10 +66,10 @@ def test_transfer_window_closes_while_the_traveller_is_airborne(impact):
 
 
 def test_hotel_is_at_risk_not_lost(impact):
-    """A message defuses it, so it must never be counted in the 282."""
+    """A message defuses it, so it must never be counted in the S$423."""
     node = impact.by_id("hotel")
     assert node.severity is Severity.AT_RISK
-    assert node.exposure == 624.0
+    assert node.exposure == 936.0
     assert node.id not in {n.id for n in impact.broken}
 
 
@@ -169,4 +170,4 @@ def test_nothing_is_recoverable_once_every_window_has_passed():
     """
     late = propagate(TRIP, DISRUPTION, datetime(2026, 10, 12, 18, 0, tzinfo=CEST))
     assert late.act_now_value == 0.0
-    assert late.do_nothing_cost == 282.0
+    assert late.do_nothing_cost == 423.0

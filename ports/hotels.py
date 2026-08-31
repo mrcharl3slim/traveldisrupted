@@ -46,6 +46,8 @@ def catalogue(city: str, country: str, limit: int = 10) -> dict:
 
 def rates(hotel_ids: list[str], checkin: datetime, checkout: datetime,
           adults: int = 1, currency: str = "EUR") -> dict:
+    # EUR is what the sandbox reliably quotes; the conversion to the engine's
+    # home currency happens in `stays`, at the boundary, like every quote.
     """Priced availability for specific hotels on specific nights."""
     key = {"hotels": ",".join(sorted(hotel_ids))[:60],
            "in": f"{checkin:%Y-%m-%d}", "out": f"{checkout:%Y-%m-%d}"}
@@ -113,6 +115,9 @@ def stays(city: str, country: str, checkin: datetime, checkout: datetime,
         if money is None:
             continue
         amount, currency = money
+        import money as fx
+        in_home, source, quoted = fx.to_home(amount, currency)
+        home_currency = fx.HOME
         out.append({
             "id": f"hotel-{hotel_id}"[:20],
             "provider": "LiteAPI",
@@ -126,7 +131,9 @@ def stays(city: str, country: str, checkin: datetime, checkout: datetime,
             "arrival_guarantee": datetime.combine(
                 checkin.date(), ARRIVAL_GUARANTEE, tzinfo=tz),
             "nights": max(1, (checkout.date() - checkin.date()).days),
-            "price": amount,
-            "currency": currency,
+            "price": in_home,
+            "currency": home_currency,
+            "price_source": source or "quoted",
+            "quoted": quoted,
         })
     return sorted(out, key=lambda s: s["price"])

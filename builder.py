@@ -43,10 +43,10 @@ def flight(offer, seat: int = 1) -> Booking:
         # refund/fee split policy.py already models.
         windows.append(Window(
             closes=offer.depart, refund=offer.price, fee=offer.change_fee,
-            label=f"change before departure, fee {offer.currency} {offer.change_fee:,.0f}"))
+            label=f"change before departure, fee S${offer.change_fee:,.0f}"))
 
     source = ("refundable before departure" if offer.refundable
-              else f"changeable before departure for {offer.currency} {offer.change_fee:,.0f}"
+              else f"changeable before departure for S${offer.change_fee:,.0f}"
               if offer.change_fee is not None
               else "non-refundable, no changes permitted")
 

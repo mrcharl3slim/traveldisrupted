@@ -47,7 +47,7 @@ class Permissions:
     #: is exactly the behaviour before this file existed. Nothing becomes
     #: autonomous by omission.
     auto_limit: float = 0.0
-    currency: str = "EUR"
+    currency: str = "SGD"
     #: Suppliers or modes the agent must never choose: "rail", "ryanair".
     #: Matched case-insensitively against the carrier a plan would buy from
     #: and the mode it travels by -- what the agent would CHOOSE, not what the
@@ -71,7 +71,7 @@ class Permissions:
             limit = 0.0
         return cls(
             auto_limit=limit,
-            currency=str(raw.get("currency") or "EUR"),
+            currency=str(raw.get("currency") or "SGD"),
             never=tuple(_words(raw.get("never"))),
             always_ask=tuple(_words(raw.get("always_ask"))),
         )
@@ -149,13 +149,13 @@ def judge(plan: Plan, perms: Permissions) -> Verdict:
         if plan.cash_out <= perms.auto_limit:
             approvals[a.label] = (
                 PRE_AUTHORISED,
-                f"{perms.currency} {plan.cash_out:,.0f} is within your "
-                f"{perms.currency} {perms.auto_limit:,.0f} limit")
+                f"S${plan.cash_out:,.0f} is within your "
+                f"S${perms.auto_limit:,.0f} limit")
             continue
         approvals[a.label] = (
             NEEDS_APPROVAL,
-            f"{perms.currency} {plan.cash_out:,.0f} exceeds your "
-            f"{perms.currency} {perms.auto_limit:,.0f} limit"
+            f"S${plan.cash_out:,.0f} exceeds your "
+            f"S${perms.auto_limit:,.0f} limit"
             if perms.anything else "you have not pre-authorised any spending")
         ask = True
 
@@ -166,7 +166,7 @@ def judge(plan: Plan, perms: Permissions) -> Verdict:
         return Verdict(True, False, approvals, "")
     if not ask:
         return Verdict(True, True, approvals,
-                       f"within your {perms.currency} {perms.auto_limit:,.0f} limit"
+                       f"within your S${perms.auto_limit:,.0f} limit"
                        if plan.cash_out else "costs nothing")
     over = [why for kind, why in approvals.values() if kind == NEEDS_APPROVAL]
     return Verdict(True, False, approvals, over[0] if over else "")

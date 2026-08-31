@@ -70,6 +70,7 @@
       <div class="sub">Read the box below first — it decides what will and will not work today.</div>
     </div>
     <div class="sub"><a href="/">the agent →</a> · <a href="/book">the builder →</a> ·
+      <a href="/story">the whole story, one press →</a> ·
       <a href="/script">presenting? the demo script →</a></div>
   </header>
 
@@ -121,7 +122,7 @@
         <li>Pick a flight <em>or a train</em>, pick a room, confirm.</li>
       </ol>
       <div class="expect"><b>Expect:</b> trains and flights in one list, ranked by what you
-        asked for. Under <em>cheapest</em> the €72 train sorts above every fare; under
+        asked for. Under <em>cheapest</em> the S$108 train sorts above every fare; under
         <em>fastest</em> a 55-minute flight wins. Both are correct.</div>
       <div class="expect nope"><b>Not a bug:</b> answering a question with something it
         cannot read leaves the question open and says so. That is deliberate — a silently
@@ -193,16 +194,16 @@
         <li><b>Cancel</b> the onward leg.</li>
       </ol>
       <div class="expect"><b>Expect:</b> the plan is taken before the page finishes
-        loading — <em>I have taken EC 11:33 — within your EUR 300 limit</em> — the hotel is
+        loading — <em>I have taken EC 11:33 — within your S$300 limit</em> — the hotel is
         emailed, the itinerary is rewritten, and the purchase link is left for you. The
-        reason reads like a sentence: <em>keeps the meeting; costs €72 more than doing
+        reason reads like a sentence: <em>keeps the meeting; costs S$108 more than doing
         nothing, which would miss it</em>. Set the cap to <code>50</code> and repeat: it
         waits, and says by how much it is over.</div>
       <div class="expect"><b>Then say it once:</b> in the <b>You</b> box on <a href="/">/</a>,
         set home <code>singapore</code>, sort by <code>cheapest</code>, act up to
         <code>300</code>. Type <code>one way to zurich on 18 september, no hotel</code> — it
         should go straight to the confirmation card with <em>From: Singapore · from your
-        profile</em>, and the next trip you book already carries the €300 rule. Then type
+        profile</em>, and the next trip you book already carries the S$300 rule. Then type
         <code>zurich to milan</code> — Zurich must win over the profile.</div>
       <div class="expect nope"><b>Not a bug:</b> nothing was bought. Pre-authorised means
         the agent <em>decided</em>; the purchase is still yours. Also: the watch asks the

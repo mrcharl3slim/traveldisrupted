@@ -41,7 +41,7 @@ def test_a_plan_within_the_cap_may_be_taken_without_asking(plans):
     best = plans[0]
     verdict = permit.judge(best, permit.Permissions(auto_limit=best.cash_out + 1))
     assert verdict.auto
-    assert "within your EUR" in verdict.why
+    assert "within your S$" in verdict.why
     kinds = {kind for kind, _ in verdict.approvals.values()}
     assert kinds <= {permit.AUTO, permit.PRE_AUTHORISED}
 
@@ -50,7 +50,7 @@ def test_a_plan_over_the_cap_waits_and_says_by_how_much(plans):
     best = plans[0]
     verdict = permit.judge(best, permit.Permissions(auto_limit=best.cash_out - 1))
     assert verdict.allowed and not verdict.auto
-    assert "exceeds your EUR" in verdict.why
+    assert "exceeds your S$" in verdict.why
 
 
 def test_inaction_is_never_taken(plans):

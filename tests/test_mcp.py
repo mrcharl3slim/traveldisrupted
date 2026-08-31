@@ -56,13 +56,13 @@ def test_impact_is_anchored_to_the_requested_dates():
     written = mcp_server.impact_of(base="written")
     assert today["anchored_to"] == date.today().isoformat()
     assert written["anchored_to"] == DEFAULT_BASE.isoformat()
-    assert today["do_nothing_eur"] == written["do_nothing_eur"] == 282.0
+    assert today["do_nothing_sgd"] == written["do_nothing_sgd"] == 423.0
 
 
 def test_plans_rank_the_same_through_the_tool_as_through_the_engine():
     plans = mcp_server.recovery_plans(base="written")["plans"]
-    assert plans[0]["net_cash_eur"] == -14.0
-    assert plans[0]["total_damage_eur"] < plans[-1]["total_damage_eur"]
+    assert plans[0]["net_cash_sgd"] == -21.0
+    assert plans[0]["total_damage_sgd"] < plans[-1]["total_damage_sgd"]
 
 
 def test_every_action_carries_a_lane_an_agent_must_respect():

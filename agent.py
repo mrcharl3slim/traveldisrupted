@@ -4,7 +4,7 @@
 
 WHERE THE MODEL IS AND IS NOT. Four of these nodes are arithmetic wearing a
 graph node's clothing, and that is deliberate. An agent that "reasons about"
-whether EUR 48 is recoverable will eventually reason wrongly, in front of
+whether S$72 is recoverable will eventually reason wrongly, in front of
 judges, about the one number the pitch rests on. So detect, propagate, replan
 and handoff are pure functions over typed data; the model reads fare prose at
 ingestion (parse.py) and writes the plan's rationale here. Those are the two
@@ -85,9 +85,9 @@ def _template(s: State) -> str:
         bid, buf = p.tightest
         tight = (f" It holds the {s['trip'].by_id(bid).title.lower()} with "
                  f"{int(buf.total_seconds() // 60)} minutes to spare.")
-    verb = (f"puts EUR {-p.net_cash:,.0f} back in your pocket" if p.net_cash < 0
-            else f"costs EUR {p.net_cash:,.0f} tonight")
-    return (f"{p.name} {verb} and leaves you EUR {saved:,.0f} better off than "
+    verb = (f"puts S${-p.net_cash:,.0f} back in your pocket" if p.net_cash < 0
+            else f"costs S${p.net_cash:,.0f} tonight")
+    return (f"{p.name} {verb} and leaves you S${saved:,.0f} better off than "
             f"doing nothing.{tight}")
 
 

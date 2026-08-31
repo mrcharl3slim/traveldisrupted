@@ -18,27 +18,14 @@ from base import call, get_json
 
 BASE = "https://api.duffel.com/air/offer_requests"
 
-#: The engine sums money. Duffel quotes in the account's currency — USD on a
-#: test account — while the itinerary is in EUR, and adding the two produced a
-#: total in no currency at all. Converting at the boundary keeps one unit in the
-#: engine; the rate is fixed and therefore a guess, so anything converted says
-#: so in `price_source` exactly as the rail estimate does.
-TRIP_CURRENCY = os.environ.get("TRIP_CURRENCY", "EUR").upper()
-FX = {"USD": float(os.environ.get("FX_USD_EUR", "0.92")),
-      "GBP": float(os.environ.get("FX_GBP_EUR", "1.17")),
-      "CHF": float(os.environ.get("FX_CHF_EUR", "1.06")),
-      "EUR": 1.0}
+#: The engine sums money, and a sum across currencies is a number in no
+#: currency at all. Conversion lives in money.py -- ONE table, because this
+#: port, the hotel port and the demo literals converting at three different
+#: rates is how two pages show two totals for one trip.
+import money
 
-
-def _to_trip_currency(amount: float, currency: str) -> tuple[float, str, str]:
-    """(amount, price_source, what the provider said)."""
-    currency = (currency or TRIP_CURRENCY).upper()
-    if currency == TRIP_CURRENCY:
-        return amount, "quoted", ""
-    rate = FX.get(currency)
-    if rate is None:
-        return amount, "estimate", f"{currency} {amount:,.0f} (no rate)"
-    return round(amount * rate, 2), "converted", f"{currency} {amount:,.0f}"
+TRIP_CURRENCY = money.HOME
+_to_trip_currency = money.to_home
 
 # Duffel timestamps are local wall-clock with NO offset -- "2026-10-12T15:30:00"
 # means half past three in Zurich, and Python will happily compare that to an

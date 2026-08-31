@@ -101,10 +101,10 @@ def test_live_offers_reproduce_the_ranking():
     plans = generate(TRIP, d, now, live)
     best = plans[0]
     assert best.arrives_at == dt(12, 15, 17)
-    assert best.net_cash == -14.0
-    assert best.total_damage == 176.0
+    assert best.net_cash == -21.0
+    assert best.total_damage == 264.0
     noop = next(p for p in plans if p.id == "noop")
-    assert noop.total_damage == 282.0
+    assert noop.total_damage == 423.0
     assert best.total_damage < noop.total_damage
 
     # Doing nothing is no longer LAST, and that is the live data being honest.

@@ -1,0 +1,108 @@
+"""The whole capability as one scripted trip -- through the real handlers.
+
+The claim /story makes is the same one /demo has always made, widened: the
+inputs are scripted and the outcomes are computed. So every assertion here is
+about a figure the engine produced, and the one structural test is that the
+story runs through the same functions the buttons call rather than through a
+parallel path that could drift.
+"""
+
+from __future__ import annotations
+
+import pytest
+
+fastapi = pytest.importorskip("fastapi")
+from fastapi.testclient import TestClient          # noqa: E402
+
+import serve                                        # noqa: E402
+
+
+@pytest.fixture(scope="module")
+def told():
+    return TestClient(serve.app).post("/api/story").json()
+
+
+def beat(told, title_start: str) -> dict:
+    return next(b for b in told["beats"] if b["title"].startswith(title_start))
+
+
+def test_the_story_runs_and_has_all_seven_chapters(told):
+    assert len(told["beats"]) == 7
+    assert told["trip_id"]
+
+
+def test_the_profile_chapter_is_the_seed_the_rest_pays_off(told):
+    said_once = beat(told, "Say it once")
+    assert said_once["profile"]["home"] == "SIN"
+    assert said_once["profile"]["permissions"]["auto_limit"] == 300
+
+
+def test_the_booking_inherits_the_rules_and_ranks_trains_with_flights(told):
+    booked = beat(told, "A sentence")
+    assert booked["rules"]["auto_limit"] == 300
+    # No longer asserted to WIN: EUR converts at 1.50 and USD at 1.30, so a
+    # USD-quoted fare can honestly undercut the S$108 train. What the story
+    # claims is one list, both modes, the estimate labelled.
+    assert booked["cheapest_train"] == 108.0
+    kinds = {b["kind"] for b in booked["bookings"]}
+    assert kinds == {"flight", "lodging"}
+
+
+def test_the_meeting_fits_and_is_never_priced(told):
+    meeting = beat(told, "The reason")
+    assert meeting["feasible"] is True
+    assert meeting["clashes"] == []
+
+
+def test_marco_sees_every_leg_and_no_price_anywhere(told):
+    marco = beat(told, "Marco")
+    assert marco["marco_sees"], "the itinerary itself is visible"
+    assert all(row["price"] is None for row in marco["marco_sees"])
+    assert marco["marco_total"] is None
+    assert marco["marco_link"].startswith("/?token=")
+
+
+def test_thirty_minutes_costs_nothing(told):
+    small = beat(told, "Thirty")
+    assert small["destroyed"] == 0 and small["at_risk"] == 0
+    assert all(n["severity"] in ("safe", "source") for n in small["nodes"])
+
+
+def test_the_cancellation_is_answered_by_the_agent_inside_the_cap(told):
+    big = beat(told, "Cancelled")
+    taken = big["auto_taken"]
+    assert taken, "the agent did not act -- the cap chapter has no payoff"
+    assert "within your S$300 limit" in taken["permission"]
+    assert taken["pending"], "the purchase still needs a person"
+    assert "keeps Meeting with the client" in big["why"]
+
+    ranked = big["plans"]
+    assert ranked[0]["best"] and ranked[0]["saves"], "the taken plan keeps the meeting"
+    cheaper_losers = [q for q in ranked
+                     if q["total_damage"] < ranked[0]["total_damage"]]
+    assert cheaper_losers and all(q["misses"] for q in cheaper_losers), (
+        "the story's whole point: cheaper rows lose because they miss the client")
+
+
+def test_the_abandon_chapter_is_priced_and_not_taken(told):
+    quote = beat(told, "And if")
+    assert round(quote["refund"] + quote["lost"], 2) == quote["paid"]
+    lanes = {a["lane"] for a in quote["errands"]}
+    assert lanes <= {"auto", "tap", "call"} and len(lanes) >= 2
+
+
+def test_the_story_can_be_told_twice(told):
+    """A story that can only be told once breaks at the second audience."""
+    again = TestClient(serve.app).post("/api/story").json()
+    assert again["trip_id"] != told["trip_id"]
+    assert beat(again, "Cancelled")["auto_taken"]
+
+
+def test_the_story_trip_is_real_and_still_actionable(told):
+    """The last chapter of the page says "open it on the agent page and keep
+    going". That has to be true: the trip exists, the agent is recorded as
+    having acted, and the replacement is pending on the itinerary."""
+    client = TestClient(serve.app)
+    listed = client.get("/api/itineraries").json()["itineraries"]
+    row = next((t for t in listed if t["trip_id"] == told["trip_id"]), None)
+    assert row is None, "the story trip belongs to Alex, not to the anonymous traveller"

@@ -31,7 +31,7 @@ class Offer:
     origin: str
     destination: str
     price: float
-    currency: str = "EUR"
+    currency: str = "SGD"
     # "quoted"  -- a real fare from a booking API, safe to put in a total
     # "estimate" -- ours, because no reachable API sells this fare. Shown as an
     # estimate everywhere it appears. Plan B's EUR 72 rail fare is the one that
@@ -76,15 +76,22 @@ class Offer:
         return f"{designator}|{self.origin}|{self.destination}|{self.depart.isoformat()}"
 
 
+import money as _fx
+
+# The same quotes the prototype carried, crossing the same boundary a live one
+# does: EUR at the declared rate, marked converted, the original kept. The
+# rail figure was always ours; it stays an estimate, now in home currency.
 OFFERS = [
     Offer("lx1626", "flight", "SWISS", "LX 1626 - Zurich to Malpensa",
-          dt(12, 15, 30), dt(12, 16, 35), "ZRH", "MXP", 118.0),
+          dt(12, 15, 30), dt(12, 16, 35), "ZRH", "MXP", _fx.to_home(118.0, "EUR")[0],
+          price_source="converted", quoted="EUR 118"),
     Offer("ec317", "rail", "SBB", "Eurocity 317 - Zurich HB to Milano Centrale",
-          dt(12, 11, 33), dt(12, 15, 20), "ZRH_HB", "MILANO_C", 72.0,
+          dt(12, 11, 33), dt(12, 15, 20), "ZRH_HB", "MILANO_C", _fx.to_home(72.0, "EUR")[0],
           price_source="estimate",
           book_url="https://www.sbb.ch/en/buying/pages/fahrplan/fahrplan.xhtml"),
     Offer("lx1902", "flight", "SWISS", "LX 1902 - Zurich to Malpensa",
-          dt(12, 18, 5), dt(12, 19, 10), "ZRH", "MXP", 89.0),
+          dt(12, 18, 5), dt(12, 19, 10), "ZRH", "MXP", _fx.to_home(89.0, "EUR")[0],
+          price_source="converted", quoted="EUR 89"),
 ]
 
 

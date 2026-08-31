@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Downstream — the whole story</title>
+<style>
+  :root{
+    --bg:#0b0f14; --card:#141b23; --edge:#232d38; --ink:#e8eef4; --dim:#93a1b0; --faint:#5d6b7a;
+    --ok:#3fb950; --bad:#f85149; --warn:#e3b341; --key:#58a6ff;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  .wrap{max-width:860px;margin:0 auto;padding:26px 22px 110px}
+  header{display:flex;justify-content:space-between;align-items:baseline;gap:20px;flex-wrap:wrap}
+  h1{font-size:20px;margin:0}
+  h2{font-size:16px;margin:0 0 4px}
+  .sub{color:var(--dim);font-size:13px}
+  a{color:var(--key);text-decoration:none}
+  a:hover{text-decoration:underline}
+  section{background:var(--card);border:1px solid var(--edge);border-radius:11px;
+          padding:22px;margin-top:18px}
+  .said{color:var(--dim);font-size:14.5px;margin:6px 0 12px}
+  .m{color:var(--faint);font:12px var(--mono)}
+  .n{font:13px var(--mono);text-align:right;white-space:nowrap}
+  .banner{background:#0e151d;border:1px solid var(--edge);border-radius:9px;
+          padding:12px 15px;font:12.5px var(--mono);color:var(--dim);margin-top:10px}
+  .banner.ok{border-left:3px solid var(--ok);color:var(--ink);font-family:inherit;font-size:14px}
+  .banner.warn{border-left:3px solid var(--warn)}
+  .leg{display:flex;justify-content:space-between;gap:14px;border-top:1px solid var(--edge);
+       padding:8px 0;font-size:14px}
+  .leg:first-child{border-top:0}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+  th{text-align:left;font:11px var(--mono);letter-spacing:.1em;text-transform:uppercase;
+     color:var(--faint);padding:6px 10px 6px 0;border-bottom:1px solid var(--edge)}
+  td{padding:7px 10px 7px 0;border-bottom:1px solid var(--edge)}
+  tr:last-child td{border-bottom:0}
+  .tag{display:inline-block;font:10px var(--mono);letter-spacing:.08em;text-transform:uppercase;
+       border:1px solid var(--edge);border-radius:5px;padding:2px 6px;color:var(--dim);margin-left:6px}
+  .tag.ok{color:var(--ok);border-color:#1d4429}
+  .tag.warn{color:var(--warn);border-color:#4d4423}
+  .tag.bad{color:#ffb4ae;border-color:#4d2326}
+  .btn{background:#173254;border:1px solid #2b5384;color:var(--ink);font:inherit;font-size:15px;
+       padding:11px 20px;border-radius:9px;cursor:pointer}
+  .btn:disabled{opacity:.5;cursor:default}
+  .sev-safe{color:var(--ok)} .sev-critical{color:var(--bad)} .sev-risk{color:var(--warn)}
+  .sev-source{color:var(--key)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>The whole story</h1>
+      <div class="sub">One scripted trip, taken through everything the app can do — by the app.
+        Scripted inputs, computed outcomes: every figure below comes out of the engine when you
+        press the button.</div>
+    </div>
+    <div class="sub"><a href="/">the agent →</a> · <a href="/script">presenter guide →</a> ·
+      <a href="/demo">the S$423 example →</a></div>
+  </header>
+
+  <section id="run-box">
+    <p style="margin:0 0 12px">Alex is flying Singapore → Zurich → Milan on 18 September, with
+      a hotel and a client meeting. One press books it, shares it, breaks it twice, and lets
+      the agent answer — through the same code every button on this site calls.</p>
+    <button class="btn" id="run">Run the story</button>
+    <span class="m" id="run-note" style="margin-left:10px"></span>
+  </section>
+
+  <div id="beats"></div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const eur = n => n == null ? '—' : (n < 0 ? '−' : '') + 'S$' + Math.abs(Math.round(n)).toLocaleString();
+const at = w => w ? w.d : '—';
+
+const RENDER = {
+  'Say it once': b => `<div class="banner">home ${esc(b.profile.home_label)} · sort
+      ${esc(b.profile.preference)} · the agent may act up to
+      S$${b.profile.permissions.auto_limit} without asking</div>`,
+
+  'A sentence, not a form': b => `
+    ${b.bookings.map(x => `<div class="leg"><div>${esc(x.title)}
+        ${x.kind === 'rail' ? '<span class="tag">train</span>' : ''}</div>
+      <div class="n">${at(x.starts)} → ${at(x.ends)} · ${eur(x.price)}</div></div>`).join('')}
+    <div class="banner">${b.trains_beat_flights
+      ? `under <b>cheapest</b>, the S$${b.cheapest_train} train ranked above every fare — one
+         list, both modes, the estimate labelled`
+      : `flights and trains ranked in one list`} · trip total ${eur(b.total)} · inherits the
+      S$${b.rules.auto_limit} rule from the profile</div>`,
+
+  'The reason the trip exists': b => `<div class="banner ${b.feasible ? 'ok' : 'warn'}">
+      ${b.feasible ? 'It fits — nothing else is in the way.' : esc(b.clashes.join('; '))}
+      A commitment has no fare and is <b>counted, never priced</b> — watch what it does to the
+      ranking two chapters from now.</div>`,
+
+  'Marco is meeting them': b => `
+    ${b.marco_sees.map(x => `<div class="leg"><div>${esc(x.title)}</div>
+      <div class="n">${at(x.starts)} → ${at(x.ends)} · ${x.price == null
+        ? '<span class="tag">no price shown</span>' : eur(x.price)}</div></div>`).join('')}
+    <div class="banner">Marco's view of the total: <b>${b.marco_total == null ? 'not his to see'
+      : eur(b.marco_total)}</b>. Every monetary key is blanked recursively, on every endpoint.
+      <a href="${esc(b.marco_link)}" target="_blank" rel="noopener">Open the trip as Marco →</a>
+      <span class="m">(that link IS his identity — there is no login, and /test says so)</span></div>`,
+
+  'Thirty minutes late': b => `
+    ${b.nodes.map(n => `<div class="leg"><div>${esc(n.title)}</div>
+      <div class="n sev-${esc(n.severity)}">${esc(n.severity)} — ${esc(n.reason)}</div></div>`).join('')}
+    <div class="banner ok">Destroyed ${eur(b.destroyed)} · at risk ${eur(b.at_risk)}. The slack
+      absorbs it, and the engine says so instead of crying wolf.</div>`,
+
+  'Cancelled — and answered before anyone is awake': b => `
+    ${b.auto_taken ? `<div class="banner ok"><b>I have taken ${esc(b.auto_taken.plan)}</b> —
+        ${esc(b.auto_taken.permission)}. ${esc(b.auto_taken.summary)}.<br>
+        <span class="m">sent: ${b.auto_taken.sent.map(esc).join(' · ') || '—'}<br>
+        still a person's: ${b.auto_taken.pending.map(esc).join(' · ') || '—'}</span></div>`
+      : `<div class="banner warn">The agent waited — the best plan was outside the rules.</div>`}
+    <div class="banner">${esc(b.why)}</div>
+    <table><thead><tr><th>Plan</th><th>The meeting</th><th class="n">Damage</th></tr></thead>
+      <tbody>${b.plans.map(q => `<tr><td>${esc(q.name)}${q.best ? '<span class="tag ok">taken</span>' : ''}
+          ${q.mode === 'rail' ? '<span class="tag">train</span>' : ''}</td>
+        <td>${q.misses.length ? '<span class="tag bad">missed</span>'
+             : q.saves.length ? '<span class="tag ok">kept</span>' : '—'}</td>
+        <td class="n">${eur(q.total_damage)}</td></tr>`).join('')}</tbody></table>
+    <div class="banner">The cheaper rows lose <b>because they miss the client</b> — goals rank
+      before money, and the meeting still has no price on it anywhere.</div>`,
+
+  'And if Alex were not going at all': b => `
+    ${b.errands.map(a => `<div class="leg"><div>${esc(a.label)}
+        <span class="tag ${a.lane === 'auto' ? 'ok' : a.lane === 'call' ? 'bad' : 'warn'}">${esc(a.lane)}</span>
+        <div class="m">${esc(a.note || '')}</div></div>
+      <div class="n">${a.cash_in ? eur(a.cash_in) + ' back' : '—'}</div></div>`).join('')}
+    <div class="banner">${eur(b.paid)} paid = ${eur(b.refund)} back + ${eur(b.lost)} gone —
+      the ledger balances to the cent, at this moment. Priced and <b>not</b> cancelled: the one
+      action that destroys value on purpose never happens in one press.</div>`,
+};
+
+$('#run').onclick = async () => {
+  $('#run').disabled = true;
+  $('#run-note').textContent = 'running every chapter through the engine…';
+  let d;
+  try {
+    const r = await fetch('/api/story', {method: 'POST'});
+    d = await r.json();
+    if (!r.ok) throw new Error(typeof d.detail === 'string' ? d.detail : JSON.stringify(d.detail));
+  } catch (e) {
+    $('#run').disabled = false;
+    $('#run-note').textContent = e.message;
+    return;
+  }
+  $('#run-note').textContent = `ports: ${d.ports.mode}`
+    + (d.ports.degraded.length ? ` · degraded: ${d.ports.degraded.join('; ')}` : '')
+    + ' · run it again for a fresh copy';
+  $('#run').disabled = false;
+  $('#beats').innerHTML = d.beats.map((b, i) => `
+    <section>
+      <h2><span class="m" style="margin-right:8px">${i + 1}</span>${esc(b.title)}</h2>
+      <div class="said">${esc(b.said)}</div>
+      ${(RENDER[b.title] || (() => ''))(b)}
+    </section>`).join('')
+    + `<section><h2>Where this leaves you</h2>
+       <div class="said">The trip above is real and stored — open it on
+         <a href="/">the agent page</a> to keep going: decline a line, change the rules, share
+         it with somebody else, or call it off for real. And the numbers behind the oldest
+         chapter of all are still on <a href="/demo">/demo</a>: S$423, asserted by the tests,
+         printable by <code style="font:12px var(--mono)">python cli.py</code> with no server
+         at all.</div></section>`;
+};
+</script>
+</body>
+</html>

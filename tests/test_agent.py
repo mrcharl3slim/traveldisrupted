@@ -46,9 +46,9 @@ def run(model=None):
 
 def test_the_graph_reaches_the_same_numbers():
     out = run()
-    assert out["impact"].do_nothing_cost == 282.0
-    assert out["chosen"].net_cash == -14.0
-    assert out["chosen"].total_damage == 176.0
+    assert out["impact"].do_nothing_cost == 423.0
+    assert out["chosen"].net_cash == -21.0
+    assert out["chosen"].total_damage == 264.0
 
 
 def test_an_on_time_flight_stops_at_detection(monkeypatch):
@@ -82,7 +82,7 @@ def test_without_a_model_the_sentence_is_still_good():
 
 def test_a_dead_model_costs_prose_never_the_plan():
     out = run(DeadModel())
-    assert out["chosen"].net_cash == -14.0
+    assert out["chosen"].net_cash == -21.0
     assert out["rationale"] == _template(out)
 
 
@@ -125,7 +125,7 @@ def test_the_mcp_tools_return_the_same_arithmetic():
     """The MCP surface is a view of the engine, not a second implementation."""
     import mcp_server
     imp = mcp_server.impact_of()
-    assert imp["do_nothing_eur"] == 282.0 and imp["recoverable_eur"] == 160.0
+    assert imp["do_nothing_sgd"] == 423.0 and imp["recoverable_sgd"] == 240.0
     assert imp["next_cutoff"]["booking"].startswith("Malpensa")
     best = mcp_server.recovery_plans()["plans"][0]
-    assert best["net_cash_eur"] == -14.0 and best["total_damage_eur"] == 176.0
+    assert best["net_cash_sgd"] == -21.0 and best["total_damage_sgd"] == 264.0

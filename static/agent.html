@@ -117,9 +117,10 @@
       <h1>Downstream</h1>
       <div class="sub">Tell it what you want. It books it, watches it, and fixes it when it breaks.</div>
     </div>
-    <div class="sub"><a href="/script">demo script</a> ·
+    <div class="sub"><a href="/story">the whole story</a> ·
+      <a href="/script">presenter guide</a> ·
       <a href="/test">how to test this</a> ·
-      <a href="/book">manual search</a> · <a href="/demo">scripted demo</a></div>
+      <a href="/book">manual search</a> · <a href="/demo">worked example</a></div>
   </header>
 
   <div class="cols">
@@ -162,7 +163,7 @@
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c =>
   ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const eur = n => (n < 0 ? '−' : '') + '€' + Math.abs(Math.round(n)).toLocaleString();
+const eur = n => (n < 0 ? '−' : '') + 'S$' + Math.abs(Math.round(n)).toLocaleString();
 // Times arrive pre-formatted in the trip's own timezone. Formatting them here
 // renders a Zurich arrival in whatever zone this laptop is set to.
 const at = w => w ? w.d : '—';
@@ -457,7 +458,7 @@ async function loadProfile(){
         <select id="you-pref"><option value="">ask me</option>${
           ['cheapest','fastest','direct'].map(x =>
             `<option value="${x}"${p.preference === x ? ' selected' : ''}>${x}</option>`).join('')}</select>
-      <span class="m">act up to €</span><input id="you-limit" type="number" min="0" step="10" value="${Number(r.auto_limit) || 0}">
+      <span class="m">act up to S$</span><input id="you-limit" type="number" min="0" step="10" value="${Number(r.auto_limit) || 0}">
       <span class="m">never</span><input id="you-never" placeholder="rail, ryanair" value="${esc((r.never || []).join(', '))}">
     </div>
     <div class="chips" style="margin-top:8px"><button class="btn sm" id="you-save">Save</button></div>`;
@@ -560,7 +561,7 @@ function openTrip(id, quiet){
            purchase link for you. Nothing is bought.`
         : `Nothing is pre-authorised — every plan that costs money waits for you.`}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-        <span class="m">up to €</span>
+        <span class="m">up to S$</span>
         <input id="rule-limit" type="number" min="0" step="10" style="width:80px"
                value="${Number(r.auto_limit) || 0}">
         <span class="m">never</span>

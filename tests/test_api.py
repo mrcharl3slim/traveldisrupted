@@ -127,9 +127,9 @@ def _with_meeting(client, permissions: dict) -> dict:
     than it costs -- which is the only situation in which there is anything
     for the agent to take."""
     # The EARLIEST feasible onward hop, not the cheapest. Cancelling a 15:10
-    # departure leaves no train in the day and the best plan is a EUR 555
-    # flight -- correct, and useless for testing a EUR 300 cap. Cancelling a
-    # morning hop leaves the EUR 72 train, which is the scenario the rules
+    # departure leaves no train in the day and the best plan is an expensive long-haul
+    # flight -- correct, and useless for testing the S$300 cap. Cancelling a
+    # morning hop leaves the S$108 train, which is the scenario the rules
     # were written for.
     inbound = client.get("/api/search/flights", params={
         "origin": "SIN", "destination": "ZRH", "on": DAY}).json()["offers"]
@@ -194,7 +194,7 @@ def test_within_the_cap_the_agent_takes_the_plan_at_the_moment_of_disruption(cli
 
     taken = outcome["auto_taken"]
     assert taken["by"] == "the agent"
-    assert "within your EUR 300 limit" in taken["permission"]
+    assert "within your S$300 limit" in taken["permission"]
     assert taken["pending"], "the purchase still needs a person, and must say so"
     assert all(d["verb"] != "buy" for d in taken["sent"]), "claimed to have bought"
 
@@ -208,7 +208,7 @@ def test_within_the_cap_the_agent_takes_the_plan_at_the_moment_of_disruption(cli
 def test_over_the_cap_the_agent_waits_and_says_by_how_much(client):
     outcome = _break_onward(client, _with_meeting(client, {"auto_limit": 50}))
     assert "auto_taken" not in outcome
-    assert "exceeds your EUR 50 limit" in outcome["why"]
+    assert "exceeds your S$50 limit" in outcome["why"]
     buy = next(a for a in outcome["plans"][0]["actions"] if a["verb"] == "buy")
     assert buy["approval"] == "needs approval"
 
@@ -469,7 +469,7 @@ def test_within_the_cap_the_watch_takes_the_plan_before_anybody_is_awake(client,
     # the email to the property -- through the same channel, and it arrives
     # first.
     message = next(m for t, k, m in feed["sent"] if t == booked["trip_id"] and k == "found")
-    assert "taken" in message and "within your EUR 300 limit" in message
+    assert "taken" in message and "within your S$300 limit" in message
     assert "still yours" in message, "the purchase still needs a person, and must say so"
 
 
@@ -625,7 +625,7 @@ def test_the_errand_on_a_row_is_the_one_for_that_booking(client):
 def test_every_door_a_tester_is_given_opens(client):
     """Four URLs go to people who did not build this. A 404 on any of them is
     the first thing they will see and the last thing they will report."""
-    for path in ("/", "/demo", "/book", "/test", "/script"):
+    for path in ("/", "/demo", "/book", "/test", "/script", "/story"):
         assert client.get(path).status_code == 200, path
 
 

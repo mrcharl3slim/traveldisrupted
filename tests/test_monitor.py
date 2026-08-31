@@ -62,8 +62,8 @@ def test_one_moment_gets_one_sentence(alerts):
 
     final = next(a for a in alerts
                  if a.booking_id == "lastsupper" and a.kind == "final")
-    # The bigger loss wins: EUR 92 of entry gone, not a EUR 74 window closing.
-    assert final.worth == 92.0
+    # The bigger loss wins: S$138 of entry gone, not a S$111 window closing.
+    assert final.worth == 138.0
 
 
 def test_the_schedule_keeps_what_it_failed_to_deliver():

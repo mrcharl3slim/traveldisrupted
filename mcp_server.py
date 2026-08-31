@@ -66,11 +66,11 @@ def impact_of(flight: str = "SQ346", base: str = "today",
         "disrupted": True,
         "anchored_to": trip.in_order()[0].start.date().isoformat(),
         "delay_minutes": int(d.delay(trip).total_seconds() // 60),
-        "do_nothing_eur": imp.do_nothing_cost,
-        "recoverable_eur": imp.act_now_value,
+        "do_nothing_sgd": imp.do_nothing_cost,
+        "recoverable_sgd": imp.act_now_value,
         "next_cutoff": {"at": when.isoformat(), "booking": node.booking.title},
         "nodes": [{"id": n.id, "title": n.booking.title, "severity": n.severity.value,
-                   "exposure_eur": n.exposure, "recoverable_eur": n.recoverable,
+                   "exposure_sgd": n.exposure, "recoverable_sgd": n.recoverable,
                    "why": n.reason} for n in imp.nodes],
     }
 
@@ -93,10 +93,10 @@ def recovery_plans(flight: str = "SQ346", base: str = "today",
                             anchor(basis, 12, 9, 0), STATIONS))
     return {"plans": [{
         "id": p.id, "name": p.name,
-        "net_cash_eur": p.net_cash, "total_damage_eur": p.total_damage,
+        "net_cash_sgd": p.net_cash, "total_damage_sgd": p.total_damage,
         "arrives": p.arrives_at.isoformat() if p.arrives_at else None,
         "actions": [{"lane": a.lane.value, "label": a.label,
-                     "out_eur": a.cash_out, "in_eur": a.cash_in,
+                     "out_sgd": a.cash_out, "in_sgd": a.cash_in,
                      # "estimate" means no reachable API quotes this fare and
                      # the number is ours. An agent repeating it must say so.
                      "price_source": a.price_source or "n/a",

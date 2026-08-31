@@ -3,6 +3,14 @@
 Cross-provider disruption replanning. Detection is commodity; this is the part
 that is not.
 
+`/story` is the whole current capability as one scripted trip: Alex's Singapore
+→ Zurich → Milan booking taken through the profile, the meeting, sharing with a
+host, a harmless 30-minute delay, a cancellation the agent answers inside the
+pre-authorised cap, and a priced-but-not-taken whole-trip cancellation — run
+server-side **through the same handlers every button calls**, so it cannot drift
+from what a person clicking would get. Scripted inputs, computed outcomes: the
+same discipline as `/demo`, applied to the whole product, and re-runnable
+because a story that can only be told once breaks at the second audience.
 `/script` is the demo as a script — seven acts, six minutes, every line to type
 in a box and every line to say in italics, with an "if it goes sideways" table.
 It reads `/health` first, because the opening instruction depends on whether the
@@ -13,6 +21,16 @@ not worth filing, and what to put in a bug report. It reads `/health` rather tha
 asserting anything, because whether an instance is talking to providers or
 replaying recordings decides which routes exist at all — and a guide that states
 that in prose goes stale silently and sends the whole team hunting the wrong bug.
+
+**One currency inside the engine, and it is Singapore dollars.** Every quote
+crosses one boundary — `money.py` — at fixed, declared rates (EUR→S$ 1.50,
+USD→S$ 1.30), because the engine sums money and a sum across currencies is a
+number in no currency at all. Anything converted says so: `price_source` becomes
+`converted` and `quoted` keeps the provider's own words (`EUR 142`). The rates
+are guesses and are labelled as guesses, exactly as the rail estimate always
+was; EUR is 1.50 rather than the mid-market ~1.45 because the demo's argument is
+figures a judge can check by hand, and EUR 282 × 1.5 = S$423 survives mental
+arithmetic. The scripted literals cross the same boundary as a live quote does.
 
 ```bash
 python serve.py                   # the web app, first free port from 8000
@@ -48,7 +66,7 @@ export LLM_PROVIDER=bedrock                      # or anthropic, or leave unset
 ## What is computed and what is written
 
 Nothing in `domain/ policy/ graph/ plan` contains a severity, a total or a
-ranking that a human typed. `EUR 282`, `-EUR 14` and `EUR 176` appear only in
+ranking that a human typed. `S$423`, `-S$21` and `S$264` appear only in
 the tests that assert them. That is the whole point: the claim is checkable in
 ten seconds by anyone leaning over a laptop.
 
@@ -117,8 +135,9 @@ as the flights, ranked by the same preference. It is not a question, because the
 same rule decides: whether a train runs between two cities is the timetable's
 answer, not the traveller's preference, and "train or plane?" put to somebody
 flying Singapore to Bangkok is a question about something that does not exist.
-Zurich to Milan under *cheapest* now opens with four trains at EUR 72 above
-every fare; under *fastest* a 55-minute flight beats a 3h44 train, and under
+Zurich to Milan under *cheapest* ranks the S$108 trains in the same list as
+every fare — first or not by honest arithmetic, since EUR and USD convert at
+different rates; under *fastest* a 55-minute flight beats a 3h44 train, and under
 *direct* the connecting train correctly sorts below the direct flights.
 
 The chosen leg carries its mode back, because the server re-resolves it and a
@@ -191,7 +210,7 @@ things had to be right before the button could be honest:
   argued that downstream is a question about deadlines and then handed the
   bookings over in start order. A room whose desk opens at 14:00 came before
   the 15:10 flight that delivers the traveller to it, so a thirty-minute delay
-  — comfortably absorbed by a six-hour connection — reported EUR 445 of room at
+  — comfortably absorbed by a six-hour connection — reported S$668 of room at
   risk. Crying wolf on the commonest disruption is how an alert gets ignored.
 - **A delayed leg stays on the itinerary.** `act.apply` dropped the disrupted
   booking unconditionally, which is right for a flight that does not exist any
@@ -307,8 +326,8 @@ Modelling it separately would have meant a second reachability check and a
 second clash rule, and the second one is always the one that rots.
 
 `commitment` is the only field that had to be added, and it exists because the
-engine reads value from `price`. A EUR 0 dinner with free cancellation costs
-nothing to miss. A EUR 0 meeting with the Milan team is the reason the trip
+engine reads value from `price`. A S$0 dinner with free cancellation costs
+nothing to miss. A S$0 meeting with the Milan team is the reason the trip
 exists. Missed commitments are **counted, never priced** — inventing a euro
 figure so the meeting could join the money total would be the engine making up
 the most important number on the page.
@@ -418,8 +437,8 @@ trip had hidden:
   not the airline's, so its seats are still in inventory and the search returns
   them. Filtered by designator, airports and departure minute.
 - **Downstream is a question about deadlines, not start times.** Walking by
-  start time charged a EUR 1,031 long-haul that landed that morning to the
-  cancellation of a EUR 170 onward hop.
+  start time charged a S$1,547 long-haul that landed that morning to the
+  cancellation of a S$255 onward hop.
 - **A stay is where the hotel is.** Inferring it from the itinerary filed a
   Milan hotel under Zurich the moment the onward leg landed the next morning.
 - **One ledger for every plan, inaction included.** A room defusable by a phone
@@ -446,7 +465,7 @@ trip had hidden:
   lands, and nothing else — while the baseline they are ranked against went
   through `propagate`. It could not see the traveller's own surviving legs, so
   a replacement landing in Milan at 13:40 was still charged for the 16:00
-  flight to Rome it had just saved: EUR 140 on every candidate and nothing on
+  flight to Rome it had just saved: S$210 on every candidate and nothing on
   doing nothing, and the engine recommended inaction over the plan that
   rescued the trip. `plan.build` now walks the same itinerary with the same
   rules, differing only in the one arrival the offer adds — and `_can_board`,
@@ -457,7 +476,7 @@ trip had hidden:
   `None`, so the option never appeared, and all the engine offered was losing
   the room.
 
-The old scripted demo — one late flight, eleven bookings, EUR 282 — still runs
+The old scripted demo — one late flight, eleven bookings, S$423 — still runs
 at `/`, from the same fixtures, asserting the same numbers.
 
 ## Who else is in
@@ -558,10 +577,10 @@ quietly removed is a ranking the traveller cannot check.
 ## Goals before money
 
 `generate` ranked by damage first, and a missed commitment carried an exposure
-of zero — so the ranking was **money-first and meeting-blind**. A EUR 120 flight
-that saved the board meeting lost to a EUR 95 one that missed it, and to doing
-nothing at EUR 0; the engine recommended missing the reason the trip existed to
-save twenty-five euros.
+of zero — so the ranking was **money-first and meeting-blind**. A S$180 flight
+that saved the board meeting lost to a S$143 one that missed it, and to doing
+nothing at S$0; the engine recommended missing the reason the trip existed to
+save S$38.
 
 The sort is now lexicographic: **commitments missed, then damage**, then the
 stated preference, then arrival. The principle that a meeting is never *priced*
@@ -570,8 +589,8 @@ still holds — there is no euro figure for one anywhere in `plan.py`. It is
 real number next to the cheaper plan that loses it rather than as a weight
 somebody typed:
 
-    Recommended because it keeps Meeting with the client; costs EUR 72 more than
-    doing nothing, which would miss it; within your EUR 300 limit.
+    Recommended because it keeps Meeting with the client; costs S$108 more than
+    doing nothing, which would miss it; within your S$300 limit.
 
 Every clause in that sentence is true of the plan and taken from the engine —
 which commitments it keeps, what it costs against the cheapest plan that does
@@ -595,10 +614,10 @@ from there, *who does this and did they* is the same question.
     Downstream handles it
       - Tell Hotel Le Marais Milano you are not coming
     One tap, you authorise
-      - Cancel Malpensa to hotel private transfer            +EUR 48
-      - Cancel Bellagio and Lake Como day tour               +EUR 128
+      - Cancel Malpensa to hotel private transfer            +S$72
+      - Cancel Bellagio and Lake Como day tour               +S$192
     You will have to call
-      - Cancel LX 1608 - Zurich to Milan Malpensa            +EUR 38
+      - Cancel LX 1608 - Zurich to Milan Malpensa            +S$57
 
 Each lane is earned rather than assigned. A room with nothing left to recover
 gets the **email**, because sending somebody to a booking portal to press cancel
@@ -628,7 +647,7 @@ nobody is taking has no deadlines worth counting down to, and `/api/cancel` and
 
 **Kept is not the same as unchanged.** Every row carries the errand that applies
 to *it* — `done for you — Tell the Grand Visconti Palace you are not coming`, or
-`yours to do — Cancel LH 0346 · EUR 1,032 back` — and a row carrying an errand is
+`yours to do — Cancel LH 0346 · the refund beside it` — and a row carrying an errand is
 not a booking any more: struck through, tagged, and no buttons on it. The first
 version marked the trip and left the rows alone, and the hotel gave it away.
 Flights at least had disabled-looking controls; the room is the row with nothing
@@ -650,7 +669,7 @@ hands a finding to exactly the path the buttons use (`_respond`), and if the
 traveller's rules allow it the plan is taken before anybody is awake. The record
 says `by: the agent`, the panel says *taken for you while you were away*, and one
 notification goes out at the moment of finding — `[DETECTED] LH 0346 cancelled —
-taken EC 11:33 (within your EUR 300 limit); still yours: Book EC 11:33` — because
+taken EC 11:33 (within your S$300 limit); still yours: Book EC 11:33` — because
 a traveller whose first word about a cancellation is a T-60 reminder three hours
 later has been let down by the notifier, not by the engine.
 
@@ -666,7 +685,7 @@ An alert exists only where the clock running out takes something away — a fare
 window still worth more than it costs to use, or the last moment a replacement
 could still land in time. A deadline with nothing behind it is a fact, not an
 alert, and stays in the impact graph. Where two deadlines land on the same
-booking at the same minute (the museum's EUR 18 date change and the museum
+booking at the same minute (the museum's S$27 date change and the museum
 itself both close at 16:00) the larger loss wins, because one clock deserves one
 sentence.
 

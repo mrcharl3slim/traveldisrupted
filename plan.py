@@ -11,14 +11,15 @@ single ledger:
     net_cash     = cash_out - cash_in          what the traveller pays tonight
     total_damage = wasted + cash_out - cash_in  what the disruption costs, full stop
 
-The first is the number the prototype showed (-EUR 14 for the rail plan). The
-second is the only one comparable with the EUR 282 of doing nothing, because
-that EUR 282 is destroyed value and the -EUR 14 is a cash flow -- different
+The first is the number the prototype showed (-S$21 for the rail plan). The
+second is the only one comparable with the S$423 of doing nothing, because
+that S$423 is destroyed value and the -S$21 is a cash flow -- different
 units, and the prototype quietly compared them. Both are reported. Neither is
 allowed to stand in for the other.
 
-SUNK COSTS. The EUR 142 SWISS fare is spent under every plan including doing
-nothing, so it does not belong in net_cash -- only the EUR 38 that acting
+SUNK COSTS. The SWISS fare (EUR 142, S$213 at the declared rate) is spent under
+every plan including doing nothing, so it does not belong in net_cash -- only
+the S$57 of taxes that acting
 claws back does. It does belong in total_damage, because the money is gone.
 
 TODO (day 9-10): a moved timed-entry slot can collide with a later booking --
@@ -388,7 +389,7 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
             elif recover > 0:
                 actions.append(Action(
                     verb="cancel", booking_id=b.id, lane=lane_for(b.provider, "cancel"),
-                    label=f"Cancel the transfer for a EUR {recover:,.0f} refund",
+                    label=f"Cancel the transfer for a S${recover:,.0f} refund",
                     cash_in=recover, deadline=cut.closes if cut else None,
                     note="not needed on this routing"))
                 wasted_ids.add(b.id); wasted += b.price
@@ -464,7 +465,7 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
         actions.insert(1, Action(
             verb="buy", booking_id=None, lane=lane_for(offer.carrier, "buy"),
             provider=offer.carrier,
-            label=f"Book {offer.label}, EUR {offer.price:,.0f}",
+            label=f"Book {offer.label}, S${offer.price:,.0f}",
             cash_out=offer.price,
             price_source=getattr(offer, "price_source", "quoted"),
             note=f"departs {offer.depart:%H:%M}, arrives {offer.arrive:%H:%M}"
@@ -562,7 +563,7 @@ def abandon(trip: Trip, now: datetime) -> Plan:
                 lane=lane_for(b.provider, "notify"),
                 label=f"Tell {_property(b)} you are not coming",
                 price_source=b.price_source,
-                note=f"{b.currency} {b.price:,.0f} is not refundable — this "
+                note=f"S${b.price:,.0f} is not refundable — this "
                      "releases the room, it does not recover the rate"))
             continue
         # The FULL fare goes in the waste column and the refund offsets it in
@@ -582,7 +583,7 @@ def abandon(trip: Trip, now: datetime) -> Plan:
             deadline=cut.closes if cut else None,
             price_source=b.price_source,
             note=(cut.label if cut else "")
-                 or (f"{b.currency} {lost:,.0f} is not refundable" if lost
+                 or (f"S${lost:,.0f} is not refundable" if lost
                      else "nothing was at stake")))
 
     return Plan(
@@ -649,8 +650,8 @@ def generate(trip: Trip, disruption: Disruption, now: datetime,
     GOALS BEFORE MONEY. A plan that keeps the meeting outranks every plan that
     loses it, whatever they cost. Until this, the sort was damage-first and a
     missed commitment carried an exposure of zero, so the ranking was
-    money-first and meeting-blind: a EUR 120 flight that saved the board
-    meeting lost to a EUR 95 one that missed it, and the engine recommended
+    money-first and meeting-blind: a S$180 flight that saved the board
+    meeting lost to a S$143 one that missed it, and the engine recommended
     missing the reason the trip existed to save twenty-five euros.
 
     The principle that a commitment is never PRICED still holds -- there is no

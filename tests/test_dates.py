@@ -175,4 +175,4 @@ def test_do_nothing_cost_is_unchanged_by_the_shift():
         disruption = aerodatabox.disruption("SQ346", anchor(basis, 11, 9, 0), "sq346")
         return propagate(trip, disruption, anchor(basis, 12, 2, 38)).do_nothing_cost
 
-    assert cost(None) == cost(DEFAULT_BASE + timedelta(days=SHIFT)) == 282.0
+    assert cost(None) == cost(DEFAULT_BASE + timedelta(days=SHIFT)) == 423.0

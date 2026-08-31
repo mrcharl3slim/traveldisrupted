@@ -82,7 +82,7 @@ def _fire_times(closes: datetime) -> list[tuple[datetime, str]]:
 
 
 def _money(worth: float) -> str:
-    return f"EUR {worth:,.0f}"
+    return f"S${worth:,.0f}"
 
 
 def _for_window(node, closes: datetime, worth: float, label: str) -> list[Alert]:
@@ -135,11 +135,11 @@ def schedule(trip: Trip, disruption: Disruption, now: datetime,
         """One moment, one sentence -- the most expensive thing it takes away.
 
         Two different deadlines land on the same booking at the same minute
-        more often than seems likely: the museum's EUR 18 date change and the
+        more often than seems likely: the museum's S$27 date change and the
         museum itself both expire at 16:00. Sending both is two notifications
         about one clock. Keeping whichever is worth more is not a tiebreak, it
-        is the right sentence: "EUR 92 of entry is gone" is the fact, and "the
-        EUR 74 change window closed" is a detail of how.
+        is the right sentence: "S$138 of entry is gone" is the fact, and "the
+        S$111 change window closed" is a detail of how.
         """
         current = found.get(alert.key)
         if current is None or alert.worth > current.worth:

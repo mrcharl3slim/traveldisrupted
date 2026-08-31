@@ -203,12 +203,12 @@ def test_a_replacement_they_genuinely_cannot_reach_is_still_refused():
 
 
 def test_rail_plan_is_cheaper_than_the_trip_as_booked(plans):
-    """72 bought - 38 taxes back - 48 transfer refund = -14."""
-    assert plans["ec317"].net_cash == -14.0
+    """EUR (72 - 38 - 48) = -14 -> S$-21."""
+    assert plans["ec317"].net_cash == -21.0
 
 
 def test_the_other_two_plans_price_out(plans):
-    """A: 118 + 18 - 38 = 98.  C: 89 + 18 - 38 = 69.
+    """In EUR: A: 118 + 18 - 38 = 98 -> S$147.  C: 89 + 18 - 38 = 69 -> S$103.50.
 
     The prototype priced the evening flight at +21, by cancelling the Malpensa
     transfer for its EUR 48 refund. The engine keeps it instead: you land at
@@ -218,19 +218,19 @@ def test_the_other_two_plans_price_out(plans):
     way -- and moving leaves the traveller with more. The prototype picked the
     equal-but-worse branch; nobody noticed, because nothing was computing it.
     """
-    assert plans["lx1626"].net_cash == 98.0
-    assert plans["lx1902"].net_cash == 69.0
-    assert plans["lx1902"].total_damage == 211.0
+    assert plans["lx1626"].net_cash == 147.0
+    assert plans["lx1902"].net_cash == 103.5
+    assert plans["lx1902"].total_damage == 316.5
     assert "transfer" in plans["lx1902"].delivered
 
 
 def test_doing_nothing_is_scored_by_the_same_code(plans):
     """Not a rhetorical baseline -- a candidate that loses. No cash moves, and
-    282 of already-paid value stops existing."""
+    S$423 of already-paid value stops existing."""
     noop = plans["noop"]
     assert noop.net_cash == 0.0
-    assert noop.wasted == 282.0
-    assert noop.total_damage == 282.0
+    assert noop.wasted == 423.0
+    assert noop.total_damage == 423.0
 
 
 def test_ranking_emerges_rather_than_being_stated(ranked):
@@ -239,12 +239,12 @@ def test_ranking_emerges_rather_than_being_stated(ranked):
 
 
 def test_total_damage_is_the_comparable_number(plans):
-    """190 wasted - 86 recovered + 72 spent = 176, against 282 for inaction.
+    """In EUR: 190 wasted - 86 recovered + 72 spent = 176 -> S$264, against S$423.
 
     The headline -14 is a cash flow and the 282 is destroyed value; comparing
     them directly, as the prototype did, mixes units. This is the honest pair.
     """
-    assert plans["ec317"].total_damage == 176.0
+    assert plans["ec317"].total_damage == 264.0
     assert plans["ec317"].total_damage < plans["noop"].total_damage
 
 
@@ -255,7 +255,7 @@ def test_only_the_rail_plan_saves_the_museum(plans):
     assert plans["ec317"].tightest == ("lastsupper", timedelta(minutes=20))
     for pid in ("lx1626", "lx1902"):
         moved = [a for a in plans[pid].actions if a.booking_id == "lastsupper"]
-        assert moved and moved[0].verb == "move" and moved[0].cash_out == 18.0
+        assert moved and moved[0].verb == "move" and moved[0].cash_out == 27.0
 
 
 def test_the_hotel_is_defused_by_a_message_under_every_plan(plans):

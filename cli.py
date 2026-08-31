@@ -64,9 +64,9 @@ for n in imp.nodes:
 
 when, node = imp.next_cutoff
 print("\n  " + "-" * 78)
-print(f"  DO NOTHING       EUR {imp.do_nothing_cost:,.0f} lost across "
+print(f"  DO NOTHING       S${imp.do_nothing_cost:,.0f} lost across "
       f"{len(imp.broken)} bookings")
-print(f"  ACT IN TIME      EUR {imp.act_now_value:,.0f} recoverable")
+print(f"  ACT IN TIME      S${imp.act_now_value:,.0f} recoverable")
 print(f"  NEXT DEADLINE    {when:%H:%M} - {node.booking.title} "
       f"(in {when - NOW})\n")
 
@@ -109,9 +109,9 @@ for lane, title in ((Lane.AUTO, "Downstream handles"),
     for a in acts:
         money = ""
         if a.cash_out:
-            money = f"  -EUR {a.cash_out:,.0f}"
+            money = f"  -S${a.cash_out:,.0f}"
         elif a.cash_in:
-            money = f"  +EUR {a.cash_in:,.0f}"
+            money = f"  +S${a.cash_in:,.0f}"
         by = f"  (by {a.deadline:%H:%M})" if a.deadline else ""
         print(f"    - {a.label}{money}{by}")
 print()

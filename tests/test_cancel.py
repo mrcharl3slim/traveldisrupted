@@ -118,4 +118,4 @@ def test_nothing_stranded_means_no_search():
 def test_the_do_nothing_baseline_is_unchanged_by_the_new_field():
     """Regression guard: adding `cancelled` must not move the number the whole
     pitch rests on."""
-    assert propagate(TRIP, DELAYED, NOW).do_nothing_cost == 282.0
+    assert propagate(TRIP, DELAYED, NOW).do_nothing_cost == 423.0

@@ -96,7 +96,7 @@ class Booking:
     origin: str | None = None
     destination: str | None = None
     price: float = 0.0
-    currency: str = "EUR"
+    currency: str = "SGD"
     policy: Policy = field(default_factory=Policy)
     ticket_group: str | None = None
     fixed_slot: bool = False

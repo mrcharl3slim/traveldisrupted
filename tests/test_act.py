@@ -111,7 +111,10 @@ def test_the_agent_offers_trains_where_trains_run(client):
     assert "rail" in turn["ports"]
     modes = {o.get("mode", "flight") for o in turn["flights"]}
     assert modes == {"flight", "rail"}, "one list, both modes"
-    assert turn["flights"][0]["mode"] == "rail", "the train is the cheapest way"
+    # The train is in the ranking on price, not privileged: EUR converts at
+    # 1.50 and USD at 1.30, so a USD-quoted fare may honestly undercut it.
+    ranked_prices = [o["price"] for o in turn["flights"]]
+    assert ranked_prices == sorted(ranked_prices), "cheapest first, whatever the mode"
     assert "by train" in turn["reply"]
 
 

@@ -26,6 +26,19 @@ def dt(day: int, hh: int, mm: int, tz=CEST, month: int = 10) -> datetime:
     return datetime(2026, month, day, hh, mm, tzinfo=tz)
 
 
+import money as _fx
+
+
+def _eur(amount: float) -> float:
+    """A EUR quote from a confirmation email, in the engine's home currency.
+
+    The same boundary a live quote crosses: fixed rate, declared in money.py,
+    and every figure downstream -- the S$423 headline included -- is this
+    conversion applied and then computed, never typed.
+    """
+    return _fx.to_home(amount, "EUR")[0]
+
+
 TRIP = Trip([
     Booking(
         id="sq346", kind=Kind.FLIGHT, provider="Singapore Airlines",
@@ -40,10 +53,10 @@ TRIP = Trip([
         title="LX 1608 - Zurich to Milan Malpensa",
         start=dt(12, 8, 20), end=dt(12, 9, 35),
         origin="ZRH", destination="MXP",
-        price=142.0, ticket_group="LX-4T81",
+        price=_eur(142.0), currency="SGD", price_source="converted", ticket_group="LX-4T81",
         policy=Policy(
             source="Economy Classic - no-show forfeits fare",
-            windows=[Window(closes=dt(12, 8, 20), refund=38.0,
+            windows=[Window(closes=dt(12, 8, 20), refund=_eur(38.0),
                             label="taxes refundable if cancelled before departure")],
         ),
     ),
@@ -52,12 +65,12 @@ TRIP = Trip([
         title="Malpensa to hotel private transfer",
         start=dt(12, 10, 0), end=dt(12, 10, 50),
         origin="MXP", destination="MILAN",
-        price=48.0,
+        price=_eur(48.0), currency="SGD", price_source="converted",
         policy=Policy(
             source="Free change up to 4 hours before pickup",
             # 4 h before a 10:00 pickup. Resolved once, here, where the pickup
             # time is in hand -- the whole point of policy.py.
-            windows=[Window(closes=dt(12, 6, 0), refund=48.0,
+            windows=[Window(closes=dt(12, 6, 0), refund=_eur(48.0),
                             label="free change or cancel until 06:00")],
         ),
     ),
@@ -65,7 +78,8 @@ TRIP = Trip([
         id="hotel", kind=Kind.LODGING, provider="Booking.com",
         title="Hotel Le Marais Milano - 3 nights",
         start=dt(12, 14, 0), end=dt(15, 11, 0), origin="MILAN",
-        price=624.0, hard_deadline=dt(12, 22, 0),
+        price=_eur(624.0), currency="SGD", price_source="converted",
+        hard_deadline=dt(12, 22, 0),
         mitigation="arrival guarantee lapses at 22:00 - notify the property",
         policy=Policy(source="Non-refundable rate, arrival guarantee to 22:00"),
     ),
@@ -73,10 +87,10 @@ TRIP = Trip([
         id="lastsupper", kind=Kind.ACTIVITY, provider="GetYourGuide",
         title="The Last Supper - timed entry",
         start=dt(12, 16, 0), end=dt(12, 16, 15), origin="SMG",
-        price=92.0, fixed_slot=True,
+        price=_eur(92.0), currency="SGD", price_source="converted", fixed_slot=True,
         policy=Policy(
             source="Non-refundable. Date change subject to slots, EUR 18 fee",
-            windows=[Window(closes=dt(12, 16, 0), refund=92.0, fee=18.0,
+            windows=[Window(closes=dt(12, 16, 0), refund=_eur(92.0), fee=_eur(18.0),
                             label="date change, EUR 18, subject to availability")],
         ),
     ),
@@ -91,10 +105,10 @@ TRIP = Trip([
         id="como", kind=Kind.ACTIVITY, provider="GetYourGuide",
         title="Bellagio and Lake Como day tour",
         start=dt(13, 9, 15), end=dt(13, 18, 0), origin="MILAN",
-        price=128.0,
+        price=_eur(128.0), currency="SGD", price_source="converted",
         policy=Policy(
             source="Free cancellation to 12 Oct 09:15",
-            windows=[Window(closes=dt(12, 9, 15), refund=128.0,
+            windows=[Window(closes=dt(12, 9, 15), refund=_eur(128.0),
                             label="free cancellation until 09:15 tomorrow")],
         ),
     ),
@@ -102,23 +116,25 @@ TRIP = Trip([
         id="scala", kind=Kind.ACTIVITY, provider="Teatro alla Scala",
         title="La Scala - Rigoletto",
         start=dt(13, 19, 30), end=dt(13, 22, 15), origin="MILAN",
-        price=180.0, fixed_slot=True,
+        price=_eur(180.0), currency="SGD", price_source="converted", fixed_slot=True,
         policy=Policy(source="Non-refundable, seat-specific"),
     ),
     Booking(
         id="fr9520", kind=Kind.RAIL, provider="Trenitalia",
         title="Frecciarossa 9520 - Milano C.le to Firenze",
         start=dt(15, 11, 20), end=dt(15, 13, 15),
-        origin="MILANO_C", destination="FLR", price=89.0,
+        origin="MILANO_C", destination="FLR",
+        price=_eur(89.0), currency="SGD", price_source="converted",
         policy=Policy(source="Super Economy, non-refundable"),
     ),
     Booking(
         id="palazzo", kind=Kind.LODGING, provider="Booking.com",
         title="Palazzo Vecchietti - 2 nights",
-        start=dt(15, 15, 0), end=dt(17, 11, 0), origin="FLR", price=430.0,
+        start=dt(15, 15, 0), end=dt(17, 11, 0), origin="FLR",
+        price=_eur(430.0), currency="SGD", price_source="converted",
         policy=Policy(
             source="Flexible rate, free cancellation to 14 Oct",
-            windows=[Window(closes=dt(14, 23, 59), refund=430.0,
+            windows=[Window(closes=dt(14, 23, 59), refund=_eur(430.0),
                             label="free cancellation until 14 Oct")],
         ),
     ),
@@ -126,7 +142,8 @@ TRIP = Trip([
         id="fr9508", kind=Kind.RAIL, provider="Trenitalia",
         title="Frecciarossa 9508 - Firenze to Milano C.le",
         start=dt(17, 9, 5), end=dt(17, 11, 0),
-        origin="FLR", destination="MILANO_C", price=79.0,
+        origin="FLR", destination="MILANO_C",
+        price=_eur(79.0), currency="SGD", price_source="converted",
         policy=Policy(source="Non-refundable"),
     ),
     Booking(

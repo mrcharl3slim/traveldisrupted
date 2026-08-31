@@ -1518,7 +1518,7 @@ def itineraries(who: roles.Person = Depends(_who)) -> dict:
             "created": saved.created.isoformat(),
             "preference": saved.payload.get("preference", ""),
             "total": round(sum(b.price for b in trip.bookings), 2),
-            "currency": trip.in_order()[0].currency if trip.bookings else "EUR",
+            "currency": trip.in_order()[0].currency if trip.bookings else "SGD",
             "starts": _when(trip.in_order()[0].start) if trip.bookings else None,
             "legs": len(trip.bookings),
             "disrupted": disruption is not None,
@@ -1905,7 +1905,7 @@ def _why(trip: Trip, recovery) -> str:
                    and p.total_damage < best.total_damage]
         if cheaper:
             low = min(cheaper, key=lambda p: p.total_damage)
-            parts.append(f"costs EUR {best.total_damage - low.total_damage:,.0f} more than "
+            parts.append(f"costs S${best.total_damage - low.total_damage:,.0f} more than "
                          f"{'doing nothing' if low.id == 'noop' else low.name}, "
                          "which would miss it")
     elif best.missed_ids:
@@ -1913,7 +1913,7 @@ def _why(trip: Trip, recovery) -> str:
             trip.by_id(i).title for i in sorted(best.missed_ids)))
     if best.id != "noop" and not (kept and best.total_damage > noop):
         # Skipped when the sentence above already priced it against inaction.
-        parts.append(f"EUR {best.total_damage:,.0f} of damage against EUR {noop:,.0f} "
+        parts.append(f"S${best.total_damage:,.0f} of damage against S${noop:,.0f} "
                      "for doing nothing")
     elif best.id == "noop":
         # Inaction recommended is a real answer and deserves a real reason: it
@@ -1922,11 +1922,11 @@ def _why(trip: Trip, recovery) -> str:
         if others:
             low = min(others, key=lambda p: p.total_damage)
             parts.append(f"nothing worth buying: the cheapest replacement, {low.name}, "
-                         f"costs EUR {low.total_damage - noop:,.0f} more than it saves")
+                         f"costs S${low.total_damage - noop:,.0f} more than it saves")
         else:
             parts.append("there is nothing to buy that would change the outcome")
         if best.at_risk:
-            parts.append(f"EUR {best.at_risk:,.0f} is held by a phone call rather than lost")
+            parts.append(f"S${best.at_risk:,.0f} is held by a phone call rather than lost")
     if recovery.verdict and recovery.verdict.why:
         parts.append(recovery.verdict.why)
     if recovery.warning:
@@ -2212,6 +2212,198 @@ def index() -> FileResponse:
 @app.get("/demo")
 def demo() -> FileResponse:
     return FileResponse(STATIC / "index.html")
+
+
+@app.post("/api/story")
+def story() -> dict:
+    """One complete trip, taken through everything the app can do, by the app.
+
+    /demo is the 2023-era capability frozen for the tests: one delay, one
+    trip, S$423. Everything built since -- the profile, the meeting, the
+    permission cap, the agent acting, the roles -- was demonstrable only by a
+    person typing. This runs the whole arc server-side THROUGH THE SAME
+    HANDLERS the buttons call, so nothing here can drift from what a person
+    clicking would get, and returns each chapter with the figures the engine
+    computed. Scripted inputs, computed outcomes: the same discipline as
+    /demo, applied to the whole product.
+
+    Every run builds a fresh owner and fresh trips, because the story ends
+    with a disruption handled and a cancellation priced, and a story that can
+    only be told once is a demo that breaks at the second audience.
+    """
+    from base import PortError
+    from datetime import date as _date
+    from zoneinfo import ZoneInfo
+
+    day = "2026-09-18"
+    beats: list[dict] = []
+
+    # -- chapter 1: say it once ------------------------------------------
+    owner = roles.new_person("Alex")
+    store_module.store().add_person(owner.id, owner.token, owner.name)
+    kept = profile_mod.Profile.from_dict({
+        "preference": "cheapest", "home": "SIN",
+        "permissions": {"auto_limit": 300}})
+    store_module.store().save_profile(owner.id, kept.to_dict())
+    beats.append({
+        "title": "Say it once",
+        "said": "Alex tells the profile three things: home is Singapore, sort "
+                "cheapest, and the agent may act up to S$300 without asking. "
+                "Everything after this is those three sentences, applied.",
+        "profile": kept.to_dict()})
+
+    # -- chapter 2: book from a sentence ---------------------------------
+    try:
+        inbound = flow.search_flights("SIN", "ZRH", _day(day, _zone("Asia/Singapore")))
+        first = min(inbound, key=lambda o: o.arrive)
+        onward = flow.search_leg("ZRH", "MXP", _day(day, _zone("Europe/Zurich")))
+        stays = flow.search_hotels("Milan", "IT", _day(day, _zone("Europe/Rome")),
+                                   _day("2026-09-20", _zone("Europe/Rome")), code="MXP")
+        trains = flow.search_rail("ZRH", "MXP", _day(day, _zone("Europe/Zurich")))
+    except PortError as exc:
+        raise HTTPException(503, f"the story needs the recorded inventory: {exc}")
+
+    picked = None
+    for candidate in sorted(onward, key=lambda o: o.depart):
+        assembled, problems = flow.select([first, candidate], stays[:1])
+        if not problems:
+            picked = candidate
+            break
+    if picked is None:
+        raise HTTPException(503, "no feasible onward hop in the recorded offers")
+
+    saved = store_module.store().save(
+        owner.id,
+        {"bookings": ingest.to_dicts(assembled.bookings),
+         "preference": "cheapest",
+         "permissions": _default_rules({}, owner)},
+        "The story · Singapore to Milan")
+    trip_id = saved.id
+    trip = _load(trip_id)
+    beats.append({
+        "title": "A sentence, not a form",
+        "said": "One sentence books it. The card said 'From: Singapore — from "
+                "your profile'; under cheapest, the S$108 train ranked in the same "
+                "list as every fare, marked estimated because no API sells "
+                "that ticket. Alex "
+                "takes the morning flight and a room, and the trip inherits the "
+                "S$300 rule.",
+        "trains_beat_flights": bool(trains) and (not onward or
+            trains[0].price <= min(o.price for o in onward)),
+        "cheapest_train": trains[0].price if trains else None,
+        "bookings": _bookings_out(trip),
+        "total": round(sum(b.price for b in trip.bookings), 2),
+        "rules": _perms(store_module.store().get(trip_id)).to_dict()})
+
+    # -- chapter 3: the reason the trip exists ---------------------------
+    zone = ZoneInfo("Europe/Rome")
+    meeting = appt_mod.Appointment(
+        what="Meeting with the client", who="the client", where="MXP", place="MXP",
+        day=_date.fromisoformat(day),
+        when=datetime(2026, 9, 18, 22, 0, tzinfo=zone), confirmed=True)
+    verdict = appt_mod.assess(trip, meeting)
+    payload = dict(store_module.store().get(trip_id).payload)
+    payload["bookings"] = ingest.to_dicts(verdict["trip"].bookings)
+    store_module.store().update(trip_id, payload)
+    trip = _load(trip_id)
+    beats.append({
+        "title": "The reason the trip exists",
+        "said": "A meeting with the client, 22:00 in Milan. No fare, so most "
+                "engines file it as free to miss; here it is a commitment — "
+                "counted, never priced — and it is about to decide a ranking.",
+        "feasible": verdict["feasible"],
+        "clashes": verdict["about_this"]})
+
+    # -- chapter 4: other people, by what their job needs ------------------
+    marco = roles.new_person("Marco, the host")
+    store_module.store().add_person(marco.id, marco.token, marco.name)
+    payload = dict(store_module.store().get(trip_id).payload)
+    payload["members"] = [{"person": marco.id, "name": marco.name, "role": "host",
+                           "added_by": owner.name,
+                           "at": datetime.now(timezone.utc).isoformat()}]
+    store_module.store().update(trip_id, payload)
+    as_marco = next(t for t in itineraries(roles.Person(marco.id, marco.name))
+                    ["itineraries"] if t["trip_id"] == trip_id)
+    beats.append({
+        "title": "Marco is meeting them",
+        "said": "Alex shares the trip with Marco as host. Marco sees every leg "
+                "and every time, and not one price — the same payloads, every "
+                "monetary key blanked, on every endpoint there is.",
+        "marco_sees": [{"title": b["title"], "starts": b["starts"], "ends": b["ends"],
+                        "price": b["price"]} for b in as_marco["bookings"]],
+        "marco_total": as_marco["total"],
+        "marco_link": f"/?token={marco.token}"})
+
+    # -- chapter 5: thirty minutes late ------------------------------------
+    onward_id = [b for b in trip.in_order() if b.kind is Kind.FLIGHT][1].id
+    small = _injected(trip_id, onward_id,
+                      lambda t: flow.delay(t, onward_id, 30), roles.Person(owner.id, owner.name))
+    beats.append({
+        "title": "Thirty minutes late",
+        "said": "The onward hop slips 30 minutes. Nothing is at risk — the "
+                "slack absorbs it, and the engine says so instead of crying "
+                "wolf. That restraint is why the alerts that do fire mean "
+                "something.",
+        "destroyed": small["impact"]["do_nothing"],
+        "at_risk": small["impact"]["at_risk"],
+        "nodes": [{"title": n["title"], "severity": n["severity"], "reason": n["reason"]}
+                  for n in small["impact"]["nodes"]]})
+
+    # -- chapter 6: cancelled, and the agent acts ---------------------------
+    big = _injected(trip_id, onward_id,
+                    lambda t: flow.cancel(t, onward_id), roles.Person(owner.id, owner.name))
+    taken = big.get("auto_taken")
+    beats.append({
+        "title": "Cancelled — and answered before anyone is awake",
+        "said": "The same hop is cancelled outright. The agent searched "
+                "airlines and the railway, ranked every option against doing "
+                "nothing, and acted inside the S$300 Alex pre-authorised: "
+                "the plan that keeps the meeting wins over cheaper inaction, "
+                "the hotel is emailed, the itinerary is rewritten, and one "
+                "purchase link is left for a person. Nothing was bought.",
+        "why": big.get("why", ""),
+        "auto_taken": ({"plan": taken["plan"], "permission": taken["permission"],
+                        "summary": taken["summary"],
+                        "sent": [d["label"] for d in taken["sent"]],
+                        "pending": [d["label"] for d in taken["pending"]]}
+                       if taken else None),
+        # The top of the ranking, PLUS doing nothing wherever it fell. The
+        # goal-first sort pushes every meeting-misser below every keeper, so a
+        # plain top-five can be all keepers -- and the row that makes the
+        # story's point is the EUR 0 inaction that loses BECAUSE it misses
+        # the client.
+        "plans": [{"name": q["name"], "total_damage": q["total_damage"],
+                   "saves": q["saves"], "misses": q["misses"], "auto": q["auto"],
+                   "mode": q["mode"], "best": q["best"]}
+                  for q in (big["plans"][:4]
+                            + [next(q for q in big["plans"] if q["id"] == "noop")]
+                            if not any(q["id"] == "noop" for q in big["plans"][:4])
+                            else big["plans"][:5])],
+        "bookings": big["bookings"]})
+
+    # -- chapter 7: what calling it all off would cost ----------------------
+    second = store_module.store().save(
+        owner.id, {"bookings": ingest.to_dicts(assembled.bookings)},
+        "The story · the trip Alex thought better of")
+    quote = abandon(Abandon(trip_id=second.id), roles.Person(owner.id, owner.name))
+    beats.append({
+        "title": "And if Alex were not going at all",
+        "said": "A second, identical trip, priced for cancellation and not "
+                "cancelled: one errand per booking, sorted by who can do it, "
+                "and what comes back plus what is gone equals what was paid — "
+                "at this moment, because a window open today is shut tomorrow.",
+        "paid": quote["paid"], "refund": quote["refund"], "lost": quote["lost"],
+        "errands": [{"label": a["label"], "lane": a["lane"], "cash_in": a["cash_in"],
+                     "note": a["note"]} for a in quote["plan"]["actions"]]})
+
+    return {"trip_id": trip_id, "owner": owner.name,
+            "ports": {"mode": MODE, "degraded": list(degraded)},
+            "beats": beats}
+
+
+@app.get("/story")
+def story_page() -> FileResponse:
+    return FileResponse(STATIC / "story.html")
 
 
 @app.get("/script")

@@ -35,8 +35,11 @@ def _iso(stamp: str) -> datetime:
         re.sub(r"([+-]\d{2})(\d{2})$", r"\1:\2", stamp))
 
 # Second-class SBB saver fares, Zurich to Milan, observed range EUR 62-89. The
-# midpoint is what we show, clearly labelled, until a fare API exists.
-ESTIMATE_EUR = 72.0
+# midpoint, converted to the engine's home currency at the declared rate --
+# an estimate of an estimate, and labelled as one either way.
+import money
+
+ESTIMATE = money.to_home(72.0, "EUR")[0]
 DEEP_LINK = "https://www.sbb.ch/en/buying/pages/fahrplan/fahrplan.xhtml"
 
 
@@ -121,6 +124,6 @@ def offers(origin: str, destination: str, when: datetime, station_map: dict):
             depart=dep, arrive=arr,
             origin=codes.get(_norm(c["from"]["station"]["name"]), "ZRH_HB"),
             destination=codes.get(_norm(c["to"]["station"]["name"]), "MILANO_C"),
-            price=ESTIMATE_EUR, price_source="estimate", book_url=DEEP_LINK,
+            price=ESTIMATE, price_source="estimate", book_url=DEEP_LINK,
         ))
     return out
