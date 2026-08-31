@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TripShield</title>
-<link rel="stylesheet" href="/static/app.css?v=2">
+<link rel="stylesheet" href="/static/app.css?v=3">
 <style>
   /* Page-local only -- everything shared lives in app.css. */
   .wrap{padding-bottom:150px}   /* clears the fixed composer */
@@ -96,6 +96,7 @@
           <div class="body">Tell me what you want in a sentence — a trip, or a meeting.
             I ask only what changes the answer, and every question says why.
             <div class="chips" id="starter-chips" style="margin-top:10px"></div>
+            <div class="ports" id="boot">connecting — a sleeping instance takes ~30s to wake…</div>
             <div class="m" style="margin-top:8px">Then break the trip from the panel on the
               right and watch what it costs. Nothing here can spend real money.</div>
           </div>
@@ -125,7 +126,7 @@
   <button class="btn key" id="send">Send</button>
 </div></div>
 
-<script src="/static/app.js?v=2"></script>
+<script src="/static/app.js?v=3"></script>
 <script>
 // $/esc/eur/at/hhmm/span/late_/DELAYS come from /static/app.js --
 // one set of helpers, one timezone rule.
@@ -198,6 +199,7 @@ function bubble(who, html, cls){
   });
   document.querySelectorAll('#thread tr.pick').forEach(tr => {
     tr.onclick = null; tr.classList.remove('pick');
+    tr.onkeydown = null; tr.tabIndex = -1;   // retired rows leave the tab order
   });
 
   const el = document.createElement('div');
@@ -316,6 +318,7 @@ function stayTable(rows){
 }
 
 function wireOffers(el){
+  el.querySelectorAll('tr.pick[data-kind]').forEach(pressable);
   el.querySelectorAll('tr.pick[data-kind]').forEach(tr => tr.onclick = () => {
     const kind = tr.dataset.kind;
     const same = PICK[kind] && PICK[kind].id === tr.dataset.id;
@@ -437,6 +440,7 @@ async function loadTrips(){
         t.preference ? ' · ' + esc(t.preference) : ''}${
         t.disrupted ? ' · <span style="color:var(--bad)">disrupted</span>' : ''}</div>
     </div>`).join('') : '<div class="note">Nothing booked yet.</div>';
+  document.querySelectorAll('.trip').forEach(pressable);
   document.querySelectorAll('.trip').forEach(el =>
     el.onclick = () => openTrip(el.dataset.id));
   if (OPEN) openTrip(OPEN, true);
@@ -705,6 +709,7 @@ async function breakLeg(tripId, what, path){
   // happens. The monitor has no box -- it moves nothing, costs nothing, and a
   // plan taken without it is a plan nobody is watching.
   const lines = el.querySelector('.lines');
+  el.querySelectorAll('tr[data-plan]').forEach(pressable);
   el.querySelectorAll('tr[data-plan]').forEach(tr => tr.onclick = () => {
     chosen = tr.dataset.plan;
     el.querySelectorAll('tr[data-plan]').forEach(r =>
@@ -843,7 +848,21 @@ $('#send').onclick = () => {
 };
 $('#say').addEventListener('keydown', e => { if (e.key === 'Enter') $('#send').click(); });
 
+// Feedback while the agent thinks -- from any door into say(): the Send
+// button, Enter, a starter chip, an answer chip.
+{
+  const inner = say, send = $('#send'), field = $('#say');
+  say = async (...args) => {
+    const was = send.textContent;
+    send.disabled = true; field.disabled = true; send.textContent = '…';
+    try { return await inner(...args); }
+    finally { send.disabled = false; field.disabled = false;
+              send.textContent = was; field.focus(); }
+  };
+}
+
 api('/health').then(h => {
+  const boot = $('#boot'); if (boot) boot.remove();
   // Status only. The starter card above already says how to talk to it --
   // two near-identical introductions read as a bug, not a welcome.
   bubble('TripShield',
@@ -855,7 +874,8 @@ api('/health').then(h => {
        : ''));
   loadProfile();
   loadTrips();
-}).catch(e => bubble('TripShield', `<span style="color:var(--bad)">${esc(e.message)}</span>`));
+}).catch(e => { const boot = $('#boot'); if (boot) boot.textContent =
+    'still waking — give it a moment and reload'; bubble('TripShield', `<span style="color:var(--bad)">${esc(e.message)}</span>`); });
 </script>
 </body>
 </html>

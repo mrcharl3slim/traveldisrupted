@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TripShield</title>
-<link rel="stylesheet" href="/static/app.css?v=2">
+<link rel="stylesheet" href="/static/app.css?v=3">
 <style>
   /* Page-local only -- everything shared lives in app.css. */
   .anchor{display:flex;gap:4px;background:var(--sunken);border:1px solid var(--edge);
@@ -115,7 +115,7 @@
   </section>
 </div>
 
-<script src="/static/app.js?v=2"></script>
+<script src="/static/app.js?v=3"></script>
 <script>
 // $/esc/eur/at/hhmm/span come from /static/app.js -- one set of
 // helpers, one timezone rule.
@@ -169,6 +169,7 @@ function render(){
       <div class="why">${esc(n.reason || 'no consequence')}${
         n.parents.length ? `<br><span class="m">follows from: ${n.parents.map(esc).join(', ')}</span>` : ''}</div>
     </div>`).join('');
+  document.querySelectorAll('.node').forEach(pressable);
   document.querySelectorAll('.node').forEach(el =>
     el.onclick = () => el.classList.toggle('open'));
 
@@ -180,6 +181,7 @@ function render(){
       <td class="n">${eur(p.total_damage)}</td>
       <td>${p.arrives_at ? esc(p.arrives_where) + ' ' + hhmm(p.arrives_at) : '—'}</td>
     </tr>`).join('');
+  document.querySelectorAll('tr.pick').forEach(pressable);
   document.querySelectorAll('tr.pick').forEach(tr =>
     tr.onclick = () => { PICKED = tr.dataset.id; render(); });
 

@@ -22,3 +22,16 @@ const late_ = m => m >= 60
   ? Math.floor(m / 60) + 'h' + (m % 60 ? ' ' + (m % 60) + 'm' : '')
   : m + 'm';
 const DELAYS = [30, 90, 180, 360, 720];
+
+/* Anything wired with .onclick on a div or table row is invisible to the
+   keyboard until it gets a tab stop and an Enter/Space handler. Call this
+   on every pickable element right where it is wired. */
+const pressable = el => {
+  el.tabIndex = 0;
+  if (el.tagName === 'DIV') el.setAttribute('role', 'button');
+  if (el.tagName === 'TR')
+    el.setAttribute('aria-selected', String(el.classList.contains('sel')));
+  el.onkeydown = e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.click(); }
+  };
+};

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TripShield — build it, then break it</title>
-<link rel="stylesheet" href="/static/app.css?v=2">
+<link rel="stylesheet" href="/static/app.css?v=3">
 <style>
   /* Page-local only -- everything shared lives in app.css. */
   section[hidden]{display:none}
@@ -60,6 +60,13 @@
   .alert.past{opacity:.45}
   .alert .at{font:12px var(--mono);color:var(--faint);white-space:nowrap;min-width:104px}
   .alert .msg{font-size:13px}
+  /* You are here: the furthest revealed section is the current step; the
+     completed ones above it step back a little. Uses :has (2023+ browsers);
+     without it every section simply keeps full weight -- nothing breaks. */
+  section:not([hidden]):has(~ section:not([hidden])){opacity:.93}
+  section:not([hidden]):has(~ section:not([hidden])) h2{color:var(--faint)}
+  section:not([hidden]):not(:has(~ section:not([hidden]))){
+    border-color:var(--key);box-shadow:var(--shadow-2)}
   @media (max-width:720px){
     .row > div{flex:1 1 45%}
     input,input.wide{width:100%}
@@ -170,7 +177,7 @@
   </section>
 </div>
 
-<script src="/static/app.js?v=2"></script>
+<script src="/static/app.js?v=3"></script>
 <script>
 // $/esc/eur/at/hhmm/span/late_/DELAYS come from /static/app.js --
 // one set of helpers, one timezone rule.
@@ -287,6 +294,7 @@ function paintFlights(){
       <td class="n">${eur(h.price)}</td>
     </tr>`).join('');
 
+  document.querySelectorAll('tr.pick[data-w]').forEach(pressable);
   document.querySelectorAll('tr.pick[data-w]').forEach(tr => tr.onclick = () => {
     PICK[tr.dataset.w] = PICK[tr.dataset.w] === tr.dataset.id ? null : tr.dataset.id;
     paintFlights();
@@ -525,6 +533,7 @@ function paintOutcome(){
       <td class="n">${eur(p.total_damage)}</td>
       <td>${p.arrives_at ? esc(p.arrives_where) + ' ' + at(p.arrives_at) : '—'}</td>
     </tr>`).join('');
+  document.querySelectorAll('[data-plan]').forEach(pressable);
   document.querySelectorAll('[data-plan]').forEach(tr =>
     tr.onclick = () => { PICKED = tr.dataset.plan; paintOutcome(); });
 
@@ -726,6 +735,16 @@ api('/health').then(h => {
   $('#ports').innerHTML = `ports: ${esc(h.ports_mode)} · model: ${esc(h.model)} · `
     + `storage: ${esc(h.storage)}`;
 }).catch(e => fail('#ports', e));
+// Feedback at the slowest moment: a search against a sleeping instance can
+// take ~30s, and a silent button reads as a broken one.
+{
+  const go = $('#go'), run = go.onclick;
+  go.onclick = async () => {
+    const was = go.textContent;
+    go.disabled = true; go.textContent = 'Searching…';
+    try { await run(); } finally { go.disabled = false; go.textContent = was; }
+  };
+}
 </script>
 </body>
 </html>

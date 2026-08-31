@@ -32,13 +32,14 @@
   --bg:#F5F7FA; --card:#FFFFFF; --sunken:#F0F3F7;
   --edge:#E3E8EF; --hairline:#EEF1F6;
   /* ink — legacy names, light values */
-  --ink:#16233A; --dim:#55677E; --faint:#8593A6;
+  --ink:#16233A; --dim:#55677E; --faint:#64748B;
   /* brand */
   --key:#287DFA; --key-strong:#1668E3; --key-tint:#EAF2FF; --key-edge:#BFD9FF;
   /* prices ONLY. Not warnings, not accents — if it isn't money, it isn't
      orange. --warn is browner and always sits on a tint or an edge, so the
      two never read as the same colour side by side. */
-  --price:#FF6F00;
+  --price:#C75300;   /* 4.5:1 on white -- fares render at 15px bold, which
+                          is small text as WCAG counts it */
   /* severity on white — legacy names */
   --ok:#12A150;  --ok-tint:#E9F7EF;  --ok-edge:#BCE5CC;
   --warn:#C77700; --warn-tint:#FDF3E3; --warn-edge:#F0D9A8;
