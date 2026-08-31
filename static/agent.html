@@ -37,6 +37,14 @@
   .box h2{font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;
           color:var(--faint);margin:0 0 12px}
   #detail-box{scroll-margin-top:70px}
+  main{min-width:0}
+  .views{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .vtab{font:inherit;font-size:13px;padding:7px 14px;border-radius:var(--r-pill);
+        border:1px solid var(--edge);background:var(--card);color:var(--dim);
+        cursor:pointer;max-width:220px;overflow:hidden;text-overflow:ellipsis;
+        white-space:nowrap}
+  .vtab:hover{border-color:var(--key);color:var(--key)}
+  .vtab.on{background:var(--key);border-color:var(--key);color:#fff;font-weight:600}
   .trip{border:1px solid var(--edge);border-left:3px solid var(--ok);
         border-radius:var(--r-md);padding:11px 12px;margin-bottom:9px;
         background:var(--card);box-shadow:var(--shadow-1);cursor:pointer}
@@ -94,11 +102,18 @@
   </header>
 
   <div class="cols">
-    <main class="thread" id="thread">
+    <main>
+      <nav class="views" id="views" aria-label="views"></nav>
+      <div class="box" id="you-box" hidden>
+        <h2>You</h2>
+        <div id="me" class="m" style="margin-bottom:8px"></div>
+        <div id="you"></div>
+      </div>
       <div class="box" id="detail-box" hidden>
         <h2 id="detail-title">Itinerary</h2>
         <div id="detail"></div>
       </div>
+      <div class="thread" id="thread">
         <div class="msg" id="starter">
           <div class="who">TripShield</div>
           <div class="body">Tell me what you want in a sentence — a trip, or a meeting.
@@ -109,16 +124,12 @@
               right and watch what it costs. Nothing here can spend real money.</div>
           </div>
         </div>
-      </main>
+      </div>
+    </main>
     <aside>
       <div class="box">
         <h2>Your itineraries</h2>
         <div id="trips"><div class="note">Nothing booked yet.</div></div>
-      </div>
-      <div class="box" id="you-box" hidden>
-        <h2>You</h2>
-        <div id="me" class="m" style="margin-bottom:8px"></div>
-        <div id="you"></div>
       </div>
     </aside>
   </div>
@@ -210,6 +221,7 @@ function bubble(who, html, cls){
   el.className = 'msg ' + (cls || (who === 'You' ? 'me' : 'agent'));
   el.innerHTML = `<div class="who">${esc(who)}</div>${html}`;
   $('#thread').appendChild(el);
+  if (typeof VIEW !== 'undefined' && VIEW !== 'chat') showView('chat');
   el.scrollIntoView({behavior:'smooth', block:'end'});
   return el;
 }
@@ -444,6 +456,7 @@ async function loadTrips(){
         t.preference ? ' · ' + esc(t.preference) : ''}${
         t.disrupted ? ' · <span style="color:var(--bad)">disrupted</span>' : ''}</div>
     </div>`).join('') : '<div class="note">Nothing booked yet.</div>';
+  paintViews();
   document.querySelectorAll('.trip').forEach(pressable);
   document.querySelectorAll('.trip').forEach(el =>
     el.onclick = () => openTrip(el.dataset.id));
@@ -456,8 +469,7 @@ function openTrip(id, quiet){
   if (!trip) return;
   document.querySelectorAll('.trip').forEach(el =>
     el.classList.toggle('on', el.dataset.id === id));
-  $('#detail-box').hidden = false;
-  if (!quiet) $('#detail-box').scrollIntoView({behavior: 'smooth', block: 'start'});
+  if (!quiet) showView('trip'); else paintViews();
   // Trimmed on a separator rather than mid-word: "one way · hotel · ch" reads
   // like a country code and is not one.
   const parts = trip.label.split(' · ');
@@ -853,15 +865,35 @@ $('#send').onclick = () => {
 };
 $('#say').addEventListener('keydown', e => { if (e.key === 'Enter') $('#send').click(); });
 
-// The profile lives behind the header's own link: /#profile opens it, from
-// this page or any other.
-const showProfile = () => {
-  const box = $('#you-box'); box.hidden = false;
-  box.scrollIntoView({behavior: 'smooth', block: 'center'});
-};
-if (location.hash === '#profile') showProfile();
+
+// Three views, one at a time: the chat, one itinerary, or the profile --
+// and a tab strip to move between them. The profile view is JUST the
+// profile: the sidebar and the composer step out of the way.
+let VIEW = 'chat';
+function showView(name){
+  VIEW = name;
+  $('#thread').hidden = name !== 'chat';
+  $('.bar').hidden = name !== 'chat';
+  $('#detail-box').hidden = name !== 'trip';
+  $('#you-box').hidden = name !== 'profile';
+  document.querySelector('aside').hidden = name === 'profile';
+  paintViews();
+}
+function paintViews(){
+  $('#views').innerHTML =
+    `<button class="vtab ${VIEW === 'chat' ? 'on' : ''}" data-view="chat">Chat</button>`
+    + TRIPS.map(t => `<button class="vtab ${
+        VIEW === 'trip' && OPEN === t.trip_id ? 'on' : ''}" data-view="trip"
+        data-id="${esc(t.trip_id)}">${esc(t.label.split(' · ')[0])}</button>`).join('')
+    + `<button class="vtab ${VIEW === 'profile' ? 'on' : ''}" data-view="profile">Profile</button>`;
+  $('#views').querySelectorAll('.vtab').forEach(b => b.onclick = () =>
+    b.dataset.view === 'chat' ? showView('chat')
+    : b.dataset.view === 'profile' ? showView('profile')
+    : openTrip(b.dataset.id));
+}
+if (location.hash === '#profile') showView('profile');
 window.addEventListener('hashchange',
-  () => { if (location.hash === '#profile') showProfile(); });
+  () => { if (location.hash === '#profile') showView('profile'); });
 
 // Feedback while the agent thinks -- from any door into say(): the Send
 // button, Enter, a starter chip, an answer chip.
