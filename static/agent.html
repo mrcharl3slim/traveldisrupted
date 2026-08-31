@@ -541,6 +541,17 @@ function openTrip(id, quiet){
         </div>` : ''}</div>
     </div>`;
   }).join('');
+  // Where this trip is thin -- said before anything breaks, from the booked
+  // times and the engine's own stress test. Facts about slack, not forecasts.
+  if ((trip.risks || []).length && !trip.abandoned) {
+    $('#detail').innerHTML += `<div class="note"><b>Where this trip is thin</b>${
+      trip.risks.slice(0, 4).map(r => `
+        <div class="leg"><div>${esc(r.sentence)}</div>
+          <span class="tag ${r.kind === 'unprotected' ? 'bad' : 'warn'}">${esc(r.kind)}${
+            r.worth != null ? ' · ' + eur(r.worth) + ' at stake' : ''}</span></div>`).join('')
+      }</div>`;
+  }
+
   // The paper trail: observed, decided, done, on whose say-so. For roles that
   // may see money, because the citations quote fares and caps -- the decision
   // log is the ledger with reasons attached.

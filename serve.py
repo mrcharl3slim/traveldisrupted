@@ -53,6 +53,7 @@ import plan as plan_mod                                      # noqa: E402
 from plan import Gap, Lane, generate                          # noqa: E402
 import permit                                                 # noqa: E402
 import profile as profile_mod                                 # noqa: E402
+import risk as risk_mod                                       # noqa: E402
 import roles                                                  # noqa: E402
 
 STATIC = ROOT / "static"
@@ -1526,6 +1527,7 @@ def choose(body: Choice, who: roles.Person = Depends(_who)) -> dict:
     trip = _load(saved.id)
     return {"trip_id": saved.id, "label": saved.label,
             "problems": infeasible(trip),
+            "risks": risk_mod.as_dicts(risk_mod.assess(trip)),
             "preference": req.preference,
             # Said, not swallowed. A fare that moved between the click and the
             # booking is the traveller's business.
@@ -1579,6 +1581,7 @@ def itineraries(who: roles.Person = Depends(_who)) -> dict:
             # which calls are still owed is exactly what the traveller comes
             # back for. It reads as cancelled and it does not read as live.
             "abandoned": saved.payload.get("abandoned"),
+            "risks": risk_mod.as_dicts(risk_mod.assess(trip)),
             "permissions": _perms(saved).to_dict(),
             "acted": saved.payload.get("acted"),
             "detected": saved.payload.get("detected"),
@@ -1851,6 +1854,10 @@ def select(body: Selection, who: roles.Person = Depends(_who)) -> dict:
         "label": saved.label,
         "durable": store_module.store().durable,
         "problems": problems,
+        # Said before anything breaks: where this trip is thin, from the
+        # booked times and the engine's own stress test -- see risk.py for
+        # what is and is not being claimed.
+        "risks": risk_mod.as_dicts(risk_mod.assess(trip)),
         "total": round(sum(b.price for b in trip.bookings), 2),
         "bookings": _bookings_out(trip),
     }

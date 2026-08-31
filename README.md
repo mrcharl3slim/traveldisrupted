@@ -634,6 +634,36 @@ not, what the rules say. A missed meeting also produces the one action that is
 possible for it: telling the person. The scripted trip has no commitments, so
 its ranking and every figure in it are unmoved.
 
+## Where the trip is thin, before anything breaks
+
+Everything else in the engine speaks after a disruption. `risk.py` reads the
+same itinerary with the same arithmetic at *booking* time and says where it
+would snap — three kinds of flag, all derived, none predicted, because there is
+no weather feed and no delay statistics here and pretending otherwise would be
+inventing the one thing this product exists not to invent:
+
+- **connection** — slack thinner than 90 minutes between landing and the next
+  leg's last check-in (a judgment constant, named and visible, like
+  `MIN_CONNECTION`); meetings reached with minutes to spare flag the same way.
+- **unprotected** — consecutive legs on separate tickets inside the same
+  travel day (a twelve-hour window; an overnight decouples them): two
+  contracts, nobody owes the connection. The scripted scenario's
+  whole premise, surfaced *before* it happens — the demo trip's own booking now
+  says *"separate purchases … 75 minutes to spare"* on day one. Legs days apart
+  are deliberately not flagged: true-but-useless warnings bury the one that
+  matters.
+- **breakpoint** — the smallest delay on each leg that starts costing money or
+  a meeting, found by running the engine's own `propagate` over a ladder of
+  hypothetical delays. Not a prediction that it *will* happen; a statement of
+  what happens *if*, from the same arithmetic that will price it on the day.
+  The demo's onward hop breaks at 30 minutes (the transfer window is the quiet
+  S$72); the long-haul absorbs an hour.
+
+The flags ride on the booking response and the itinerary listing, both pages
+show *"where this trip is thin"*, and the money stays out of the prose — the
+number lives in the `worth` field so role redaction keeps working by key
+instead of by parsing sentences.
+
 ## The paper trail
 
 Every field the trail needs already existed as data, and nothing wrote it

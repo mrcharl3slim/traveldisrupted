@@ -161,6 +161,7 @@
   <section id="s-trip" hidden>
     <h2>5 · Your trip <span id="trip-total" class="m"></span></h2>
     <div id="trip-problems"></div>
+    <div id="trip-risks"></div>
     <div id="trip-legs"></div>
     <div id="trip-rules" class="note"></div>
     <div id="trip-abandon"></div>
@@ -370,6 +371,7 @@ async function select(){
                            check_out:iso(on, nights), hotel_id:PICK.hotel}] : [],
   };
   try { TRIP = await api('/api/select', body); } catch (e) { return fail('#ports', e); }
+  TRIP.risks = TRIP.risks || [];
   OUT = null; PICKED = null;
   remember();
   $('#s-out').hidden = true; $('#s-hand').hidden = true;
@@ -403,6 +405,7 @@ async function restore(){
           problems: found.problems || [], durable: found.durable,
           abandoned: found.abandoned, permissions: found.permissions,
           acted: found.acted, detected: found.detected, bookings: found.bookings,
+          risks: found.risks || [],
           role: found.role, can: found.can || []};
   paintTrip();
   try { WATCH = await api(`/api/alerts?trip=${encodeURIComponent(id)}`); }
@@ -470,6 +473,12 @@ function paintTrip(){
       </div>
     </div>`;
   }).join('');
+
+  $('#trip-risks').innerHTML = (TRIP.risks || []).length && !TRIP.abandoned
+    ? `<div class="banner warn"><b>Where this trip is thin</b> — before anything breaks:<br>`
+      + TRIP.risks.slice(0, 4).map(r => `· ${esc(r.sentence)}${
+          r.worth != null ? ` (${eur(r.worth)} at stake)` : ''}`).join('<br>') + `</div>`
+    : '';
 
   paintRules();
   paintAbandon();

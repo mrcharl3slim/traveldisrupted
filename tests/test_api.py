@@ -248,6 +248,25 @@ def test_rules_can_be_changed_after_booking_and_are_listed(client):
 
 
 # --------------------------------------------------------------------------
+# said before anything breaks
+# --------------------------------------------------------------------------
+
+
+def test_booking_answers_with_where_the_trip_is_thin(client):
+    """Proactive, not reactive: the flags arrive WITH the booking, before any
+    disruption exists, from the same arithmetic that will price one."""
+    booked = book(client)
+    assert "risks" in booked
+    kinds = {r["kind"] for r in booked["risks"]}
+    assert "unprotected" in kinds, (
+        "two flights bought in two searches ARE the scenario's premise")
+    assert all("S$" not in r["sentence"] for r in booked["risks"])
+
+    row = _row(client, booked["trip_id"])
+    assert row["risks"], "the listing repeats it so the panel can show it"
+
+
+# --------------------------------------------------------------------------
 # the middle tier: decided, held, flagged
 # --------------------------------------------------------------------------
 
