@@ -2822,6 +2822,21 @@ def book() -> FileResponse:
     return FileResponse(STATIC / "book.html")
 
 
+# The shared sheet and helpers. Explicit routes rather than a StaticFiles
+# mount, matching every other page here -- nothing else that lands in
+# static/ becomes reachable by accident. Pages reference these with ?v=N;
+# bump the number when editing, because FileResponse sends no cache headers
+# and a stale stylesheet mid-rehearsal is a real risk.
+@app.get("/static/app.css")
+def app_css() -> FileResponse:
+    return FileResponse(STATIC / "app.css")
+
+
+@app.get("/static/app.js")
+def app_js() -> FileResponse:
+    return FileResponse(STATIC / "app.js")
+
+
 def _free_port(start: int, tries: int = 12) -> int:
     import socket
 

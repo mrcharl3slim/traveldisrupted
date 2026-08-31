@@ -4,89 +4,59 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Downstream</title>
+<link rel="stylesheet" href="/static/app.css?v=2">
 <style>
-  :root{
-    --bg:#0b0f14; --card:#141b23; --edge:#232d38; --ink:#e8eef4; --dim:#93a1b0; --faint:#5d6b7a;
-    --ok:#3fb950; --bad:#f85149; --warn:#e3b341; --key:#58a6ff;
-    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);
-       font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-  .wrap{max-width:920px;margin:0 auto;padding:26px 22px 100px}
-  header{display:flex;justify-content:space-between;align-items:baseline;gap:20px;flex-wrap:wrap}
-  h1{font-size:20px;margin:0;letter-spacing:-.01em}
-  h2{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--faint);
-     margin:0 0 16px;font-weight:600}
-  .sub{color:var(--dim);font-size:13px}
-  section{background:var(--card);border:1px solid var(--edge);border-radius:11px;
-          padding:22px;margin-top:18px}
-
-  .anchor{display:flex;gap:6px;background:#0e151d;border:1px solid var(--edge);
-          border-radius:9px;padding:4px}
-  .anchor button{background:none;border:none;color:var(--dim);font:inherit;font-size:12.5px;
-                 padding:6px 12px;border-radius:6px;cursor:pointer}
-  .anchor button.on{background:var(--card);color:var(--ink);font-weight:600}
-
+  /* Page-local only -- everything shared lives in app.css. */
+  .anchor{display:flex;gap:4px;background:var(--sunken);border:1px solid var(--edge);
+          border-radius:var(--r-md);padding:4px}
+  .anchor button{background:none;border:none;color:var(--dim);font:inherit;
+          font-size:12px;padding:6px 12px;border-radius:var(--r-sm);cursor:pointer}
+  .anchor button.on{background:var(--card);color:var(--key);font-weight:600;
+          box-shadow:var(--shadow-1)}
   .signal{font-size:19px;line-height:1.45}
   .signal b{color:var(--warn)}
-  .ledger{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-top:4px}
-  .fig{font:650 34px/1 var(--mono);letter-spacing:-.02em}
-  .fig.bad{color:var(--bad)} .fig.ok{color:var(--ok)} .fig.warn{color:var(--warn)}
-  .figlabel{font:11px var(--mono);letter-spacing:.12em;text-transform:uppercase;
-            color:var(--faint);margin-bottom:8px}
-  .figfoot{font-size:12.5px;color:var(--dim);margin-top:7px}
-
   .nodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:9px}
-  .node{border:1px solid var(--edge);border-left:3px solid var(--edge);border-radius:8px;
-        padding:12px 13px;background:#101821;cursor:pointer;transition:border-color .15s}
-  .node:hover{border-color:#3a4a5c}
+  .node{border:1px solid var(--edge);border-left:3px solid var(--edge);
+        border-radius:var(--r-md);padding:12px 13px;background:var(--card);
+        box-shadow:var(--shadow-1);cursor:pointer;transition:border-color .15s}
+  .node:hover{border-color:var(--key)}
   .node.critical{border-left-color:var(--bad)}
   .node.risk{border-left-color:var(--warn)}
   .node.safe{border-left-color:var(--ok)}
   .node.source{border-left-color:var(--key)}
-  .node .t{font-size:13.5px}
+  .node .t{font-size:13px}
   .node .m{font:11px var(--mono);color:var(--faint);margin-top:4px}
-  .node .why{font-size:12.5px;color:var(--dim);margin-top:8px;display:none}
+  .node .why{font-size:12px;color:var(--dim);margin-top:8px;display:none}
   .node.open .why{display:block}
-
-  table{width:100%;border-collapse:collapse;font-size:14px}
-  th{text-align:left;font:11px var(--mono);letter-spacing:.1em;text-transform:uppercase;
-     color:var(--faint);font-weight:500;padding:0 10px 10px;border-bottom:1px solid var(--edge)}
-  th.n,td.n{text-align:right}
-  td{padding:12px 10px;border-bottom:1px solid #1b242e}
-  tr.pick{cursor:pointer}
-  tr.pick:hover{background:#18212b}
-  tr.sel{background:#12202f}
-  tr.best td:first-child{border-left:2px solid var(--key)}
-  .neg{color:var(--ok)} .pos{color:var(--dim)}
-  .star{color:var(--warn)}
-
   .lane{margin-top:18px}
   .lane h3{font-size:14px;margin:0 0 4px}
-  .lane .who{font-size:12.5px;color:var(--faint);margin-bottom:10px}
-  .act{border:1px solid var(--edge);border-radius:8px;padding:12px 14px;margin-bottom:8px;
-       background:#101821}
+  .lane .who{font-size:12px;color:var(--faint);margin-bottom:10px}
+  .act{border:1px solid var(--edge);border-radius:var(--r-md);padding:12px 14px;
+       margin-bottom:8px;background:var(--card);box-shadow:var(--shadow-1)}
   .act .l{font-size:14px}
-  .act .n{font-size:12.5px;color:var(--dim);margin-top:5px}
+  /* the note under an action is prose, not machine data -- the global .n
+     (mono, nowrap) must not reach it */
+  .act .n{font-size:12px;font-family:inherit;white-space:normal;text-align:left;
+          color:var(--dim);margin-top:5px}
   .act .cash{font:12px var(--mono);color:var(--faint);margin-top:5px}
-  .badge{display:inline-block;font:10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;
-         padding:2px 8px;border-radius:999px;border:1px solid var(--edge);color:var(--faint);margin-left:8px}
-  .badge.est{color:var(--warn);border-color:#3d3016}
-
-  .banner{font:12px var(--mono);color:var(--key);background:#101a27;border:1px solid #1d3350;
-          border-radius:8px;padding:11px 14px;margin-top:14px;line-height:1.7}
-  .note{font-size:12.5px;color:var(--dim);margin-top:14px;line-height:1.6}
-  .err{color:var(--bad)}
+  .badge{margin-left:8px}
 </style>
 </head>
 <body>
+<div class="site-header"><div class="bar-inner">
+  <a class="wordmark" href="/">Downstream</a>
+  <nav class="site-nav">
+    <a href="/">agent</a> <a href="/book">book</a>
+    <a href="/demo" aria-current="page">demo</a>
+    <a href="/story">story</a> <a href="/script">script</a>
+    <a href="/test">test</a>
+  </nav>
+</div></div>
 <div class="wrap">
   <header>
     <div>
       <h1>Downstream</h1>
-      <div class="sub">What one late flight costs, and what is still catchable. ·
-        <a href="/test">how to test this</a> · <a href="/">book your own</a></div>
+      <div class="sub">What one late flight costs, and what is still catchable.</div>
     </div>
     <div class="anchor" id="anchor">
       <button data-base="today" class="on">Today</button>
@@ -130,12 +100,12 @@
 
   <section>
     <h2>Recovery plans — click to see the handoff</h2>
-    <table>
+    <div class="table-wrap"><table>
       <thead><tr>
         <th>Plan</th><th class="n">Tonight</th><th class="n">Total damage</th><th>Arrives</th>
       </tr></thead>
       <tbody id="plans"></tbody>
-    </table>
+    </table></div>
     <div class="note" id="plan-note"></div>
   </section>
 
@@ -145,22 +115,10 @@
   </section>
 </div>
 
+<script src="/static/app.js?v=2"></script>
 <script>
-const $ = s => document.querySelector(s);
-const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-const eur = n => (n < 0 ? '−' : '') + 'S$' + Math.abs(Math.round(n)).toLocaleString();
-// Times arrive pre-formatted in the trip's own timezone. Formatting them here
-// would render a Zurich arrival in the viewer's zone, which is a different
-// flight as far as the traveller is concerned.
-const hhmm = w => w ? w.t : '—';
-const dayhhmm = w => w ? w.d : '—';
-// Start and end together, with the end's DATE shown only when it differs from
-// the start's. "18 Sep 23:55 - 06:30" reads as a seven-hour hop that lands
-// before it left; the arrival is the next morning and the row has to say so.
-// Both are already formatted in their own zone, so comparing the date halves
-// compares what the traveller reads at each end.
-const span = (a, b) => !b ? dayhhmm(a)
-  : dayhhmm(a) + ' \u2192 ' + (a && a.iso.slice(0, 10) === b.iso.slice(0, 10) ? b.t : b.d);
+// $/esc/eur/at/hhmm/span come from /static/app.js -- one set of
+// helpers, one timezone rule.
 
 let STATE = null, PICKED = null, TICK = null;
 
@@ -207,7 +165,7 @@ function render(){
       <div class="m">${span(n.starts, n.ends)}</div>
       <div class="m">${n.exposure ? eur(n.exposure) + ' exposed' : n.severity}
         ${n.recoverable ? ' · ' + eur(n.recoverable) + ' recoverable' : ''}
-        ${n.cutoff ? ' · by ' + dayhhmm(n.cutoff) : ''}</div>
+        ${n.cutoff ? ' · by ' + at(n.cutoff) : ''}</div>
       <div class="why">${esc(n.reason || 'no consequence')}${
         n.parents.length ? `<br><span class="m">follows from: ${n.parents.map(esc).join(', ')}</span>` : ''}</div>
     </div>`).join('');
@@ -245,7 +203,7 @@ function render(){
               <div class="l">${esc(a.label)}${a.estimated ? '<span class="badge est">estimated fare</span>' : ''}</div>
               <div class="n">${esc(a.note || '')}</div>
               <div class="cash">${a.net ? (a.net > 0 ? 'costs ' : 'returns ') + eur(Math.abs(a.net)) : 'no money moves'}${
-                a.deadline ? ' · before ' + dayhhmm(a.deadline) : ''}</div>
+                a.deadline ? ' · before ' + at(a.deadline) : ''}</div>
             </div>`).join('') + `</div>`;
       }).join('');
 
@@ -260,7 +218,7 @@ function startCountdown(){
   // The scenario's clock starts at its own "now", so the remaining time is
   // computed once from the engine and then ticks.
   let left = c.seconds;
-  $('#countdown-foot').textContent = `${c.title} · closes ${dayhhmm(c.at)}`;
+  $('#countdown-foot').textContent = `${c.title} · closes ${at(c.at)}`;
   const paint = () => {
     const h = Math.floor(left/3600), m = Math.floor((left%3600)/60), s = left%60;
     $('#countdown').textContent = left > 0

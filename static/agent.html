@@ -4,123 +4,89 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Downstream</title>
+<link rel="stylesheet" href="/static/app.css?v=2">
 <style>
-  :root{
-    --bg:#0b0f14; --card:#141b23; --edge:#232d38; --ink:#e8eef4; --dim:#93a1b0; --faint:#5d6b7a;
-    --ok:#3fb950; --bad:#f85149; --warn:#e3b341; --key:#58a6ff;
-    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);
-       font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-  .wrap{max-width:1080px;margin:0 auto;padding:24px 20px 140px}
-  header{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap}
-  h1{font-size:20px;margin:0}
-  .sub{color:var(--dim);font-size:13px}
-  a{color:var(--key);text-decoration:none}
+  /* Page-local only -- everything shared lives in app.css. */
+  .wrap{padding-bottom:150px}   /* clears the fixed composer */
   .cols{display:grid;grid-template-columns:1fr 320px;gap:18px;margin-top:18px}
   @media (max-width:880px){.cols{grid-template-columns:1fr}}
-
   .thread{display:flex;flex-direction:column;gap:12px}
-  .msg{border:1px solid var(--edge);border-radius:12px;padding:14px 16px;background:var(--card)}
-  .msg.me{background:#17222f;border-color:#2b3c4f;align-self:flex-end;max-width:76%}
-  .msg.agent{border-left:3px solid var(--key)}
-  .msg .who{font:10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;
+  /* an agent bubble can carry a whole offer table -- it gets the width */
+  .msg.agent{max-width:none}
+  .msg .who{font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;
             color:var(--faint);margin-bottom:7px}
-  .why{font-size:12.5px;color:var(--dim);margin-top:8px;border-top:1px solid var(--edge);
-       padding-top:8px}
-
+  .msg.me .who{color:rgba(255,255,255,.75)}
+  .why{font-size:12px;color:var(--dim);margin-top:8px;
+       border-top:1px solid var(--hairline);padding-top:8px}
   .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-  .chip{background:#17222f;border:1px solid #2b3c4f;color:var(--ink);font:inherit;font-size:13.5px;
-        padding:7px 14px;border-radius:999px;cursor:pointer}
-  .chip:hover{background:#1d2b3b}
-
-  .ports{font:11.5px var(--mono);color:var(--key);margin-top:10px}
+  .chip{background:var(--card);border:1px solid var(--key-edge);color:var(--key);
+        font:inherit;font-size:13px;padding:7px 14px;border-radius:var(--r-pill);
+        cursor:pointer}
+  .chip:hover{background:var(--key-tint)}
+  .chip:disabled{opacity:.5;cursor:default}
+  .ports{font:11px var(--mono);color:var(--key);margin-top:10px}
   .ports i{font-style:normal;color:var(--faint)}
-
-  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:10px}
-  th{text-align:left;font:10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;
-     color:var(--faint);font-weight:500;padding:0 8px 8px;border-bottom:1px solid var(--edge)}
-  th.n,td.n{text-align:right}
-  td{padding:9px 8px;border-bottom:1px solid #1b242e;vertical-align:top}
-  tr.pick{cursor:pointer}
-  tr.pick:hover{background:#18212b}
-  tr.sel{background:#12202f}
-  tr.sel td:first-child{border-left:2px solid var(--key)}
-  tr.best td:first-child{border-left:2px solid var(--key)}
-  .m{font:11px var(--mono);color:var(--faint)}
-  .neg{color:var(--ok)}
-
-  .bar{position:fixed;left:0;right:0;bottom:0;background:#0d131a;border-top:1px solid var(--edge);
-       padding:14px 20px}
-  .bar .inner{max-width:1080px;margin:0 auto;display:flex;gap:10px}
-  input[type=text]{flex:1;background:#0e151d;border:1px solid var(--edge);border-radius:10px;
-                   color:var(--ink);font:inherit;font-size:15px;padding:12px 14px}
-  .btn{background:#17222f;border:1px solid #2b3c4f;color:var(--ink);font:inherit;font-size:14px;
-       padding:11px 18px;border-radius:10px;cursor:pointer;white-space:nowrap}
-  .btn:hover{background:#1d2b3b}
-  .btn.key{background:#173254;border-color:#2b5384}
-  .btn.bad{background:#2a1618;border-color:#4d2326;color:#ffb4ae}
-  .btn.sm{font-size:12.5px;padding:6px 12px;border-radius:8px}
-  .btn.warn{background:#2a2413;border-color:#4d4423;color:#f0d68c}
-  /* Both buttons and the amount that qualifies one of them, on one line: it is
-     one control -- "break this leg" -- with two ways of breaking it. */
+  .bar .inner{max-width:var(--wrap);margin:0 auto;display:flex;gap:10px;padding:0 20px}
+  input[type=text]{flex:1;font-size:15px;padding:12px 14px}
+  /* One control -- "break this leg" -- with two ways of breaking it. */
   .break{display:flex;gap:5px;justify-content:flex-end;margin-top:6px}
   select.btn.sm{padding:6px 4px}
-  .btn:disabled{opacity:.45;cursor:default}
-
-  aside .box{background:var(--card);border:1px solid var(--edge);border-radius:12px;padding:16px;
-             margin-bottom:14px}
-  aside h2{font:10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--faint);
-           margin:0 0 12px;font-weight:600}
-  .trip{border:1px solid var(--edge);border-left:3px solid var(--ok);border-radius:9px;
-        padding:11px 12px;margin-bottom:9px;background:#101821;cursor:pointer}
-  .trip:hover{border-color:#3a4a5c}
+  aside .box{background:var(--card);border:1px solid var(--edge);
+             border-radius:var(--r-lg);padding:16px;margin-bottom:14px;
+             box-shadow:var(--shadow-1)}
+  aside h2{font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;
+           color:var(--faint);margin:0 0 12px}
+  .trip{border:1px solid var(--edge);border-left:3px solid var(--ok);
+        border-radius:var(--r-md);padding:11px 12px;margin-bottom:9px;
+        background:var(--card);box-shadow:var(--shadow-1);cursor:pointer}
+  .trip:hover{border-color:var(--key)}
   .trip.broken{border-left-color:var(--bad)}
-  .trip.on{background:#12202f}
+  .trip.on{background:var(--key-tint)}
   .trip .t{font-size:13px}
-  .leg{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:5px 0;
-       border-bottom:1px solid #1b242e}
+  /* legs are rows everywhere; in the itinerary panel they also hang off a
+     timeline rail, each with a node dot coloured by state. Late is not
+     gone: .gone fades, .late keeps its weight and says what moved. */
+  .leg{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;
+       padding:5px 0;border-bottom:1px solid var(--hairline)}
   .leg:last-child{border-bottom:none}
   .leg.pending .n{color:var(--warn)}
-  /* Late is not gone: the leg is still flying and the traveller is still on
-     it, so it keeps its weight and says what moved. */
-  .leg.gone{border-left-color:var(--bad);opacity:.6}
-  .leg.late{border-left-color:var(--warn)}
+  .leg.gone{opacity:.6}
   .late-line{color:var(--warn)}
-  .tag.bad{border-color:#4d2326;color:#ffb4ae}
-  .tag{display:inline-block;font:9.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;
-       padding:1px 7px;border-radius:999px;border:1px solid var(--edge);color:var(--faint);
-       margin-left:6px}
-  .tag.warn{color:var(--warn);border-color:#3d3016}
-  .tag.ok{color:var(--ok);border-color:#1c3a22}
-  .banner{font:12px var(--mono);color:var(--key);background:#101a27;border:1px solid #1d3350;
-          border-radius:9px;padding:10px 13px;margin-top:10px;line-height:1.7}
-  .banner.bad{color:#ffb4ae;background:#1b1113;border-color:#4d2326}
-  .banner.warn{color:#f0cf72;background:#1b1710;border-color:#4d3f16}
-  .card{border:1px solid var(--edge);border-left:3px solid var(--key);border-radius:9px;
-        background:#101821;padding:4px 14px;margin-top:12px}
-  .card .row{display:flex;gap:14px;padding:9px 0;border-bottom:1px solid #1b242e;
-             align-items:baseline}
+  #detail .leg{position:relative;padding-left:14px;border-left:2px solid var(--edge)}
+  #detail .leg::before{content:"";position:absolute;left:-6px;top:10px;
+       width:8px;height:8px;border-radius:50%;background:var(--key);
+       border:2px solid var(--card)}
+  #detail .leg.gone::before{background:var(--bad)}
+  #detail .leg.late::before{background:var(--warn)}
+  #detail .leg.pending::before{background:var(--card);border-color:var(--warn)}
+  .card{border:1px solid var(--edge);border-left:3px solid var(--key);
+        border-radius:var(--r-md);background:var(--card);padding:4px 14px;
+        margin-top:12px;box-shadow:var(--shadow-1)}
+  .card .row{display:flex;gap:14px;padding:9px 0;
+             border-bottom:1px solid var(--hairline);align-items:baseline}
   .card .row:last-child{border-bottom:none}
-  .card .k{font:10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;
+  .card .k{font:600 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;
            color:var(--faint);min-width:84px}
   .card .v{font-size:14px}
-  .card .n{font:11.5px var(--mono);color:var(--key);margin-left:auto}
-  .note{font-size:12.5px;color:var(--dim);margin-top:10px;line-height:1.6}
+  .card .n{font:11px var(--mono);color:var(--key);margin-left:auto;white-space:nowrap}
 </style>
 </head>
 <body>
+<div class="site-header"><div class="bar-inner">
+  <a class="wordmark" href="/">Downstream</a>
+  <nav class="site-nav">
+    <a href="/" aria-current="page">agent</a> <a href="/book">book</a>
+    <a href="/demo">demo</a>
+    <a href="/story">story</a> <a href="/script">script</a>
+    <a href="/test">test</a>
+  </nav>
+</div></div>
 <div class="wrap">
   <header>
     <div>
       <h1>Downstream</h1>
       <div class="sub">Tell it what you want. It books it, watches it, and fixes it when it breaks.</div>
     </div>
-    <div class="sub"><a href="/story">the whole story</a> ·
-      <a href="/script">presenter guide</a> ·
-      <a href="/test">how to test this</a> ·
-      <a href="/book">manual search</a> · <a href="/demo">worked example</a></div>
   </header>
 
   <div class="cols">
@@ -159,21 +125,10 @@
   <button class="btn key" id="send">Send</button>
 </div></div>
 
+<script src="/static/app.js?v=2"></script>
 <script>
-const $ = s => document.querySelector(s);
-const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c =>
-  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const eur = n => (n < 0 ? '−' : '') + 'S$' + Math.abs(Math.round(n)).toLocaleString();
-// Times arrive pre-formatted in the trip's own timezone. Formatting them here
-// renders a Zurich arrival in whatever zone this laptop is set to.
-const at = w => w ? w.d : '—';
-// Start and end together, with the end's DATE shown only when it differs from
-// the start's. "18 Sep 23:55 - 06:30" reads as a seven-hour hop that lands
-// before it left; the arrival is the next morning and the row has to say so.
-// Both are already formatted in their own zone, so comparing the date halves
-// compares what the traveller reads at each end.
-const span = (a, b) => !b ? at(a)
-  : at(a) + ' \u2192 ' + (a && a.iso.slice(0, 10) === b.iso.slice(0, 10) ? b.t : b.d);
+// $/esc/eur/at/hhmm/span/late_/DELAYS come from /static/app.js --
+// one set of helpers, one timezone rule.
 
 
 let STATE = {};          // the request so far — the server holds nothing
@@ -181,11 +136,6 @@ let LAST = null;         // the last agent turn, for the option tables
 // Selections are held as the offer itself, not as an id: the id belongs to the
 // search that produced it and the server has to find the flight again.
 let PICK = {flight:null, ret:null, hotel:null};
-// Spread so the answer actually changes. Under an hour is absorbed by any sane
-// connection, a few hours is where a trip starts to come apart, and overnight
-// is a cancellation in all but name -- one hard-coded number would only ever
-// demonstrate whichever of those the inventory happened to land on.
-const DELAYS = [30, 90, 180, 360, 720];
 let TRIPS = [], OPEN = null, RECOVERY = null;
 
 // Who you are, as far as this page knows: a token from a link somebody shared,
@@ -338,7 +288,7 @@ async function say(text, answers){
 }
 
 function offerTable(kind, title, rows){
-  return `<table><thead><tr><th>${esc(title)}</th><th>Departs</th><th>Arrives</th>
+  return `<div class="table-wrap"><table><thead><tr><th>${esc(title)}</th><th>Departs</th><th>Arrives</th>
     <th class="n">Fare</th></tr></thead><tbody>` + rows.map(o => `
     <tr class="pick" data-kind="${kind}" data-id="${esc(o.id)}"
         data-key="${esc(o.key)}" data-price="${o.price}"
@@ -350,11 +300,11 @@ function offerTable(kind, title, rows){
       <td>${at(o.depart)}</td>
       <td>${at(o.arrive)}${o.overnight ? '<div class="m">next day</div>' : ''}</td>
       <td class="n">${eur(o.price)}${o.quoted ? `<div class="m">${esc(o.quoted)}</div>` : ''}</td>
-    </tr>`).join('') + `</tbody></table>`;
+    </tr>`).join('') + `</tbody></table></div>`;
 }
 
 function stayTable(rows){
-  return `<table><thead><tr><th>Stay</th><th>Check-in</th><th>Held until</th>
+  return `<div class="table-wrap"><table><thead><tr><th>Stay</th><th>Check-in</th><th>Held until</th>
     <th class="n">Total</th></tr></thead><tbody>` + rows.map(h => `
     <tr class="pick" data-kind="hotel" data-id="${esc(h.id)}">
       <td>${esc(h.name)}<div class="m">${esc(h.city)} · ${h.nights} night${
@@ -362,7 +312,7 @@ function stayTable(rows){
       <td>${at(h.check_in)}</td>
       <td>${at(h.held_until)}<div class="m">then the room is gone</div></td>
       <td class="n">${eur(h.price)}</td>
-    </tr>`).join('') + `</tbody></table>`;
+    </tr>`).join('') + `</tbody></table></div>`;
 }
 
 function wireOffers(el){
@@ -688,11 +638,6 @@ function openTrip(id, quiet){
       '/api/delay'));
 }
 
-// How late, said the way a person says it. "delayed 180 minutes" is a number
-// the traveller has to divide before it means anything.
-const late_ = m => m >= 60
-  ? Math.floor(m / 60) + 'h' + (m % 60 ? ' ' + (m % 60) + 'm' : '')
-  : m + 'm';
 
 async function breakLeg(tripId, what, path){
   let d;
@@ -736,7 +681,7 @@ async function breakLeg(tripId, what, path){
     html += `<div class="note"><span class="m">Not shown, by your rules: ${
       d.excluded.map(x => esc(x.name) + ' (' + esc(x.why) + ')').join(' · ')}</span></div>`;
 
-  html += `<table><thead><tr><th>Plan</th><th class="n">Tonight</th>
+  html += `<div class="table-wrap"><table><thead><tr><th>Plan</th><th class="n">Tonight</th>
     <th class="n">Total damage</th><th>Arrives</th></tr></thead><tbody>`
     + d.plans.slice(0, 6).map(p => `
       <tr class="pick ${p.best ? 'best' : ''}" data-plan="${esc(p.key || p.id)}">
@@ -747,7 +692,7 @@ async function breakLeg(tripId, what, path){
         <td class="n ${p.net_cash < 0 ? 'neg' : ''}">${p.net_cash ? eur(p.net_cash) : '—'}</td>
         <td class="n">${eur(p.total_damage)}</td>
         <td>${p.arrives_at ? esc(p.arrives_where) + ' ' + at(p.arrives_at) : '—'}</td>
-      </tr>`).join('') + `</tbody></table>
+      </tr>`).join('') + `</tbody></table></div>
     <div class="chips">${d.auto_taken
       ? '<span class="m">Taken already — pick a different row only if you want to change it.</span>'
       : '<button class="btn key do-it" disabled>Take this plan</button>'}</div>`;

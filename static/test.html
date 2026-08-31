@@ -4,65 +4,33 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Downstream — how to test it</title>
+<link rel="stylesheet" href="/static/app.css?v=2">
 <style>
-  :root{
-    --bg:#0b0f14; --card:#141b23; --edge:#232d38; --ink:#e8eef4; --dim:#93a1b0; --faint:#5d6b7a;
-    --ok:#3fb950; --bad:#f85149; --warn:#e3b341; --key:#58a6ff;
-    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);
-       font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-  .wrap{max-width:860px;margin:0 auto;padding:26px 22px 100px}
-  header{display:flex;justify-content:space-between;align-items:baseline;gap:20px;flex-wrap:wrap}
-  h1{font-size:20px;margin:0;letter-spacing:-.01em}
-  h2{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--faint);
-     margin:0 0 14px;font-weight:600}
-  h3{font-size:15px;margin:0 0 4px}
-  .sub{color:var(--dim);font-size:13px}
-  a{color:var(--key);text-decoration:none}
-  a:hover{text-decoration:underline}
-  p{margin:0 0 12px}
-  section{background:var(--card);border:1px solid var(--edge);border-radius:11px;
-          padding:22px;margin-top:18px}
-  code{font:13px var(--mono);background:#0e151d;border:1px solid var(--edge);
-       border-radius:5px;padding:1px 6px}
-  .lede{font-size:17px;color:var(--ink)}
-  .note{color:var(--dim);font-size:14px;margin-top:10px}
-  .m{color:var(--faint);font:12px var(--mono)}
-
-  .doors{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
-  .door{background:#0e151d;border:1px solid var(--edge);border-left:3px solid var(--key);
-        border-radius:9px;padding:14px 16px}
-  .door .m{margin-top:6px;display:block;line-height:1.5}
-
+  /* Page-local only -- everything shared lives in app.css. */
   ol.steps{margin:0;padding-left:20px}
   ol.steps li{margin-bottom:6px}
-  .case{border-top:1px solid var(--edge);padding-top:18px;margin-top:18px}
+  .case{border-top:1px solid var(--hairline);padding-top:18px;margin-top:18px}
   .case:first-of-type{border-top:0;padding-top:0;margin-top:0}
-  .expect{background:#0e151d;border:1px solid var(--edge);border-left:3px solid var(--ok);
-          border-radius:9px;padding:12px 15px;margin-top:10px;font-size:14.5px}
+  /* Green = expect this; amber = looks wrong, isn't. The severity edge
+     doing its usual job. */
+  .expect{background:var(--ok-tint);border:1px solid var(--ok-edge);
+          border-left:3px solid var(--ok);border-radius:var(--r-md);
+          padding:12px 15px;margin-top:10px;font-size:14px}
   .expect b{color:var(--ok)}
-  .nope{border-left-color:var(--warn)}
+  .nope{background:var(--warn-tint);border-color:var(--warn-edge);
+        border-left-color:var(--warn)}
   .nope b{color:var(--warn)}
-
-  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:4px}
-  th{text-align:left;font:11px var(--mono);letter-spacing:.1em;text-transform:uppercase;
-     color:var(--faint);padding:7px 10px 7px 0;border-bottom:1px solid var(--edge)}
-  td{padding:8px 10px 8px 0;border-bottom:1px solid var(--edge);vertical-align:top}
-  tr:last-child td{border-bottom:0}
-
-  .banner{background:#0e151d;border:1px solid var(--edge);border-radius:9px;
-          padding:12px 15px;font:12.5px var(--mono);color:var(--dim)}
-  .pill{display:inline-block;font:11px var(--mono);text-transform:uppercase;letter-spacing:.08em;
-        border:1px solid var(--edge);border-radius:5px;padding:2px 7px;color:var(--dim)}
-  .pill.ok{color:var(--ok);border-color:#1d4429}
-  .pill.warn{color:var(--warn);border-color:#4d4423}
-  ul{margin:0 0 12px;padding-left:20px}
-  li{margin-bottom:5px}
 </style>
 </head>
 <body>
+<div class="site-header"><div class="bar-inner">
+  <a class="wordmark" href="/">Downstream</a>
+  <nav class="site-nav">
+    <a href="/">agent</a> <a href="/book">book</a> <a href="/demo">demo</a>
+    <a href="/story">story</a> <a href="/script">script</a>
+    <a href="/test" aria-current="page">test</a>
+  </nav>
+</div></div>
 <div class="wrap">
   <header>
     <div>
@@ -70,9 +38,6 @@
       <div class="sub">Six things to try, with what to expect. Status, limits and the
         bug-report checklist live on <a href="/script">/script</a>.</div>
     </div>
-    <div class="sub"><a href="/">the agent →</a> · <a href="/book">the builder →</a> ·
-      <a href="/story">the whole story, one press →</a> ·
-      <a href="/script">presenting? the demo script →</a></div>
   </header>
 
   <section>
