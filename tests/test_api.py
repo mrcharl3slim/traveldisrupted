@@ -248,6 +248,38 @@ def test_rules_can_be_changed_after_booking_and_are_listed(client):
 
 
 # --------------------------------------------------------------------------
+# clearing the decks
+# --------------------------------------------------------------------------
+
+
+def test_the_wipe_endpoint_does_not_exist_until_a_token_does(client, monkeypatch):
+    """An admin surface that advertises itself on every deployment is a target
+    on every deployment. Unset, it is a 404 like any other wrong path."""
+    monkeypatch.delenv("DOWNSTREAM_ADMIN_TOKEN", raising=False)
+    assert client.post("/api/admin/wipe", json={}).status_code == 404
+
+
+def test_the_wrong_token_is_refused_and_the_right_one_wipes(client, monkeypatch):
+    monkeypatch.setenv("DOWNSTREAM_ADMIN_TOKEN", "letmein-test")
+    assert client.post("/api/admin/wipe", json={},
+                       headers={"x-admin-token": "guess"}).status_code == 403
+
+    booked = book(client)
+    done = client.post("/api/admin/wipe", json={"what": "trips"},
+                       headers={"x-admin-token": "letmein-test"}).json()
+    assert done["wiped"]["trips"] >= 1
+    assert done["wiped"]["people"] == 0, "trips-only keeps the shared links"
+    listed = client.get("/api/itineraries").json()["itineraries"]
+    assert booked["trip_id"] not in {t["trip_id"] for t in listed}
+
+
+def test_a_wipe_of_nonsense_is_refused(client, monkeypatch):
+    monkeypatch.setenv("DOWNSTREAM_ADMIN_TOKEN", "letmein-test")
+    assert client.post("/api/admin/wipe", json={"what": "half of it"},
+                       headers={"x-admin-token": "letmein-test"}).status_code == 422
+
+
+# --------------------------------------------------------------------------
 # approve, reject, per line
 # --------------------------------------------------------------------------
 

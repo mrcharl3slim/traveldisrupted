@@ -2214,6 +2214,44 @@ def demo() -> FileResponse:
     return FileResponse(STATIC / "index.html")
 
 
+class Wipe(BaseModel):
+    what: str = "trips"          # "trips" | "everything"
+
+
+@app.post("/api/admin/wipe")
+def admin_wipe(body: Wipe, x_admin_token: str = Header("")) -> dict:
+    """Clear stored data on a deployed instance, for whoever holds the admin
+    token -- which is nobody until DOWNSTREAM_ADMIN_TOKEN is set in the
+    environment.
+
+    OFF BY DEFAULT, AND OFF MEANS INVISIBLE. With no token configured the
+    endpoint answers 404 exactly like a route that does not exist, because an
+    admin surface that advertises itself on every deployment is a target on
+    every deployment. With one configured, the comparison is constant-time and
+    a miss is a 403 that names nothing.
+
+    "trips" clears itineraries only -- shared links and profiles survive, so
+    testers keep their identities and rules and simply re-book. "everything"
+    takes people and profiles with it: every shared link dies, and whoever
+    holds one sees "that link is not one I handed out", which is the truth.
+    """
+    import hmac
+
+    expected = os.environ.get("DOWNSTREAM_ADMIN_TOKEN", "").strip()
+    if not expected:
+        raise HTTPException(404, "Not Found")
+    if not hmac.compare_digest(x_admin_token.strip(), expected):
+        raise HTTPException(403, "no")
+    if body.what not in ("trips", "everything"):
+        raise HTTPException(422, "what must be 'trips' or 'everything'")
+
+    gone = store_module.store().wipe(
+        trips=True,
+        people=(body.what == "everything"),
+        profiles=(body.what == "everything"))
+    return {"wiped": gone, "storage": store_module.status()["using"]}
+
+
 @app.post("/api/story")
 def story() -> dict:
     """One complete trip, taken through everything the app can do, by the app.

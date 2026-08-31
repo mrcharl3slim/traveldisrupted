@@ -144,6 +144,27 @@ class MemoryStore:
             self._profiles[owner] = dict(payload)
         return dict(payload)
 
+    def wipe(self, trips: bool = True, people: bool = False,
+             profiles: bool = False) -> dict:
+        """Delete whole categories, and say exactly how much of each went.
+
+        For clearing test data between rounds -- old trips priced in a
+        currency the app no longer speaks, story runs, tokens handed to
+        testers. Counts come back because "wiped" without a number is a claim
+        nobody can check against what they expected to lose.
+        """
+        with self._lock:
+            gone = {"trips": len(self._trips) if trips else 0,
+                    "people": len(self._people) if people else 0,
+                    "profiles": len(self._profiles) if profiles else 0}
+            if trips:
+                self._trips.clear()
+            if people:
+                self._people.clear()
+            if profiles:
+                self._profiles.clear()
+        return gone
+
     # -- people: a name and the token that is them ------------------------
     def add_person(self, person_id: str, token: str, name: str) -> None:
         with self._lock:
@@ -247,6 +268,18 @@ class PostgresStore:
                 " updated = EXCLUDED.updated",
                 (owner, datetime.now(timezone.utc), json.dumps(payload)))
         return dict(payload)
+
+    def wipe(self, trips: bool = True, people: bool = False,
+             profiles: bool = False) -> dict:
+        gone = {"trips": 0, "people": 0, "profiles": 0}
+        with self._conn() as conn:
+            if trips:
+                gone["trips"] = conn.execute("DELETE FROM trips").rowcount
+            if people:
+                gone["people"] = conn.execute("DELETE FROM people").rowcount
+            if profiles:
+                gone["profiles"] = conn.execute("DELETE FROM profiles").rowcount
+        return gone
 
     def add_person(self, person_id: str, token: str, name: str) -> None:
         with self._conn() as conn:

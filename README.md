@@ -11,6 +11,13 @@ server-side **through the same handlers every button calls**, so it cannot drift
 from what a person clicking would get. Scripted inputs, computed outcomes: the
 same discipline as `/demo`, applied to the whole product, and re-runnable
 because a story that can only be told once breaks at the second audience.
+Between test rounds, `maintain.py` clears stored data from wherever
+`DATABASE_URL` points (dry-run by default; `--yes` to mean it), and
+`POST /api/admin/wipe` does the same over HTTP — but only once
+`DOWNSTREAM_ADMIN_TOKEN` is set, and until then it answers 404 like a route
+that does not exist. `trips` keeps people and profiles, so shared links
+survive and testers simply re-book; `everything` takes the links with it.
+
 `/script` is the demo as a script — seven acts, six minutes, every line to type
 in a box and every line to say in italics, with an "if it goes sideways" table.
 It reads `/health` first, because the opening instruction depends on whether the

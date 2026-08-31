@@ -170,6 +170,37 @@ def test_people_and_membership_survive_the_process(fresh):
     assert shared.id in {t.id for t in again.live()}
 
 
+def test_wipe_takes_what_it_is_told_and_counts_what_it_took(fresh):
+    db = fresh(None)
+    db.save("o", {"bookings": []}, "a")
+    db.save("o", {"bookings": []}, "b")
+    db.add_person("p1", "tok", "Priya")
+    db.save_profile("o", {"home": "SIN"})
+
+    gone = db.wipe(trips=True)
+    assert gone == {"trips": 2, "people": 0, "profiles": 0}
+    assert db.list("o") == []
+    assert db.person("tok"), "trips-only left the shared links alone"
+    assert db.profile("o"), "and the profile"
+
+    assert db.wipe(trips=True, people=True, profiles=True) \
+        == {"trips": 0, "people": 1, "profiles": 1}
+    assert db.person("tok") is None
+
+
+@needs_db
+def test_wipe_is_as_thorough_on_postgres(fresh):
+    db = fresh(DATABASE_URL)
+    db.save("owner-wipe", {"bookings": []}, "doomed")
+    db.add_person("pw", "tok-wipe", "Temp")
+    db.save_profile("owner-wipe", {"home": "SIN"})
+
+    gone = db.wipe(trips=True, people=True, profiles=True)
+    assert gone["trips"] >= 1 and gone["people"] >= 1 and gone["profiles"] >= 1
+    assert fresh(DATABASE_URL).live(limit=5) == []
+    assert fresh(DATABASE_URL).person("tok-wipe") is None
+
+
 @needs_db
 def test_the_watch_asks_the_database_for_its_work(fresh):
     """A watch that loads every itinerary anybody ever pasted, once a minute,

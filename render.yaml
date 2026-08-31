@@ -95,6 +95,13 @@ services:
       - key: LITEAPI_KEY
         sync: false
 
+      # Unset by default, and unset means /api/admin/wipe answers 404 like a
+      # route that does not exist. Set it (any long random string) to clear
+      # test data with one curl between rounds; see maintain.py for the
+      # run-it-yourself equivalent.
+      - key: DOWNSTREAM_ADMIN_TOKEN
+        sync: false
+
       # Trips survive a restart only with a database. Render fills this in from
       # the instance declared below; without it the app keeps trips in memory
       # and /health says so rather than pretending.
