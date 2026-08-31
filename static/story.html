@@ -146,6 +146,22 @@ const RENDER = {
       constructor refuses an empty timestamp, citation or authorization state. That is the
       acceptance criterion made structural, and there is a test proving the refusal.</div>`,
 
+  'The same cancellation, with the kill switch on': b => `
+    <div class="banner warn"><b>${esc(b.toggled || 'master kill switch → disarmed')}</b>
+      — same trip, same S$${b.cap} cap as the chapter above. The only difference is the
+      switch.</div>
+    <div class="banner">${esc(b.why)}</div>
+    <div class="leg"><div>Did the agent act?</div>
+      <div class="n">${b.auto_taken ? 'yes — a bug' : '<b>no — it waited</b>'}</div></div>
+    <div class="leg"><div>Approval on every line</div>
+      <div class="n">${b.approvals.map(esc).join(' · ')}</div></div>
+    <div class="leg"><div>Alex takes the plan by hand — messages sent</div>
+      <div class="n"><b>${b.sent}</b> · zero channels used</div></div>
+    ${b.held.map(l => `<div class="leg"><div>${esc(l)}</div>
+      <span class="tag warn">held — yours to send</span></div>`).join('')}
+    <div class="banner ok">${esc(b.summary)}. Read-only reached the executor too: the email
+      the armed chapter sent automatically is handed to the person here.</div>`,
+
   'And if Alex were not going at all': b => `
     ${b.errands.map(a => `<div class="leg"><div>${esc(a.label)}
         <span class="tag ${a.lane === 'auto' ? 'ok' : a.lane === 'call' ? 'bad' : 'warn'}">${esc(a.lane)}</span>

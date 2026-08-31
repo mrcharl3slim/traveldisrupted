@@ -26,9 +26,27 @@ def beat(told, title_start: str) -> dict:
     return next(b for b in told["beats"] if b["title"].startswith(title_start))
 
 
-def test_the_story_runs_and_has_all_eight_chapters(told):
-    assert len(told["beats"]) == 8
+def test_the_story_runs_and_has_all_nine_chapters(told):
+    assert len(told["beats"]) == 9
     assert told["trip_id"]
+
+
+def test_the_kill_switch_chapter_is_the_armed_chapter_negated(told):
+    """Same trip, same cap, same cancellation as the chapter before it -- the
+    only difference is the switch, so every claim is the earlier chapter's
+    with the sign flipped: no auto-take, one fixed reason on every line, zero
+    messages sent, the email held for the person, and the flip on record."""
+    stopped = beat(told, "The same cancellation")
+    armed = beat(told, "Cancelled")
+
+    assert armed["auto_taken"], "the premise: the armed chapter acted"
+    assert stopped["auto_taken"] is False
+    assert "kill switch" in stopped["why"]
+    assert stopped["approvals"] == ["needs approval"], "nothing auto, nothing pre-authorised"
+    assert stopped["sent"] == 0, "zero channels used"
+    assert stopped["held"], "the email is held for the person, not dropped"
+    assert "held by the kill switch" in stopped["summary"]
+    assert stopped["toggled"].endswith("disarmed")
 
 
 def test_the_story_closes_on_its_own_paper_trail(told):

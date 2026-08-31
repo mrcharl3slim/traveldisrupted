@@ -2616,7 +2616,47 @@ def story() -> dict:
                             else big["plans"][:5])],
         "bookings": big["bookings"]})
 
-    # -- chapter 7: what calling it all off would cost ----------------------
+    # -- chapter 7: the same cancellation, with the machine stopped ----------
+    # A third copy of the trip, with the same S$300 cap chapter six acted
+    # under -- so the ONLY difference between the two chapters is the switch.
+    third = store_module.store().save(
+        owner.id,
+        {"bookings": ingest.to_dicts(assembled.bookings),
+         "preference": "cheapest", "permissions": _default_rules({}, owner)},
+        "The story · the kill-switch copy")
+    disarm(Disarm(trip_id=third.id, disarmed=True),
+           roles.Person(owner.id, owner.name))
+    third_trip = _load(third.id)
+    third_onward = [b for b in third_trip.in_order() if b.kind is Kind.FLIGHT][1].id
+    stopped = _injected(third.id, third_onward,
+                        lambda t: flow.cancel(t, third_onward),
+                        roles.Person(owner.id, owner.name))
+    held_best = stopped["plans"][0]
+    held_done = act(Act(trip_id=third.id, booking_id=third_onward,
+                        plan_key=held_best.get("key") or held_best["id"]),
+                    roles.Person(owner.id, owner.name))
+    beats.append({
+        "title": "The same cancellation, with the kill switch on",
+        "said": "An identical copy of the trip, the same S$300 cap -- and Alex "
+                "flips the master kill switch first. The same hop is cancelled. "
+                "This time the agent assesses, ranks, recommends -- and touches "
+                "nothing: every line waits for a person with one fixed reason, "
+                "and when Alex takes the plan by hand, even the hotel email is "
+                "HELD rather than sent. Zero channels used. Read-only means "
+                "read, in exactly the case a judge would test.",
+        "cap": 300,
+        "auto_taken": "auto_taken" in stopped,
+        "why": stopped["why"],
+        "approvals": sorted({a["approval"] for q in stopped["plans"][:3]
+                             for a in q["actions"]}),
+        "sent": len(held_done["sent"]),
+        "held": [d["label"] for d in held_done["held"]],
+        "summary": held_done["summary"],
+        "toggled": next((e["subject"] for e in
+                         store_module.store().trail(third.id)
+                         if e["type"] == audit.TOGGLED), "")})
+
+    # -- chapter 8: what calling it all off would cost ----------------------
     second = store_module.store().save(
         owner.id, {"bookings": ingest.to_dicts(assembled.bookings)},
         "The story · the trip Alex thought better of")
