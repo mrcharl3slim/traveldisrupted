@@ -146,10 +146,27 @@ const RENDER = {
       constructor refuses an empty timestamp, citation or authorization state. That is the
       acceptance criterion made structural, and there is a test proving the refusal.</div>`,
 
+  'The middle tier: decided, held, flagged': b => `
+    <div class="banner">act ≤ S$${b.cap} · auto-hold ≤ S$${b.hold} · ask above — the
+      S$108 plan lands in the middle rung.</div>
+    <div class="leg"><div>Did the agent decide?</div>
+      <div class="n">${b.auto_held ? '<b>yes — taken and held</b>' : 'no — a bug'}</div></div>
+    <div class="leg"><div>On the record</div>
+      <div class="n">${esc(b.permission)}</div></div>
+    <div class="leg"><div>Messages sent</div>
+      <div class="n"><b>${b.sent}</b> · zero channels used</div></div>
+    ${b.held.map(l => `<div class="leg"><div>${esc(l)}</div>
+      <span class="tag warn">held — review it</span></div>`).join('')}
+    ${b.pending.map(l => `<div class="leg"><div>${esc(l)}</div>
+      <span class="tag">pending — the hold itself</span></div>`).join('')}
+    <div class="banner ok">${esc(b.summary)}. The pending replacement IS the hold — an
+      intention recorded, not bought — and the email the act tier would have sent sits
+      waiting for a person.</div>`,
+
   'The same cancellation, with the kill switch on': b => `
     <div class="banner warn"><b>${esc(b.toggled || 'master kill switch → disarmed')}</b>
-      — same trip, same S$${b.cap} cap as the chapter above. The only difference is the
-      switch.</div>
+      — same trip, same S$${b.cap} cap the armed chapter acted under. The only difference
+      is the switch.</div>
     <div class="banner">${esc(b.why)}</div>
     <div class="leg"><div>Did the agent act?</div>
       <div class="n">${b.auto_taken ? 'yes — a bug' : '<b>no — it waited</b>'}</div></div>

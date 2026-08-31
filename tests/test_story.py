@@ -26,9 +26,30 @@ def beat(told, title_start: str) -> dict:
     return next(b for b in told["beats"] if b["title"].startswith(title_start))
 
 
-def test_the_story_runs_and_has_all_nine_chapters(told):
-    assert len(told["beats"]) == 9
+def test_the_story_runs_and_has_all_ten_chapters(told):
+    assert len(told["beats"]) == 10
     assert told["trip_id"]
+
+
+def test_the_ladder_reads_act_hold_stop_in_order(told):
+    titles = [b["title"] for b in told["beats"]]
+    ladder = [titles.index(next(t for t in titles if t.startswith("Cancelled"))),
+              titles.index("The middle tier: decided, held, flagged"),
+              titles.index("The same cancellation, with the kill switch on")]
+    assert ladder == sorted(ladder), "act, then hold, then stop"
+
+
+def test_the_middle_tier_chapter_decides_and_nothing_leaves(told):
+    """Between the armed chapter and the kill switch: the agent still decides
+    -- the pending replacement IS the hold -- and zero channels are used, with
+    the tier named on the record."""
+    mid = beat(told, "The middle tier")
+    assert mid["auto_held"] is True
+    assert "auto-hold tier" in mid["permission"]
+    assert mid["sent"] == 0
+    assert mid["held"], "the email is held for the person"
+    assert any("Book" in l for l in mid["pending"]), "the hold itself: a pending purchase"
+    assert "held by the kill switch" in mid["summary"] or "held" in mid["summary"]
 
 
 def test_the_kill_switch_chapter_is_the_armed_chapter_negated(told):

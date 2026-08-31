@@ -2628,7 +2628,54 @@ def story() -> dict:
                             else big["plans"][:5])],
         "bookings": big["bookings"]})
 
-    # -- chapter 7: the same cancellation, with the machine stopped ----------
+    def _with_client_meeting(copy_id: str) -> None:
+        """The copies must be the SAME trip, meeting included. Without the
+        commitment, doing nothing at S$0 outranks the S$108 train and there is
+        nothing for the tier -- or the switch -- to be shown declining."""
+        copy_trip = _load(copy_id)
+        copy_verdict = appt_mod.assess(copy_trip, meeting)
+        copy_payload = dict(store_module.store().get(copy_id).payload)
+        copy_payload["bookings"] = ingest.to_dicts(copy_verdict["trip"].bookings)
+        store_module.store().update(copy_id, copy_payload)
+
+    # -- chapter 7: the middle tier -- decided, held, flagged ----------------
+    # Another copy, with the cap set BELOW the train and the hold tier above
+    # it (act <= 50, hold <= 200), so the same S$108 plan lands in the middle:
+    # the agent decides, nothing leaves the building.
+    tiered = store_module.store().save(
+        owner.id,
+        {"bookings": ingest.to_dicts(assembled.bookings),
+         "preference": "cheapest",
+         "permissions": permit.Permissions.from_dict(
+             {"auto_limit": 50, "hold_limit": 200}).to_dict()},
+        "The story · the hold-tier copy")
+    _with_client_meeting(tiered.id)
+    tiered_trip = _load(tiered.id)
+    tiered_onward = [b for b in tiered_trip.in_order() if b.kind is Kind.FLIGHT][1].id
+    mid = _injected(tiered.id, tiered_onward,
+                    lambda t: flow.cancel(t, tiered_onward),
+                    roles.Person(owner.id, owner.name))
+    held_take = mid.get("auto_taken") or {}
+    beats.append({
+        "title": "The middle tier: decided, held, flagged",
+        "said": "The same trip again, with the tiers the deck describes: act "
+                "up to S$50, auto-hold up to S$200, ask above that. The S$108 "
+                "plan is over the cap and inside the hold tier, so the agent "
+                "still DECIDES -- the itinerary is rewritten and the "
+                "replacement enters as pending, which is what a hold is in a "
+                "product that cannot pay -- but nothing leaves the building: "
+                "the hotel email is held, zero channels used, and the "
+                "notification says review it. One ladder, three rungs: act, "
+                "hold, ask.",
+        "cap": 50, "hold": 200,
+        "auto_held": bool(held_take.get("auto_held")),
+        "permission": held_take.get("permission", ""),
+        "sent": len(held_take.get("sent", [])),
+        "held": [d["label"] for d in held_take.get("held", [])],
+        "pending": [d["label"] for d in held_take.get("pending", [])],
+        "summary": held_take.get("summary", "")})
+
+    # -- chapter 8: the same cancellation, with the machine stopped ----------
     # A third copy of the trip, with the same S$300 cap chapter six acted
     # under -- so the ONLY difference between the two chapters is the switch.
     third = store_module.store().save(
@@ -2638,6 +2685,7 @@ def story() -> dict:
         "The story · the kill-switch copy")
     disarm(Disarm(trip_id=third.id, disarmed=True),
            roles.Person(owner.id, owner.name))
+    _with_client_meeting(third.id)
     third_trip = _load(third.id)
     third_onward = [b for b in third_trip.in_order() if b.kind is Kind.FLIGHT][1].id
     stopped = _injected(third.id, third_onward,
@@ -2649,7 +2697,8 @@ def story() -> dict:
                     roles.Person(owner.id, owner.name))
     beats.append({
         "title": "The same cancellation, with the kill switch on",
-        "said": "An identical copy of the trip, the same S$300 cap -- and Alex "
+        "said": "An identical copy of the trip, the same S$300 cap the armed "
+                "chapter acted under -- and Alex "
                 "flips the master kill switch first. The same hop is cancelled. "
                 "This time the agent assesses, ranks, recommends -- and touches "
                 "nothing: every line waits for a person with one fixed reason, "
