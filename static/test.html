@@ -67,47 +67,13 @@
   <header>
     <div>
       <h1>Downstream — how to test it</h1>
-      <div class="sub">Read the box below first — it decides what will and will not work today.</div>
+      <div class="sub">Six things to try, with what to expect. Status, limits and the
+        bug-report checklist live on <a href="/script">/script</a>.</div>
     </div>
     <div class="sub"><a href="/">the agent →</a> · <a href="/book">the builder →</a> ·
       <a href="/story">the whole story, one press →</a> ·
       <a href="/script">presenting? the demo script →</a></div>
   </header>
-
-  <section>
-    <h2>What this thing is</h2>
-    <p class="lede">Detecting that a flight is late is commodity. Downstream does the part
-      after: what <em>else</em> in the trip breaks, what it costs, and what to do
-      instead — across airlines, railways and hotels that do not talk to each other.</p>
-    <p>You build a real itinerary from live inventory, then break it and watch the
-      consequences fall out of the same data. Nothing about the outcome is scripted.</p>
-    <div class="expect nope"><b>Nothing is ever bought.</b> Every provider account here is a
-      test account that cannot take money. If you find a way to spend a real euro, that is
-      the most important bug you will file all day.</div>
-  </section>
-
-  <section>
-    <h2>What this instance is doing right now</h2>
-    <div id="live" class="banner">reading /health…</div>
-    <div class="note" id="live-note"></div>
-  </section>
-
-  <section>
-    <h2>Three ways in</h2>
-    <div class="doors">
-      <div class="door"><h3><a href="/">/ — the agent</a></h3>
-        <span class="m">Type a sentence. It asks only what changes the answer,
-          then searches and offers.</span></div>
-      <div class="door"><h3><a href="/book">/book — the builder</a></h3>
-        <span class="m">Pick legs from tables. Faster to get to a broken trip,
-          and it shows the raw fares.</span></div>
-      <div class="door"><h3><a href="/demo">/demo — the scripted one</a></h3>
-        <span class="m">One fixed October trip, always the same numbers.
-          Read-only. Good for a first look.</span></div>
-    </div>
-    <div class="note">Trips you make in one door appear in the other — they are the same
-      store. <code>/demo</code> is separate and cannot be edited.</div>
-  </section>
 
   <section>
     <h2>Test 1 · Book a trip</h2>
@@ -122,7 +88,7 @@
         <li>Pick a flight <em>or a train</em>, pick a room, confirm.</li>
       </ol>
       <div class="expect"><b>Expect:</b> trains and flights in one list, ranked by what you
-        asked for. Under <em>cheapest</em> the S$108 train sorts above every fare; under
+        asked for. Under <em>cheapest</em> the S$108 train ranks with the fares on price alone; under
         <em>fastest</em> a 55-minute flight wins. Both are correct.</div>
       <div class="expect nope"><b>Not a bug:</b> answering a question with something it
         cannot read leaves the question open and says so. That is deliberate — a silently
@@ -234,92 +200,6 @@
         drops the token from this browser.</div>
     </div>
   </section>
-
-  <section>
-    <h2>Known limits — please do not file these</h2>
-    <table>
-      <thead><tr><th>What you will see</th><th>Why</th></tr></thead>
-      <tbody>
-        <tr><td>“No inventory recorded for that route”</td>
-            <td>In <span class="pill">replay</span> only recorded routes exist. See the box
-              at the top for which. On <span class="pill">live</span> any route works.</td></tr>
-        <tr><td>Trains only between Zurich and Milan</td>
-            <td>The only rail API we can reach is the Swiss timetable. It does not know
-              about Madrid.</td></tr>
-        <tr><td>A train fare is marked <em>estimated</em></td>
-            <td>SBB publishes no free fare API. The number is ours and says so everywhere
-              it appears — including in totals.</td></tr>
-        <tr><td>Trips vanish after a while</td>
-            <td>Only if storage says <em>memory</em> in the box above. On
-              <em>postgres</em> they survive restarts and sleeps — if one disappears
-              anyway, that <b>is</b> worth filing, with the trip id.</td></tr>
-        <tr><td>A replacement leg says <em>not paid</em></td>
-            <td>Deliberate. Nothing here can take money, and a plan must not look like a
-              purchase.</td></tr>
-        <tr><td>“You will have to call”</td>
-            <td>That provider has no consumer API. Saying so is the feature — the
-              alternative is claiming we did something we cannot.</td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section>
-    <h2>Filing a bug</h2>
-    <p>Four things, and it is almost always enough:</p>
-    <ul>
-      <li><b>The page and what you typed</b> — the exact sentence, not a summary of it.</li>
-      <li><b>What you expected and what you got.</b> A number being <em>wrong</em> is more
-        useful than a number being <em>odd</em> — tell us which one you can check by hand.</li>
-      <li><b>The trip id</b>, from the address bar on <code>/book</code>
-        (<code>?trip=…</code>).</li>
-      <li><b>The line from the box at the top of this page</b>, copied. It says which
-        providers answered and which were replayed, and that changes the answer.</li>
-    </ul>
-    <div class="note">A screenshot of the whole page beats a crop. Half the interesting
-      failures are two numbers that disagree with each other.</div>
-  </section>
 </div>
-
-<script>
-const $ = s => document.querySelector(s);
-
-// The one thing a tester cannot guess and most needs: which world this instance
-// is in. Read live rather than written down, because it changes per deploy and a
-// paragraph claiming "replay" over a live instance sends everybody hunting the
-// wrong bug.
-fetch('/health').then(r => r.json()).then(h => {
-  const live = h.ports_mode === 'live';
-  $('#live').innerHTML =
-      `providers  <span class="pill ${live ? 'ok' : ''}">${h.ports_mode}</span>`
-    + `   model  <span class="pill ${h.model_status.ready ? 'ok' : 'warn'}">${
-        h.model_status.ready ? h.model : 'not started'}</span>`
-    + `   storage  <span class="pill ${h.storage.startsWith('postgres') ? 'ok' : 'warn'}">${
-        h.storage}</span>`
-    // Configured and not working is a third state and the only one worth
-    // reading out. "memory" alone makes a database that is down look exactly
-    // like a deployment that never wanted one.
-    + ((h.storage_status && h.storage_status.why_not)
-        ? `<br><br>a database is configured and is not answering:<br>· ${
-            h.storage_status.why_not}` : '')
-    + (h.degraded.length
-        ? `<br><br>degraded — a live call failed and a recording was used:<br>`
-          + h.degraded.map(d => '· ' + d).join('<br>') : '')
-    + (h.shifted.length
-        ? `<br><br>shifted — a recording was replayed under a different date:<br>`
-          + h.shifted.slice(0, 3).map(d => '· ' + d).join('<br>') : '');
-
-  $('#live-note').innerHTML = live
-    ? `<b>Live.</b> Real searches against real providers, so any route you type should
-       return something. If one fails it falls back to a recording and says
-       <em>degraded</em> in the banner — that is the app being honest, not breaking.`
-    : `<b>Replay.</b> Every answer comes from a committed recording, so only these exist:
-       flights <code>SIN→ZRH</code> and <code>ZRH→MXP</code>, trains
-       <code>Zurich→Milan</code>, hotels in <code>Milan</code>. Any date works — dates are
-       shifted to match. Anything else will say it has no inventory, and that is correct.`;
-}).catch(() => {
-  $('#live').textContent = 'could not read /health — the instance may be asleep. '
-    + 'Load it once more; a free instance takes about thirty seconds to wake.';
-});
-</script>
 </body>
 </html>

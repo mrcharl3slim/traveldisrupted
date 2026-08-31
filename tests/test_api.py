@@ -661,18 +661,29 @@ def test_every_door_a_tester_is_given_opens(client):
         assert client.get(path).status_code == 200, path
 
 
-def test_the_test_guide_reads_the_instance_rather_than_asserting_it(client):
-    """Which routes exist at all depends on whether this instance is talking to
-    providers or replaying recordings, and that changes per deploy. A guide that
-    states it in prose goes stale silently and sends everybody hunting the wrong
-    bug, so the page reads /health and /health has to keep answering."""
+def test_the_tester_page_is_only_the_test_cases(client):
+    """Asked for plainly: the six things to try, and nothing else. Status,
+    limits and the bug checklist moved to /script."""
     page = client.get("/test").text
-    assert "/health" in page, "the guide stopped reading the instance"
+    for n in range(1, 7):
+        assert f"Test {n}" in page, f"case {n} went missing"
+    for gone in ("What this thing is", "Known limits", "Filing a bug",
+                 "Three ways in", 'id="live"'):
+        assert gone not in page, f"{gone!r} was supposed to go"
+
+
+def test_the_script_reads_the_instance_rather_than_asserting_it(client):
+    """Which routes exist at all depends on whether this instance is talking to
+    providers or replaying recordings, and that changes per deploy. Prose
+    asserting it goes stale silently, so the page reads /health and /health has
+    to keep answering the fields it renders."""
+    page = client.get("/script").text
+    assert "/health" in page, "the script stopped reading the instance"
 
     health = client.get("/health").json()
     assert health["ports_mode"] in ("replay", "live", "record")
     for key in ("model_status", "storage", "degraded", "shifted"):
-        assert key in health, f"the guide renders {key} and health stopped sending it"
+        assert key in health, f"the page renders {key} and health stopped sending it"
     assert "ready" in health["model_status"]
 
 
