@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TripShield</title>
-<link rel="stylesheet" href="/static/app.css?v=3">
+<link rel="stylesheet" href="/static/app.css?v=4">
 <style>
   /* Page-local only -- everything shared lives in app.css. */
   .wrap{padding-bottom:150px}   /* clears the fixed composer */
@@ -40,7 +40,7 @@
         border-radius:var(--r-md);padding:11px 12px;margin-bottom:9px;
         background:var(--card);box-shadow:var(--shadow-1);cursor:pointer}
   .trip:hover{border-color:var(--key)}
-  .trip.broken{border-left-color:var(--bad)}
+  .trip.broken{border-left-color:var(--bad);background:var(--bad-tint)}
   .trip.on{background:var(--key-tint)}
   .trip .t{font-size:13px}
   /* legs are rows everywhere; in the itinerary panel they also hang off a
@@ -56,8 +56,10 @@
   #detail .leg::before{content:"";position:absolute;left:-6px;top:10px;
        width:8px;height:8px;border-radius:50%;background:var(--key);
        border:2px solid var(--card)}
-  #detail .leg.gone::before{background:var(--bad)}
-  #detail .leg.late::before{background:var(--warn)}
+  #detail .leg.gone{background:var(--bad-tint)}
+  #detail .leg.gone::before{background:var(--card);border-color:var(--bad)}
+  #detail .leg.late{background:var(--warn-tint)}
+  #detail .leg.late::before{background:var(--warn);border-radius:2px;transform:rotate(45deg)}
   #detail .leg.pending::before{background:var(--card);border-color:var(--warn)}
   .card{border:1px solid var(--edge);border-left:3px solid var(--key);
         border-radius:var(--r-md);background:var(--card);padding:4px 14px;
@@ -126,7 +128,7 @@
   <button class="btn key" id="send">Send</button>
 </div></div>
 
-<script src="/static/app.js?v=3"></script>
+<script src="/static/app.js?v=4"></script>
 <script>
 // $/esc/eur/at/hhmm/span/late_/DELAYS come from /static/app.js --
 // one set of helpers, one timezone rule.

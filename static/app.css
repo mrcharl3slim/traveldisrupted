@@ -41,9 +41,9 @@
   --price:#C75300;   /* 4.5:1 on white -- fares render at 15px bold, which
                           is small text as WCAG counts it */
   /* severity on white — legacy names */
-  --ok:#12A150;  --ok-tint:#E9F7EF;  --ok-edge:#BCE5CC;
-  --warn:#C77700; --warn-tint:#FDF3E3; --warn-edge:#F0D9A8;
-  --bad:#DE3B41; --bad-tint:#FDECEC;  --bad-edge:#F4C2C4;
+  --ok:#0F7B3F;  --ok-tint:#E9F7EF;  --ok-edge:#BCE5CC;
+  --warn:#8F5600; --warn-tint:#FDF3E3; --warn-edge:#F0D9A8;
+  --bad:#C22F35; --bad-tint:#FDECEC;  --bad-edge:#F4C2C4;
   /* scales — three radii and a pill replace the seven that grew by hand */
   --r-sm:6px; --r-md:10px; --r-lg:14px; --r-pill:999px;
   --s-1:4px; --s-2:8px; --s-3:12px; --s-4:16px; --s-5:24px; --s-6:32px;
@@ -59,7 +59,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
      font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,
           "Helvetica Neue",Arial,sans-serif}
 .wrap{max-width:var(--wrap);margin:0 auto;padding:26px 22px 110px}
-a{color:var(--key);text-decoration:none}
+a{color:var(--key-strong);text-decoration:none}
 a:hover{text-decoration:underline}
 :focus-visible{outline:2px solid var(--key);outline-offset:2px}
 p{margin:0 0 12px}
@@ -134,8 +134,8 @@ section{background:var(--card);border:1px solid var(--edge);
      background:var(--card);border:1px solid var(--edge);color:var(--ink);
      cursor:pointer}
 .btn:hover{border-color:var(--key);color:var(--key)}
-.btn.key{background:var(--key);border-color:var(--key);color:#fff;font-weight:600}
-.btn.key:hover{background:var(--key-strong);border-color:var(--key-strong);color:#fff}
+.btn.key{background:#1668E3;border-color:#1668E3;color:#fff;font-weight:600}
+.btn.key:hover{background:#124FB0;border-color:#124FB0;color:#fff}
 .btn.bad{color:var(--bad);border-color:var(--bad-edge);background:var(--bad-tint)}
 .btn.bad:hover{border-color:var(--bad)}
 .btn.warn{color:var(--warn);border-color:var(--warn-edge);background:var(--warn-tint)}
@@ -158,6 +158,8 @@ tr.pick{cursor:pointer}
 tr.pick:hover td{background:var(--key-tint)}
 tr.sel td,tr.best td{background:var(--key-tint)}
 tr.sel td:first-child,tr.best td:first-child{box-shadow:inset 3px 0 0 var(--key)}
+tr.sel td{font-weight:600}
+tr.sel td:first-child::before{content:"\2713  ";color:var(--key-strong)}
 .neg{color:var(--ok)}
 .pos{color:var(--bad)}
 .star{color:var(--warn)}

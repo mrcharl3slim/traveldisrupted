@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TripShield — build it, then break it</title>
-<link rel="stylesheet" href="/static/app.css?v=3">
+<link rel="stylesheet" href="/static/app.css?v=4">
 <style>
   /* Page-local only -- everything shared lives in app.css. */
   section[hidden]{display:none}
@@ -36,10 +36,10 @@
        box-shadow:var(--shadow-1);margin-bottom:8px}
   .leg.flight{border-left-color:var(--key)}
   .leg.lodging{border-left-color:var(--ok)}
-  .leg.gone{border-left-color:var(--bad);opacity:.6}
+  .leg.gone{border-left-color:var(--bad);opacity:.6;background:var(--bad-tint)}
   /* Late is not gone. The leg is still flying and the traveller is still on
      it, so it keeps its weight and says what moved. */
-  .leg.late{border-left-color:var(--warn)}
+  .leg.late{border-left-color:var(--warn);background:var(--warn-tint)}
   .late-line{color:var(--warn)}
   .leg .t{font-size:14px}
   .lane{margin-top:18px}
@@ -177,7 +177,7 @@
   </section>
 </div>
 
-<script src="/static/app.js?v=3"></script>
+<script src="/static/app.js?v=4"></script>
 <script>
 // $/esc/eur/at/hhmm/span/late_/DELAYS come from /static/app.js --
 // one set of helpers, one timezone rule.

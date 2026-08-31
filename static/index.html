@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TripShield</title>
-<link rel="stylesheet" href="/static/app.css?v=3">
+<link rel="stylesheet" href="/static/app.css?v=4">
 <style>
   /* Page-local only -- everything shared lives in app.css. */
   .anchor{display:flex;gap:4px;background:var(--sunken);border:1px solid var(--edge);
@@ -27,6 +27,8 @@
   .node .t{font-size:13px}
   .node .m{font:11px var(--mono);color:var(--faint);margin-top:4px}
   .node .why{font-size:12px;color:var(--dim);margin-top:8px;display:none}
+  .node .t::after{content:" +";color:var(--faint)}
+  .node.open .t::after{content:" \2212"}
   .node.open .why{display:block}
   .lane{margin-top:18px}
   .lane h3{font-size:14px;margin:0 0 4px}
@@ -115,7 +117,7 @@
   </section>
 </div>
 
-<script src="/static/app.js?v=3"></script>
+<script src="/static/app.js?v=4"></script>
 <script>
 // $/esc/eur/at/hhmm/span come from /static/app.js -- one set of
 // helpers, one timezone rule.
