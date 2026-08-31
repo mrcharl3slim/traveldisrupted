@@ -652,6 +652,8 @@ function paintRules(){
     <div class="row" style="align-items:center">
       <div><label>Act without asking up to</label>
         <input id="rule-limit" type="number" min="0" step="10" value="${Number(r.auto_limit) || 0}"></div>
+      <div><label>Auto-hold up to</label>
+        <input id="rule-hold" type="number" min="0" step="10" value="${Number(r.hold_limit) || 0}"></div>
       <div><label>Never choose</label>
         <input id="rule-never" class="wide" placeholder="rail, ryanair" value="${esc((r.never || []).join(', '))}"></div>
       <div><button class="btn" id="rule-save">Save rules</button></div>
@@ -681,6 +683,7 @@ function paintRules(){
     try {
       r = await api('/api/permissions', {trip_id: TRIP.trip_id,
         auto_limit: Number($('#rule-limit').value) || 0,
+        hold_limit: Number($('#rule-hold').value) || 0,
         never: $('#rule-never').value.split(',').map(x => x.trim()).filter(Boolean),
         remember: $('#rule-remember').checked});
     } catch (e) { return fail('#trip-problems', e); }

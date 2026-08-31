@@ -105,6 +105,55 @@ def test_the_auto_lane_never_needs_approval(plans):
         assert verdict.approval(a)[0] == permit.AUTO
 
 
+def _plan_costing(cash: float):
+    from plan import Action, Lane, Plan
+    return Plan(id="x", name="p", tagline="", actions=[
+        Action(verb="notify", label="Email the hotel", lane=Lane.AUTO),
+        Action(verb="buy", label="Book it", lane=Lane.TAP, cash_out=cash)],
+        arrives_at=None, arrives_where=None)
+
+
+def test_the_tiers_at_every_boundary():
+    """The deck's numbers, reading (a) -- the only one where both do work:
+    <=300 auto, 301-500 auto-hold, >500 explicit authorization. Table-driven
+    at 299/300/301/499/500/501 as the acceptance demands."""
+    rules = permit.Permissions(auto_limit=300, hold_limit=500)
+    table = [(299, permit.PRE_AUTHORISED, True, False),
+             (300, permit.PRE_AUTHORISED, True, False),
+             (301, permit.AUTO_HELD, False, True),
+             (499, permit.AUTO_HELD, False, True),
+             (500, permit.AUTO_HELD, False, True),
+             (501, permit.NEEDS_APPROVAL, False, False)]
+    for cash, state, auto, hold in table:
+        plan = _plan_costing(cash)
+        verdict = permit.judge(plan, rules)
+        assert verdict.approval(plan.actions[1])[0] == state, cash
+        assert (verdict.auto, verdict.hold) == (auto, hold), cash
+    over = permit.judge(_plan_costing(501), rules)
+    assert "exceeds your S$500" in over.why, "the refusal names the outer limit"
+
+
+def test_the_tiers_are_configured_not_shipped():
+    """The default is 0/0: a product that spends money out of the box has
+    shipped the demo persona's settings as everyone's."""
+    verdict = permit.judge(_plan_costing(1), permit.Permissions())
+    assert not verdict.auto and not verdict.hold
+
+
+def test_a_hold_ceiling_below_the_cap_is_a_contradiction_not_a_config():
+    fixed = permit.Permissions.from_dict({"auto_limit": 300, "hold_limit": 100})
+    assert fixed.hold_limit == 300, "the auto tier wins; the middle tier is empty"
+    assert permit.Permissions.from_dict({"hold_limit": "lots"}).hold_limit == 0.0
+
+
+def test_the_kill_switch_beats_the_tiers():
+    off = permit.Permissions(auto_limit=300, hold_limit=500, disarmed=True)
+    for cash in (100, 400, 900):
+        verdict = permit.judge(_plan_costing(cash), off)
+        assert not verdict.auto and not verdict.hold
+        assert verdict.why == permit.DISARMED
+
+
 def test_the_kill_switch_beats_every_other_rule(plans):
     """The acceptance, verbatim: disarmed, no plan yields AUTO or
     PRE_AUTHORISED for any action -- the cap ignored, the AUTO-lane email

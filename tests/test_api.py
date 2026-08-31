@@ -248,6 +248,47 @@ def test_rules_can_be_changed_after_booking_and_are_listed(client):
 
 
 # --------------------------------------------------------------------------
+# the middle tier: decided, held, flagged
+# --------------------------------------------------------------------------
+
+
+def test_in_the_hold_tier_the_agent_decides_and_nothing_leaves(client):
+    """Cap S$50, hold S$200: the S$108 train is above the cap and inside the
+    tier. The plan is taken -- itinerary rewritten, replacement pending, which
+    is what a hold is in a product that cannot pay -- and the hotel email is
+    HELD, zero channels used, with the tier named on the record."""
+    booked = _with_meeting(client, {"auto_limit": 50, "hold_limit": 200})
+    outcome = _break_onward(client, booked)
+
+    taken = outcome["auto_taken"]
+    assert taken["auto_held"] is True
+    assert "auto-hold tier" in taken["permission"]
+    assert taken["sent"] == [], "something left the building on a hold"
+    assert taken["held"], "the email is held for the person"
+    assert any(d["verb"] == "buy" for d in taken["pending"])
+
+    row = _row(client, booked["trip_id"])
+    assert row["acted"]["by"] == "the agent"
+    assert any(b["pending"] for b in row["bookings"]), "the hold is on the itinerary"
+
+
+def test_above_the_hold_tier_the_agent_waits(client):
+    booked = _with_meeting(client, {"auto_limit": 50, "hold_limit": 100})
+    outcome = _break_onward(client, booked)
+    assert "auto_taken" not in outcome
+    assert "exceeds your S$100 limit" in outcome["why"]
+
+
+def test_a_rules_save_carries_both_tiers(client):
+    booked = book(client)
+    client.post("/api/permissions", json={
+        "trip_id": booked["trip_id"], "auto_limit": 300, "hold_limit": 500})
+    row = _row(client, booked["trip_id"])
+    assert row["permissions"]["auto_limit"] == 300
+    assert row["permissions"]["hold_limit"] == 500
+
+
+# --------------------------------------------------------------------------
 # the master kill switch
 # --------------------------------------------------------------------------
 

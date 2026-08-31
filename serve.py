@@ -280,6 +280,9 @@ class Permit(BaseModel):
 
     trip_id: str
     auto_limit: float = 0.0
+    #: The second threshold: between auto_limit and here the agent decides and
+    #: holds -- itinerary rewritten, replacement pending, nothing sent.
+    hold_limit: float = 0.0
     never: list[str] = []
     always_ask: list[str] = []
     #: The kill switch has its own endpoint; a rules save leaves it where it
@@ -298,6 +301,7 @@ class ProfileIn(BaseModel):
     preference: str = ""
     home: str = ""
     auto_limit: float = 0.0
+    hold_limit: float = 0.0
     never: list[str] = []
     always_ask: list[str] = []
 
@@ -1638,7 +1642,8 @@ def act(body: Act, who: roles.Person = Depends(_who)) -> dict:
 
 
 def _take(trip_id: str, trip: Trip, recovery, plan, by: str,
-          skip: set[str] | None = None, actor: str = "") -> dict:
+          skip: set[str] | None = None, actor: str = "",
+          hold: bool = False) -> dict:
     """Take one plan: perform what can be performed, rewrite the itinerary,
     record who decided.
 
@@ -1652,7 +1657,7 @@ def _take(trip_id: str, trip: Trip, recovery, plan, by: str,
     skip = set(skip or set())
     lines: list[str] = []
     done = act_mod.perform(plan, trip, trip_id, log=lines.append, skip=skip,
-                           armed=not recovery.permissions.disarmed)
+                           armed=not recovery.permissions.disarmed and not hold)
     offer = next((o for o in recovery.offers if o.id == plan.id), None)
     updated, changed = act_mod.apply(plan, trip, recovery.disruption, offer, skip=skip)
     declined = [d for d in done if d.state == "declined"]
@@ -1925,10 +1930,17 @@ def _respond(trip_id: str, saved, trip: Trip, disruption, injected: bool,
     # reported as waiting rather than as done.
     best = recovery.best
     taken = None
-    if best is not None and best.id != "noop" and recovery.verdict and recovery.verdict.auto:
+    verdict = recovery.verdict
+    if best is not None and best.id != "noop" and verdict and (verdict.auto or verdict.hold):
+        # The middle tier decides and HOLDS: the itinerary is rewritten and
+        # the replacement enters as pending -- which is what a hold is in a
+        # product that cannot pay -- but nothing leaves the building; the
+        # sends are held exactly as the kill switch holds them, and the
+        # notification tells the traveller to review.
         taken = _take(trip_id, trip, recovery, best, by="the agent",
-                      actor=actor)
-        taken["permission"] = recovery.verdict.why
+                      actor=actor, hold=verdict.hold)
+        taken["permission"] = verdict.why
+        taken["auto_held"] = verdict.hold
     return recovery, taken
 
 
@@ -2117,8 +2129,8 @@ def write_profile(body: ProfileIn, who: roles.Person = Depends(_who)) -> dict:
         raise HTTPException(422, f"I do not know a place called {body.home!r}")
     kept = profile_mod.Profile.from_dict({
         "preference": body.preference, "home": found.code if found else "",
-        "permissions": {"auto_limit": body.auto_limit, "never": body.never,
-                        "always_ask": body.always_ask}})
+        "permissions": {"auto_limit": body.auto_limit, "hold_limit": body.hold_limit,
+                        "never": body.never, "always_ask": body.always_ask}})
     store_module.store().save_profile(who.id, kept.to_dict())
     return {"profile": kept.to_dict(), "empty": kept.empty}
 
@@ -2133,8 +2145,8 @@ def permissions(body: Permit, who: roles.Person = Depends(_who)) -> dict:
     """
     saved, _role = _access(body.trip_id, who, roles.RULES)
     perms = permit.Permissions.from_dict(
-        {"auto_limit": body.auto_limit, "never": body.never,
-         "always_ask": body.always_ask,
+        {"auto_limit": body.auto_limit, "hold_limit": body.hold_limit,
+         "never": body.never, "always_ask": body.always_ask,
          "disarmed": _perms(saved).disarmed if body.disarmed is None
                      else body.disarmed})
     stored = dict(saved.payload)

@@ -36,6 +36,7 @@ from plan import Action, Lane, Plan
 #: What the agent may do about one action, once both questions are answered.
 AUTO = "auto"                       # nothing to approve: no money, reversible
 PRE_AUTHORISED = "pre-authorised"   # within the rules; taken without asking
+AUTO_HELD = "auto-held"             # taken, nothing sent, flagged for review
 NEEDS_APPROVAL = "needs approval"   # over a limit or on the always-ask list
 BLOCKED = "blocked"                 # a choice the traveller has ruled out
 
@@ -62,6 +63,17 @@ class Permissions:
     #: irreversible -- and it is not the default, because in this product a
     #: cancellation is already a tap or a call and never performed by us.
     always_ask: tuple[str, ...] = ()
+    #: The second threshold. Between `auto_limit` and here the agent still
+    #: DECIDES -- the plan is applied, the replacement enters as `pending`,
+    #: which is what a hold is in a product that cannot pay: an intention
+    #: recorded, not bought -- but nothing leaves the building. The outward
+    #: sends are held exactly as the kill switch holds them, and the
+    #: notification tells the traveller to review. Above it, nothing happens
+    #: without a person. Zero -- the default -- means no middle tier: the
+    #: tiers are what a traveller configures, not what the product ships,
+    #: because shipping them would be shipping something that spends money
+    #: out of the box.
+    hold_limit: float = 0.0
     #: THE MASTER KILL SWITCH. On, and every action on every plan waits for a
     #: person -- the cap is ignored, the AUTO lane's sends are held, and the
     #: agent recommends and touches nothing. It lives here rather than as a
@@ -82,8 +94,15 @@ class Permissions:
             limit = max(0.0, float(raw.get("auto_limit") or 0.0))
         except (TypeError, ValueError):
             limit = 0.0
+        try:
+            hold = max(0.0, float(raw.get("hold_limit") or 0.0))
+        except (TypeError, ValueError):
+            hold = 0.0
         return cls(
             auto_limit=limit,
+            # A hold ceiling below the auto ceiling is a contradiction, not a
+            # configuration; the auto tier wins and the middle tier is empty.
+            hold_limit=max(hold, limit) if hold else 0.0,
             currency=str(raw.get("currency") or "SGD"),
             never=tuple(_words(raw.get("never"))),
             always_ask=tuple(_words(raw.get("always_ask"))),
@@ -91,7 +110,8 @@ class Permissions:
         )
 
     def to_dict(self) -> dict:
-        return {"auto_limit": self.auto_limit, "currency": self.currency,
+        return {"auto_limit": self.auto_limit, "hold_limit": self.hold_limit,
+                "currency": self.currency,
                 "never": list(self.never), "always_ask": list(self.always_ask),
                 "disarmed": self.disarmed}
 
@@ -116,9 +136,13 @@ class Verdict:
     action has no id of its own and the label is what the page shows."""
 
     allowed: bool                     # not ruled out by `never`
-    auto: bool                        # may be taken without asking
+    auto: bool                        # may be taken without asking, sends included
     approvals: dict[str, tuple[str, str]] = field(default_factory=dict)
     why: str = ""                     # one sentence a traveller can act on
+    #: The middle tier: taken without asking, sends held, review flagged.
+    #: Last in the dataclass on purpose -- every older call site constructs
+    #: positionally, and a field inserted mid-order silently reassigns them.
+    hold: bool = False
 
     def approval(self, action: Action) -> tuple[str, str]:
         return self.approvals.get(action.label, (NEEDS_APPROVAL, ""))
@@ -175,10 +199,17 @@ def judge(plan: Plan, perms: Permissions) -> Verdict:
                 f"S${plan.cash_out:,.0f} is within your "
                 f"S${perms.auto_limit:,.0f} limit")
             continue
+        if plan.cash_out <= perms.hold_limit:
+            approvals[a.label] = (
+                AUTO_HELD,
+                f"S${plan.cash_out:,.0f} is within your "
+                f"S${perms.hold_limit:,.0f} auto-hold tier — taken and held, "
+                "nothing sent, review it")
+            continue
         approvals[a.label] = (
             NEEDS_APPROVAL,
             f"S${plan.cash_out:,.0f} exceeds your "
-            f"S${perms.auto_limit:,.0f} limit"
+            f"S${max(perms.hold_limit, perms.auto_limit):,.0f} limit"
             if perms.anything else "you have not pre-authorised any spending")
         ask = True
 
@@ -188,6 +219,12 @@ def judge(plan: Plan, perms: Permissions) -> Verdict:
         # Inaction is never "taken". It is what happens when nothing is.
         return Verdict(True, False, approvals, "")
     if not ask:
+        held = any(kind == AUTO_HELD for kind, _ in approvals.values())
+        if held:
+            return Verdict(True, False, approvals=approvals, hold=True,
+                           why=f"S${plan.cash_out:,.0f} is within your "
+                               f"S${perms.hold_limit:,.0f} auto-hold tier — "
+                               "taken and held, nothing sent, review it")
         return Verdict(True, True, approvals,
                        f"within your S${perms.auto_limit:,.0f} limit"
                        if plan.cash_out else "costs nothing")

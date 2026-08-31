@@ -577,6 +577,19 @@ whether a two-hour delay at 02:00 is answered at 02:00 or at 07:30 when somebody
 wakes up and presses a button. The record says `by: the agent`, because an action
 taken unasked is exactly the kind a person later wants to find in the log.
 
+**The permission tiers** are the cap grown a second threshold, reading the
+deck's numbers the only way both do work: **≤ S$300 act** (taken, sends sent),
+**S$301–500 auto-hold** — the agent still *decides*: the itinerary is rewritten
+and the replacement enters as `pending`, which is what a hold is in a product
+that cannot pay — but nothing leaves the building; the sends are held exactly
+as the kill switch holds them, and the notification says *taken and held,
+nothing sent, review it* — and **above S$500 nothing without a person**. The
+boundaries are tested at 299/300/301/499/500/501. A hold ceiling below the cap
+is a contradiction, not a configuration — the auto tier wins and the middle
+tier is empty. And the shipped default is still 0/0: the tiers are what the
+demo persona configures, not the product default, because otherwise you have
+shipped something that spends money out of the box.
+
 **The master kill switch** sits inside the same gate rather than beside it:
 `Permissions.disarmed`, and `judge()` short-circuits — every action on every
 plan `needs approval` with one fixed reason, the cap ignored, `never` included,
