@@ -72,6 +72,26 @@
     input,input.wide{width:100%}
     .hero .btn.key{width:100%}
   }
+
+  /* The journey has eight rooms; the rail says which are open and which
+     one you are in, and clicking a step goes there. Sticky under the site
+     header so it survives the scroll the long pages need. */
+  .rail{position:sticky;top:52px;z-index:40;display:flex;gap:4px;
+        overflow-x:auto;background:var(--card);border:1px solid var(--edge);
+        border-radius:var(--r-pill);padding:6px;margin-top:14px;
+        box-shadow:var(--shadow-1)}
+  .rail a{display:inline-flex;align-items:center;gap:6px;font-size:12px;
+          color:var(--dim);padding:4px 10px;border-radius:var(--r-pill);
+          white-space:nowrap}
+  .rail a:hover{text-decoration:none;background:var(--key-tint)}
+  .rail a b{display:inline-flex;width:18px;height:18px;border-radius:50%;
+            align-items:center;justify-content:center;background:var(--sunken);
+            color:var(--dim);font:600 10px var(--mono)}
+  .rail a.done b{background:var(--ok-tint);color:var(--ok)}
+  .rail a.now{color:var(--key-strong);font-weight:600}
+  .rail a.now b{background:var(--key);color:#fff}
+  .rail a.todo{opacity:.45;pointer-events:none}
+  section{scroll-margin-top:110px}
 </style>
 </head>
 <body>
@@ -95,7 +115,9 @@
 
   <div id="ports" class="banner"></div>
 
-  <section class="hero">
+  <nav class="rail" id="rail" aria-label="progress"></nav>
+
+  <section class="hero" id="s-search">
     <h2>1 · Search</h2>
     <div class="modes"><span>Flights</span><span>Trains</span><span>Hotels</span>
       <span class="m">searched together — one press, every mode</span></div>
@@ -745,6 +767,25 @@ api('/health').then(h => {
     try { await run(); } finally { go.disabled = false; go.textContent = was; }
   };
 }
+// The progress rail: state read from the sections' hidden attributes, so
+// every reveal anywhere updates it for free.
+const RAIL_STEPS = [['s-search','Search'],['s-in','Outbound'],['s-on','Onward'],
+  ['s-hotel','Hotel'],['s-trip','Trip'],['s-out','Costs'],
+  ['s-watch','Watch'],['s-hand','Handoff']];
+function paintRail(){
+  const seen = RAIL_STEPS.map(([id]) => {
+    const el = document.getElementById(id);
+    return !!el && !el.hidden;
+  });
+  const now = seen.lastIndexOf(true);
+  $('#rail').innerHTML = RAIL_STEPS.map(([id, label], i) => `
+    <a href="#${id}" class="${!seen[i] ? 'todo' : i === now ? 'now' : 'done'}"${
+      i === now ? ' aria-current="step"' : ''}>
+      <b>${seen[i] && i !== now ? '\u2713' : i + 1}</b>${label}</a>`).join('');
+}
+new MutationObserver(paintRail).observe(document.querySelector('.wrap'),
+  {attributes: true, subtree: true, attributeFilter: ['hidden']});
+paintRail();
 </script>
 </body>
 </html>
