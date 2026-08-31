@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Downstream — the demo, as a script</title>
+<style>
+  :root{
+    --bg:#0b0f14; --card:#141b23; --edge:#232d38; --ink:#e8eef4; --dim:#93a1b0; --faint:#5d6b7a;
+    --ok:#3fb950; --bad:#f85149; --warn:#e3b341; --key:#58a6ff;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  .wrap{max-width:860px;margin:0 auto;padding:26px 22px 110px}
+  header{display:flex;justify-content:space-between;align-items:baseline;gap:20px;flex-wrap:wrap}
+  h1{font-size:20px;margin:0}
+  h2{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--faint);
+     margin:0 0 14px;font-weight:600}
+  .sub{color:var(--dim);font-size:13px}
+  a{color:var(--key);text-decoration:none}
+  a:hover{text-decoration:underline}
+  p{margin:0 0 12px}
+  section{background:var(--card);border:1px solid var(--edge);border-radius:11px;
+          padding:22px;margin-top:18px}
+  code{font:13px var(--mono);background:#0e151d;border:1px solid var(--edge);
+       border-radius:5px;padding:1px 6px}
+  .m{color:var(--faint);font:12px var(--mono)}
+  .lede{font-size:17px}
+  .act{display:grid;grid-template-columns:52px 1fr;gap:14px;border-top:1px solid var(--edge);
+       padding-top:16px;margin-top:16px}
+  .act:first-of-type{border-top:0;padding-top:0;margin-top:0}
+  .clock{font:12px var(--mono);color:var(--faint);text-align:right;padding-top:3px}
+  .act h3{font-size:15px;margin:0 0 6px}
+  .do{background:#0e151d;border:1px solid var(--edge);border-left:3px solid var(--key);
+      border-radius:9px;padding:10px 14px;margin:8px 0;font-size:14.5px}
+  .do .m{display:block;margin-top:2px}
+  .say{border-left:3px solid var(--ok);background:#0e151d;border-top:1px solid var(--edge);
+       border-right:1px solid var(--edge);border-bottom:1px solid var(--edge);
+       border-radius:9px;padding:10px 14px;margin:8px 0;font-size:14.5px;font-style:italic;
+       color:var(--dim)}
+  .say b{color:var(--ink);font-style:normal}
+  .watchfor{font-size:13.5px;color:var(--dim);margin-top:6px}
+  .watchfor b{color:var(--warn)}
+  .banner{background:#0e151d;border:1px solid var(--edge);border-radius:9px;
+          padding:12px 15px;font:12.5px var(--mono);color:var(--dim)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{text-align:left;font:11px var(--mono);letter-spacing:.1em;text-transform:uppercase;
+     color:var(--faint);padding:7px 10px 7px 0;border-bottom:1px solid var(--edge)}
+  td{padding:8px 10px 8px 0;border-bottom:1px solid var(--edge);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>The demo, as a script</h1>
+      <div class="sub">Seven acts, about six minutes. Every line to type is a box; every line to
+        say is in italics.</div>
+    </div>
+    <div class="sub"><a href="/">the agent →</a> · <a href="/test">how to test →</a></div>
+  </header>
+
+  <section>
+    <h2>Before you start</h2>
+    <div id="live" class="banner">reading /health…</div>
+    <p class="watchfor" style="margin-top:10px">Open <a href="/">/</a> a few minutes early — a
+      free instance takes ~30s to wake. If the <b>You</b> box or an old trip is left over from a
+      previous run, press <em>forget it</em> and clear the profile fields first: the script
+      assumes a blank slate. Keep <a href="/demo">/demo</a> in a second tab for the closer.</p>
+    <p class="watchfor">The one sentence to hold the room with before touching anything:</p>
+    <div class="say"><b>Detection is commodity — every travel app can tell you your flight is
+      late.</b> This is the part after: what else in the trip breaks, what that costs, and an
+      agent that acts on it — within rules you set, never with your money.</div>
+  </section>
+
+  <section>
+    <h2>The script</h2>
+
+    <div class="act"><div class="clock">0:00</div><div>
+      <h3>Act 1 — Say it once</h3>
+      <p>In the <b>You</b> box on the right: home <code>singapore</code>, sort by
+        <code>cheapest</code>, act up to <code>300</code>. Save.</p>
+      <div class="say">Everything I tell it here is said once, applied to every trip, and shown
+        on screen whenever it is used. The €300 is the interesting one — it is what I
+        <b>pre-authorise the agent to decide</b> without waking me.</div>
+    </div></div>
+
+    <div class="act"><div class="clock">0:40</div><div>
+      <h3>Act 2 — A sentence, not a form</h3>
+      <div class="do">one way to zurich on 18 september, then milan, with a hotel
+        <span class="m">…or tap the starter chip. Answer what it asks; every question shows
+          why it is being asked.</span></div>
+      <div class="say">It asks only what <b>changes the answer</b> — and look at the card:
+        <b>From: Singapore · from your profile</b>. It filled the blank, said so, and one word
+        would override it.</div>
+      <p>At the options: point at the trains sitting above the flights, then pick the
+        <b>morning flight to Milan</b> and a room. Confirm.</p>
+      <div class="say">One list, both modes — under <em>cheapest</em> the €72 train beats every
+        fare, and the fare marked <b>estimated</b> is marked because no API sells Swiss rail
+        tickets. We do not invent numbers quietly.</div>
+    </div></div>
+
+    <div class="act"><div class="clock">1:50</div><div>
+      <h3>Act 3 — The reason the trip exists</h3>
+      <div class="do">meeting with the client on 18 september at 10pm in milan
+        <span class="m">Attach it to the trip when asked, and save.</span></div>
+      <div class="say">A meeting has no fare, so most engines treat it as free to miss. Here it
+        becomes a booking with a <b>commitment</b> flag — counted, never priced — and it is
+        about to decide a ranking.</div>
+    </div></div>
+
+    <div class="act"><div class="clock">2:30</div><div>
+      <h3>Act 4 — Break it, twice</h3>
+      <p>Open the trip in the panel. On the <b>Milan leg</b>: choose <code>30m</code>,
+        press <b>Late</b>.</p>
+      <div class="say">Thirty minutes late: <b>nothing is at risk</b>. The connection absorbs
+        it, and it says so instead of crying wolf — that restraint is why the alerts that do
+        fire mean something.</div>
+      <p>Now press <b>Cancel</b> on the same leg.</p>
+      <div class="say">Watch what came back <em>before I touched anything</em>: “<b>I have
+        taken EC 11:33 — within your EUR 300 limit</b>.” It searched airlines <b>and</b> the
+        railway, ranked every option against doing nothing, kept the meeting — the €72 train
+        beat cheaper inaction <b>because inaction misses the client</b> — emailed the hotel,
+        rewrote the itinerary, and left me one purchase link. Nothing was bought. That is the
+        difference between an alert and an agent.</div>
+      <div class="watchfor">Read the <b>Recommended because…</b> sentence aloud — it is
+        computed, not written by a model. Then point at the plan table: <em>Do nothing</em> is
+        scored by the same arithmetic and loses on the merits.</div>
+    </div></div>
+
+    <div class="act"><div class="clock">4:00</div><div>
+      <h3>Act 5 — You stay in charge, per line</h3>
+      <p>Click a <em>different</em> plan row. It opens line by line with a box each — untick
+        the hotel email, press <b>Take this plan</b>.</p>
+      <div class="say">Approve all, or line by line. The unticked line is recorded as
+        <b>declined</b>, not forgotten — if the room goes unheld, the history says whose call
+        that was.</div>
+    </div></div>
+
+    <div class="act"><div class="clock">4:40</div><div>
+      <h3>Act 6 — Other people, by what their job needs</h3>
+      <p>Under the itinerary: <b>Who else sees this</b> → share as <code>host</code> → open the
+        link in a private window, side by side.</p>
+      <div class="say">The person meeting them in Milan sees every leg, every time —
+        and <b>not one price</b>, on any screen, including the disruption we just caused.
+        An assistant would get the buttons too; finance can raise the €300 and cannot spend
+        a cent. No accounts — the link is the key, shown once, revocable there.</div>
+    </div></div>
+
+    <div class="act"><div class="clock">5:20</div><div>
+      <h3>Act 7 — The numbers are checkable</h3>
+      <p>Switch to the <a href="/demo">/demo</a> tab: the fixed October trip, EUR 282.</p>
+      <div class="say">Nothing on any of these pages is a typed number. This scripted trip
+        asserts <b>EUR 282</b> in the tests, and <code>python cli.py</code> prints the same
+        figures in a terminal with no server at all — anyone leaning over a laptop can check
+        the claim in ten seconds. And <code>/health</code> tells you, right now, which
+        providers answered live and which were replayed. The whole product is that honesty,
+        applied to a travel disruption.</div>
+    </div></div>
+  </section>
+
+  <section>
+    <h2>If it goes sideways</h2>
+    <table>
+      <thead><tr><th>What happened</th><th>Do this, say this</th></tr></thead>
+      <tbody>
+        <tr><td>“No inventory recorded for that route”</td>
+          <td>You are in replay and typed an unrecorded route. Stay on
+            Singapore → Zurich → Milan, 18 September. <em>“Replay means the demo cannot be
+            killed by someone else's outage — the same honesty badge you saw on /health.”</em></td></tr>
+        <tr><td><b>degraded</b> appears in a banner</td>
+          <td>A live provider timed out and a recording answered. Say so — <em>“that is the
+            app refusing to hide a fallback”</em> — it is a feature, mid-demo.</td></tr>
+        <tr><td>The agent did not auto-take</td>
+          <td>The best plan is over €300 or the trip missed the cap. Show the
+            <em>“exceeds your limit”</em> line — the refusal IS the permission engine working
+            — and press Take this plan yourself.</td></tr>
+        <tr><td>Nothing breaks when you press Late</td>
+          <td>Correct: the delay fits the slack. Use a bigger delay or Cancel, and keep the
+            point — restraint is the feature.</td></tr>
+        <tr><td>The instance was asleep</td>
+          <td>First load takes ~30s. This is why Act 0 says open it early.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<script>
+fetch('/health').then(r => r.json()).then(h => {
+  const live = h.ports_mode === 'live';
+  document.querySelector('#live').innerHTML =
+    `providers <b>${h.ports_mode}</b> · model ${h.model_status.ready ? h.model : 'NOT STARTED'} ·`
+    + ` storage ${h.storage}`
+    + (live ? '<br><br>Live: any route works; a slow provider falls back to a recording and says "degraded".'
+            : '<br><br>Replay: stay on Singapore → Zurich → Milan, 18 September — other routes have no recording.');
+}).catch(() => {
+  document.querySelector('#live').textContent =
+    'could not read /health — the instance is waking. Load / once and come back.';
+});
+</script>
+</body>
+</html>

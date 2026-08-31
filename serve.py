@@ -2214,6 +2214,18 @@ def demo() -> FileResponse:
     return FileResponse(STATIC / "index.html")
 
 
+@app.get("/script")
+def demo_script() -> FileResponse:
+    """The demo as a script: what to type, what to say, what to point at.
+
+    /test is for somebody probing the app alone; this is for somebody holding
+    a room. Same rule as /test for why it is a page and not a document -- the
+    first thing it says depends on whether the instance is live or replaying,
+    and prose asserting that goes stale silently.
+    """
+    return FileResponse(STATIC / "script.html")
+
+
 @app.get("/test")
 def test_guide() -> FileResponse:
     """What the app is and how to break it, for somebody who did not build it.

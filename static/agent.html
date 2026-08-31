@@ -117,12 +117,23 @@
       <h1>Downstream</h1>
       <div class="sub">Tell it what you want. It books it, watches it, and fixes it when it breaks.</div>
     </div>
-    <div class="sub"><a href="/test">how to test this</a> ·
+    <div class="sub"><a href="/script">demo script</a> ·
+      <a href="/test">how to test this</a> ·
       <a href="/book">manual search</a> · <a href="/demo">scripted demo</a></div>
   </header>
 
   <div class="cols">
-    <main class="thread" id="thread"></main>
+    <main class="thread" id="thread">
+        <div class="msg" id="starter">
+          <div class="who">Downstream</div>
+          <div class="body">Tell me what you want in a sentence — a trip, or a meeting.
+            I ask only what changes the answer, and every question says why.
+            <div class="chips" id="starter-chips" style="margin-top:10px"></div>
+            <div class="m" style="margin-top:8px">Then break the trip from the panel on the
+              right and watch what it costs. Nothing here can spend real money.</div>
+          </div>
+        </div>
+      </main>
     <aside>
       <div class="box">
         <h2>Your itineraries</h2>
@@ -393,8 +404,11 @@ async function confirm(button){
            ).join('; ') + `</div>` : '')
     + (saved.problems.length
        ? `<div class="banner bad">${saved.problems.map(esc).join('<br>')}</div>` : '')
-    + `<div class="note">Book another trip whenever you like, or open it on the right to
-       break it and see what happens.</div>`);
+    + `<div class="note"><b>Now break it.</b> Open the trip on the right — every flight has
+       a duration, <b>Late</b> and <b>Cancel</b>. Try 30m late first (nothing should be at
+       risk), then Cancel, and watch the recovery come out of live data. A meeting makes it
+       more interesting: <em>&ldquo;meeting with the client on 18 september at 10pm in
+       milan&rdquo;</em>.</div>`);
   await loadTrips();
 }
 
@@ -412,6 +426,23 @@ function paintMe(){
     try { localStorage.removeItem('downstream.token'); } catch (x) {}
     location.href = location.pathname; };
 }
+
+// The first hurdle of a sentence-shaped product is the blank box. These are
+// real sentences, sent as typed, so the first click produces exactly the
+// conversation typing it would -- and they disappear once there is one.
+const STARTERS = [
+  'one way to zurich on 18 september, then milan, with a hotel',
+  'one way zurich to milan on 18 september, cheapest, no hotel',
+  'meeting with the client on 18 september at 10pm in milan',
+];
+(() => {
+  const box = $('#starter-chips');
+  if (!box) return;
+  box.innerHTML = STARTERS.map(t =>
+    `<button class="chip" data-start="${esc(t)}">&ldquo;${esc(t)}&rdquo;</button>`).join('');
+  box.querySelectorAll('[data-start]').forEach(b =>
+    b.onclick = () => { $('#say').value = b.dataset.start; $('#send').click(); });
+})();
 
 async function loadProfile(){
   let p;

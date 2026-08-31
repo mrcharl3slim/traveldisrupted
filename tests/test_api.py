@@ -625,7 +625,7 @@ def test_the_errand_on_a_row_is_the_one_for_that_booking(client):
 def test_every_door_a_tester_is_given_opens(client):
     """Four URLs go to people who did not build this. A 404 on any of them is
     the first thing they will see and the last thing they will report."""
-    for path in ("/", "/demo", "/book", "/test"):
+    for path in ("/", "/demo", "/book", "/test", "/script"):
         assert client.get(path).status_code == 200, path
 
 

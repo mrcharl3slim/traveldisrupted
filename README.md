@@ -3,7 +3,11 @@
 Cross-provider disruption replanning. Detection is commodity; this is the part
 that is not.
 
-`/test` is the page to send anybody who did not build this: what the app is, four
+`/script` is the demo as a script — seven acts, six minutes, every line to type
+in a box and every line to say in italics, with an "if it goes sideways" table.
+It reads `/health` first, because the opening instruction depends on whether the
+instance is live or replaying. `/test` is the page to send anybody who did not
+build this: what the app is, four
 things to try with what each should produce, the limits that are deliberate and
 not worth filing, and what to put in a bug report. It reads `/health` rather than
 asserting anything, because whether an instance is talking to providers or
