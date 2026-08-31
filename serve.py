@@ -2568,6 +2568,22 @@ def story() -> dict:
         "feasible": verdict["feasible"],
         "clashes": verdict["about_this"]})
 
+    # -- where this trip is thin, said before anything breaks --------------
+    thin = risk_mod.assess(trip)
+    beats.append({
+        "title": "Where this trip is thin",
+        "said": "Before anything breaks, the trip says where it would snap. "
+                "The two flights are separate purchases with 75 minutes to "
+                "spare — nobody owes Alex that connection — and each leg "
+                "carries the smallest delay that starts costing money, from "
+                "the same arithmetic that will price the real one two "
+                "chapters from now. Derived, not predicted: no weather feed, "
+                "no probabilities, no crystal ball.",
+        "risks": risk_mod.as_dicts(thin),
+        # The flag the rest of the story is about: the connection the delay
+        # chapter bends and the cancellation chapter snaps.
+        "premise_flagged": any(r.kind == "unprotected" for r in thin)})
+
     # -- chapter 4: other people, by what their job needs ------------------
     marco = roles.new_person("Marco, the host")
     store_module.store().add_person(marco.id, marco.token, marco.name)

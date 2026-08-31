@@ -26,9 +26,24 @@ def beat(told, title_start: str) -> dict:
     return next(b for b in told["beats"] if b["title"].startswith(title_start))
 
 
-def test_the_story_runs_and_has_all_ten_chapters(told):
-    assert len(told["beats"]) == 10
+def test_the_story_runs_and_has_all_eleven_chapters(told):
+    assert len(told["beats"]) == 11
     assert told["trip_id"]
+
+
+def test_the_thin_places_are_flagged_before_anything_breaks(told):
+    """The premise of the whole story -- two tickets, one fragile connection
+    -- is on the record BEFORE the delay chapter, from booked times alone.
+    Foreshadowing only counts if it comes first."""
+    titles = [b["title"] for b in told["beats"]]
+    assert titles.index("Where this trip is thin") < titles.index("Thirty minutes late")
+
+    thin = beat(told, "Where this trip is thin")
+    assert thin["premise_flagged"], "the separate-ticket connection went unflagged"
+    kinds = {r["kind"] for r in thin["risks"]}
+    assert "unprotected" in kinds and "breakpoint" in kinds
+    assert all("S$" not in r["sentence"] for r in thin["risks"]), (
+        "money lives in `worth`, never in the prose")
 
 
 def test_the_ladder_reads_act_hold_stop_in_order(told):

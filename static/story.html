@@ -100,6 +100,13 @@ const RENDER = {
       A commitment has no fare and is <b>counted, never priced</b> — watch what it does to the
       ranking two chapters from now.</div>`,
 
+  'Where this trip is thin': b => `<div class="banner ${b.premise_flagged ? 'warn' : 'ok'}">
+      Flagged on day one, before any disruption exists:</div>
+    ${(b.risks || []).map(r => `<div class="leg"><span>${esc(r.sentence)}</span>
+      <b>${esc(r.kind)}${r.worth != null ? ' · S$' + Math.round(r.worth) + ' at stake' : ''}</b></div>`).join('')}
+    <div class="note">Derived from booked times and the engine's own stress test —
+      the unprotected connection above is the one the next chapters break.</div>`,
+
   'Marco is meeting them': b => `
     ${b.marco_sees.map(x => `<div class="leg"><div>${esc(x.title)}</div>
       <div class="n">${at(x.starts)} → ${at(x.ends)} · ${x.price == null
