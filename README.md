@@ -605,6 +605,36 @@ not, what the rules say. A missed meeting also produces the one action that is
 possible for it: telling the person. The scripted trip has no commitments, so
 its ranking and every figure in it are unmoved.
 
+## The paper trail
+
+Every field the trail needs already existed as data, and nothing wrote it
+anywhere: `permit.Verdict` carried the authorization state and its reason,
+`act.Done` carried verb, lane, state and channels, `Policy.source` was the
+citation, `monitor.Alert` was the triggering deadline. `audit.py` is assembly,
+not invention — one event shape (timestamp, actor, type, subject, **citation**,
+**authorization state**, **triggering feed** with its replay/live mode),
+append-only through the store, memory by default and Postgres when
+`DATABASE_URL` is set.
+
+**The write points are decision boundaries, not the functions.** `propagate`
+runs once per candidate plan inside `generate` — twenty-odd calls per replan —
+so instrumenting the function would write twenty entries for one decision.
+The entry lands where a result is *acted on*: `extracted` when a trip enters
+the store (citing the fare prose every later decision rests on), `assessed` and
+`judged` once per disruption answered (the reachability rule; the computed
+rationale and the verdict), `performed` once per action (lane, outcome,
+channels, the approval it ran under, `declined by …` when it did not run),
+`alerted` once per delivery (the deadline and what was at stake).
+
+**An entry that cannot explain itself cannot be written.** The constructor
+refuses an empty timestamp, citation or authorization state — the acceptance
+criterion made structural, with a test proving the refusal. Reading the trail
+takes the `money` capability, because the citations quote fares and caps: the
+decision log is the ledger with reasons attached, and a host who may not see a
+price may not read a sentence that names one. `GET /api/trail` is the data,
+`GET /api/trail.txt` is plain text a judge can read on the spot, and the
+itinerary panel shows the last few entries with a link to the full text.
+
 ## Calling the whole thing off
 
 Not going at all is a different question from being disrupted, and `plan.abandon`

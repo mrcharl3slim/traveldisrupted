@@ -539,6 +539,26 @@ function openTrip(id, quiet){
         </div>` : ''}</div>
     </div>`;
   }).join('');
+  // The paper trail: observed, decided, done, on whose say-so. For roles that
+  // may see money, because the citations quote fares and caps -- the decision
+  // log is the ledger with reasons attached.
+  if (may(trip, 'money')) {
+    $('#detail').innerHTML += `<div class="note"><b>Paper trail</b>
+      <span class="m">· <a href="/api/trail.txt?trip=${esc(id)}${TOKEN ? '&token=' + TOKEN : ''}"
+        target="_blank" rel="noopener">plain text, for reading aloud</a></span>
+      <div id="trail" class="m" style="margin-top:6px">loading…</div></div>`;
+    api('/api/trail?trip=' + encodeURIComponent(id)).then(t => {
+      const box = $('#trail');
+      if (!box) return;
+      box.innerHTML = t.events.length ? t.events.slice(-8).map(e =>
+        `<div style="margin-bottom:6px"><b>${esc(e.type)}</b> · ${esc(e.actor)} ·
+           ${esc(e.at.slice(11, 19))}Z<br>${esc(e.subject)}<br>
+           <span style="color:var(--faint)">${esc(e.citation)} — ${esc(e.authorization)}
+           · ${esc(e.feed)}</span></div>`).join('')
+        : 'nothing recorded yet — the trail starts with the first decision';
+    }).catch(() => {});
+  }
+
   // What the watch did while nobody was looking. A trip the agent acted on
   // has to say so in the panel, or the traveller finds a new pending leg on
   // their itinerary with no idea who put it there.

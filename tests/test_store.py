@@ -177,15 +177,29 @@ def test_wipe_takes_what_it_is_told_and_counts_what_it_took(fresh):
     db.add_person("p1", "tok", "Priya")
     db.save_profile("o", {"home": "SIN"})
 
+    db.audit("t1", {"at": "2026-08-31T00:00:00+00:00", "type": "assessed"})
     gone = db.wipe(trips=True)
-    assert gone == {"trips": 2, "people": 0, "profiles": 0}
+    assert gone == {"trips": 2, "people": 0, "profiles": 0, "audit": 1}
+    assert db.trail("t1") == [], "the trail goes with the trips"
     assert db.list("o") == []
     assert db.person("tok"), "trips-only left the shared links alone"
     assert db.profile("o"), "and the profile"
 
     assert db.wipe(trips=True, people=True, profiles=True) \
-        == {"trips": 0, "people": 1, "profiles": 1}
+        == {"trips": 0, "people": 1, "profiles": 1, "audit": 0}
     assert db.person("tok") is None
+
+
+@needs_db
+def test_the_trail_is_append_only_and_survives_the_process(fresh):
+    db = fresh(DATABASE_URL)
+    db.audit("trip-audit", {"at": "2026-08-31T00:00:00+00:00", "type": "assessed",
+                            "citation": "c", "authorization": "a", "actor": "x",
+                            "subject": "s", "feed": "f"})
+    again = fresh(DATABASE_URL)
+    events = again.trail("trip-audit")
+    assert len(events) >= 1 and events[-1]["type"] == "assessed"
+    assert not hasattr(again, "unappend"), "append and read are the whole API"
 
 
 @needs_db

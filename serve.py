@@ -27,12 +27,13 @@ ROOT = Path(__file__).resolve().parent
 sys.path[:0] = [str(ROOT), str(ROOT / "data"), str(ROOT / "ports")]
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request  # noqa: E402
-from fastapi.responses import FileResponse, JSONResponse      # noqa: E402
+from fastapi.responses import FileResponse, JSONResponse, Response  # noqa: E402
 from pydantic import BaseModel                                # noqa: E402
 
 import _model                                                 # noqa: E402
 import act as act_mod                                         # noqa: E402
 import appointment as appt_mod                                # noqa: E402
+import audit                                                  # noqa: E402
 import converse                                               # noqa: E402
 import flow                                                   # noqa: E402
 import places                                                 # noqa: E402
@@ -661,7 +662,17 @@ def sweep(now: datetime | None = None) -> int:
         if not ready:
             continue
         for alert in ready:
-            notify.deliver(alert, saved.id)
+            channels = notify.deliver(alert, saved.id)
+            audit.record(
+                store_module.store(), saved.id,
+                actor="the watch", type=audit.ALERTED,
+                subject=f"{alert.title or alert.booking_id}: {alert.message}",
+                citation=f"deadline {alert.closes:%d %b %H:%M}"
+                         + (f"; S${alert.worth:,.0f} at stake" if alert.worth else
+                            "; nothing recoverable behind it"),
+                authorization=audit.NOTIFICATION,
+                feed=f"watch tick ({MODE}); delivered via "
+                     f"{', '.join(channels) or 'no channel took it'}")
             fired += 1
         payload = dict(saved.payload)
         payload["watermark"] = max(a.at for a in ready).isoformat()
@@ -753,7 +764,8 @@ def detect(now: datetime | None = None) -> int:
 
         fresh = store_module.store().get(saved.id)
         try:
-            recovery, taken = _respond(saved.id, fresh, trip, disruption, injected=False)
+            recovery, taken = _respond(saved.id, fresh, trip, disruption,
+                                       injected=False, actor="the watch")
         except Exception as exc:                        # noqa: BLE001
             print(f"detect: {saved.id}: replan failed: {type(exc).__name__}: {exc}")
             continue
@@ -762,7 +774,16 @@ def detect(now: datetime | None = None) -> int:
         # traveller whose flight was found cancelled at 02:00 and whose first
         # word about it is a T-60 reminder at 05:00 has been let down by the
         # notifier, not by the engine.
-        notify.deliver(_Found(disruption, trip, recovery, taken), saved.id)
+        found_alert = _Found(disruption, trip, recovery, taken)
+        channels = notify.deliver(found_alert, saved.id)
+        audit.record(
+            store_module.store(), saved.id,
+            actor="the watch", type=audit.ALERTED,
+            subject=found_alert.message,
+            citation=f"status feed reported: {disruption.reason or 'disruption'}",
+            authorization=audit.NOTIFICATION,
+            feed=f"aerodatabox ({MODE}); delivered via "
+                 f"{', '.join(channels) or 'no channel took it'}")
         after = dict(store_module.store().get(saved.id).payload)
         after["detected"] = {"at": when.isoformat(),
                              "plan": recovery.best.name if recovery.best else "",
@@ -872,6 +893,14 @@ def add_trip(body: Paste, who: roles.Person = Depends(_who)) -> dict:
     saved = store_module.store().save(
         who.id, {"bookings": ingest.to_dicts(result.trip.bookings)},
         body.label or "Untitled trip")
+    audit.record(
+        store_module.store(), saved.id,
+        actor=who.name, type=audit.EXTRACTED,
+        subject=f"{saved.label}: {len(result.trip.bookings)} bookings from a "
+                "pasted confirmation",
+        citation=_cite_policies(result.trip),
+        authorization=audit.OBSERVED,
+        feed=f"pasted text, read by {_model.label()}")
     return {
         "trip_id": saved.id,
         "label": saved.label,
@@ -1476,6 +1505,15 @@ def choose(body: Choice, who: roles.Person = Depends(_who)) -> dict:
          "permissions": _default_rules(body.permissions, who),
          "request": _req_out(req)},
         body.label or req.summary())
+    _audited = _load(saved.id)
+    audit.record(
+        store_module.store(), saved.id,
+        actor=who.name, type=audit.EXTRACTED,
+        subject=f"{saved.label}: {len(_audited.bookings)} bookings selected "
+                "from a search",
+        citation=_cite_policies(_audited),
+        authorization=audit.OBSERVED,
+        feed=_feed_for(_audited))
 
     trip = _load(saved.id)
     return {"trip_id": saved.id, "label": saved.label,
@@ -1596,7 +1634,7 @@ def act(body: Act, who: roles.Person = Depends(_who)) -> dict:
 
 
 def _take(trip_id: str, trip: Trip, recovery, plan, by: str,
-          skip: set[str] | None = None) -> dict:
+          skip: set[str] | None = None, actor: str = "") -> dict:
     """Take one plan: perform what can be performed, rewrite the itinerary,
     record who decided.
 
@@ -1613,6 +1651,20 @@ def _take(trip_id: str, trip: Trip, recovery, plan, by: str,
     offer = next((o for o in recovery.offers if o.id == plan.id), None)
     updated, changed = act_mod.apply(plan, trip, recovery.disruption, offer, skip=skip)
     declined = [d for d in done if d.state == "declined"]
+
+    verdict = recovery.verdict
+    for action, outcome in zip(plan.actions, done):
+        approval, why = verdict.approval(action) if verdict else ("", "")
+        audit.record(
+            store_module.store(), trip_id,
+            actor=actor or by, type=audit.PERFORMED,
+            subject=f"{outcome.verb}: {outcome.label} → {outcome.state}"
+                    + (f" via {', '.join(outcome.channels)}" if outcome.channels else ""),
+            citation=outcome.note or action.note or outcome.label,
+            authorization=(f"declined by {by}" if outcome.state == "declined"
+                           else f"{approval} — {why}" if why
+                           else approval or f"taken by {by}"),
+            feed=f"{outcome.lane} lane; executing the judged plan (no feed)")
 
     # Declining the replacement leaves the trip broken. Everything else in the
     # plan can be taken -- the hotel emailed, the transfer cancelled -- and the
@@ -1762,6 +1814,15 @@ def select(body: Selection, who: roles.Person = Depends(_who)) -> dict:
         who.id, {"bookings": ingest.to_dicts(assembled.bookings),
                  "permissions": _default_rules(body.permissions, who)},
         body.label or "Booked here")
+    _audited = _load(saved.id)
+    audit.record(
+        store_module.store(), saved.id,
+        actor=who.name, type=audit.EXTRACTED,
+        subject=f"{saved.label}: {len(_audited.bookings)} bookings selected "
+                "from a search",
+        citation=_cite_policies(_audited),
+        authorization=audit.OBSERVED,
+        feed=_feed_for(_audited))
 
     # Answer with the trip AS IT READS BACK, not as it was assembled. Booking
     # ids are derived from the title when a trip is loaded -- a fresh extraction
@@ -1784,7 +1845,23 @@ def select(body: Selection, who: roles.Person = Depends(_who)) -> dict:
     }
 
 
-def _respond(trip_id: str, saved, trip: Trip, disruption, injected: bool):
+def _feed_for(trip: Trip) -> str:
+    """Which ports produced this trip's rows, and whether they were live."""
+    names = {Kind.FLIGHT: "duffel", Kind.RAIL: "transport.opendata.ch",
+             Kind.LODGING: "liteapi"}
+    used = sorted({names[b.kind] for b in trip.bookings if b.kind in names})
+    return f"{' + '.join(used) or 'no ports'} ({MODE})"
+
+
+def _cite_policies(trip: Trip) -> str:
+    """The fare prose every later decision rests on, quoted once."""
+    seen = list(dict.fromkeys(b.policy.source for b in trip.in_order()
+                              if b.policy.source))
+    return "; ".join(seen) or "no fare rules supplied"
+
+
+def _respond(trip_id: str, saved, trip: Trip, disruption, injected: bool,
+             actor: str = "the traveller"):
     """Record a disruption, work out the answer, and act on it if allowed.
 
     One path for a pressed button and for the status feed, because the only
@@ -1809,6 +1886,30 @@ def _respond(trip_id: str, saved, trip: Trip, disruption, injected: bool):
     stored.pop("last_sent", None)
     store_module.store().update(trip_id, stored)
 
+    source = trip.by_id(disruption.booking_id)
+    audit.record(
+        store_module.store(), trip_id,
+        actor=actor, type=audit.ASSESSED,
+        subject=f"{source.title}: {disruption.reason or 'disruption'}",
+        citation="presence(place) + transit(place → booking) ≤ must_arrive_by, "
+                 f"walked over {len(recovery.impact.nodes)} bookings; "
+                 f"S${recovery.impact.do_nothing_cost:,.0f} destroyed if nobody acts",
+        authorization=audit.OBSERVED,
+        feed=("the traveller pressed the button (no feed)" if injected
+              else f"aerodatabox ({MODE})"))
+    if recovery.best is not None:
+        verdict = recovery.verdict
+        audit.record(
+            store_module.store(), trip_id,
+            actor=actor, type=audit.JUDGED,
+            subject=f"recommended: {recovery.best.name}",
+            citation=_why(trip, recovery) or "no options to weigh",
+            authorization=(verdict.why or ("may be taken without asking"
+                                           if verdict.auto else "waits for a person"))
+                          if verdict else "no rules apply to inaction",
+            feed=f"duffel + transport.opendata.ch ({MODE}), "
+                 f"{len(recovery.offers)} offers searched")
+
     # THE AGENT ACTS, when it has been allowed to. The best plan is taken
     # without a click if the traveller's rules permit it -- which is the whole
     # difference between a delay at 02:00 answered at 02:00 and one answered
@@ -1819,7 +1920,8 @@ def _respond(trip_id: str, saved, trip: Trip, disruption, injected: bool):
     best = recovery.best
     taken = None
     if best is not None and best.id != "noop" and recovery.verdict and recovery.verdict.auto:
-        taken = _take(trip_id, trip, recovery, best, by="the agent")
+        taken = _take(trip_id, trip, recovery, best, by="the agent",
+                      actor=actor)
         taken["permission"] = recovery.verdict.why
     return recovery, taken
 
@@ -1851,7 +1953,8 @@ def _injected(trip_id: str, booking_id: str, make,
         raise HTTPException(409, "that trip has been cancelled")
     perms = _perms(saved)
     try:
-        recovery, taken = _respond(trip_id, saved, trip, make(trip), injected=True)
+        recovery, taken = _respond(trip_id, saved, trip, make(trip), injected=True,
+                                   actor=who.name)
     except PortError as exc:
         raise HTTPException(503, str(exc)) from exc
 
@@ -2148,6 +2251,15 @@ def abandon(body: Abandon, who: roles.Person = Depends(_who)) -> dict:
 
     lines: list[str] = []
     done = act_mod.perform(plan, trip, body.trip_id, log=lines.append)
+    for outcome in done:
+        audit.record(
+            store_module.store(), body.trip_id,
+            actor=who.name, type=audit.PERFORMED,
+            subject=f"{outcome.verb}: {outcome.label} → {outcome.state}"
+                    + (f" via {', '.join(outcome.channels)}" if outcome.channels else ""),
+            citation=outcome.note or outcome.label,
+            authorization=f"whole-trip cancellation, confirmed by {who.name} (two-step)",
+            feed=f"{outcome.lane} lane; executing the cancellation (no feed)")
 
     stored = dict(saved.payload)
     # The trip is KEPT, marked. Deleting it would take with it the one thing
@@ -2212,6 +2324,37 @@ def index() -> FileResponse:
 @app.get("/demo")
 def demo() -> FileResponse:
     return FileResponse(STATIC / "index.html")
+
+
+@app.get("/api/trail")
+def trail(trip: str, who: roles.Person = Depends(_who)) -> dict:
+    """The paper trail for one trip: observed, decided, done, on whose say-so.
+
+    Gated on the `money` capability rather than `view`, because the citations
+    quote fares, refunds and caps -- the decision log IS the ledger with
+    reasons attached, and a host who may not see a price may not read a
+    sentence that names one.
+    """
+    _saved, _role = _access(trip, who, roles.MONEY)
+    return {"trip_id": trip, "events": store_module.store().trail(trip)}
+
+
+@app.get("/api/trail.txt")
+def trail_text(trip: str, token: str = "",
+               who: roles.Person = Depends(_who)) -> Response:
+    """The same trail as plain text a judge can read on the spot.
+
+    Accepts ?token= as well as the header, because this is the one endpoint
+    meant to be opened as a bare link from the panel -- the same trade the
+    share links already make, stated rather than snuck."""
+    if token.strip() and who.anonymous:
+        found = store_module.store().person(token.strip())
+        if not found:
+            raise HTTPException(401, "that link is not one I handed out")
+        who = roles.Person(found["id"], found["name"], token.strip())
+    _saved, _role = _access(trip, who, roles.MONEY)
+    return Response(audit.render(store_module.store().trail(trip)),
+                    media_type="text/plain; charset=utf-8")
 
 
 class Wipe(BaseModel):
@@ -2318,6 +2461,17 @@ def story() -> dict:
         "The story · Singapore to Milan")
     trip_id = saved.id
     trip = _load(trip_id)
+    # The story saves through the store directly rather than through
+    # /api/select, so it owes the trail the same extraction entry that door
+    # writes -- or the scripted run's own paper trail would start at the
+    # assessment, with the fare rules every later decision cites never quoted.
+    audit.record(
+        store_module.store(), trip_id,
+        actor=owner.name, type=audit.EXTRACTED,
+        subject=f"{saved.label}: {len(trip.bookings)} bookings selected from a search",
+        citation=_cite_policies(trip),
+        authorization=audit.OBSERVED,
+        feed=_feed_for(trip))
     beats.append({
         "title": "A sentence, not a form",
         "said": "One sentence books it. The card said 'From: Singapore — from "

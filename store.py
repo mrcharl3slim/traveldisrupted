@@ -38,6 +38,13 @@ CREATE TABLE IF NOT EXISTS profiles (
     updated    TIMESTAMPTZ NOT NULL,
     payload    JSONB NOT NULL
 );
+CREATE TABLE IF NOT EXISTS audit (
+    id         BIGSERIAL PRIMARY KEY,
+    trip       TEXT NOT NULL,
+    at         TIMESTAMPTZ NOT NULL,
+    payload    JSONB NOT NULL
+);
+CREATE INDEX IF NOT EXISTS audit_trip_idx ON audit (trip, id);
 CREATE TABLE IF NOT EXISTS people (
     id         TEXT PRIMARY KEY,
     token      TEXT NOT NULL UNIQUE,
@@ -71,6 +78,7 @@ class MemoryStore:
         self._trips: dict[str, Saved] = {}
         self._profiles: dict[str, dict] = {}
         self._people: dict[str, dict] = {}       # token -> {id, name}
+        self._audit: dict[str, list[dict]] = {}  # trip -> events, append-only
         self._lock = threading.Lock()
 
     def save(self, owner: str, payload: dict, label: str = "") -> Saved:
@@ -152,18 +160,32 @@ class MemoryStore:
         currency the app no longer speaks, story runs, tokens handed to
         testers. Counts come back because "wiped" without a number is a claim
         nobody can check against what they expected to lose.
+
+        The audit trail goes with the trips: append-only means no API deletes
+        an entry, and wiping test trips while keeping their decision log
+        would leave a trail about itineraries that no longer exist.
         """
         with self._lock:
             gone = {"trips": len(self._trips) if trips else 0,
                     "people": len(self._people) if people else 0,
-                    "profiles": len(self._profiles) if profiles else 0}
+                    "profiles": len(self._profiles) if profiles else 0,
+                    "audit": sum(len(v) for v in self._audit.values()) if trips else 0}
             if trips:
                 self._trips.clear()
+                self._audit.clear()
             if people:
                 self._people.clear()
             if profiles:
                 self._profiles.clear()
         return gone
+
+    # -- the paper trail: append and read, nothing else -------------------
+    def audit(self, trip_id: str, payload: dict) -> None:
+        with self._lock:
+            self._audit.setdefault(trip_id, []).append(dict(payload))
+
+    def trail(self, trip_id: str, limit: int = 200) -> list[dict]:
+        return [dict(e) for e in self._audit.get(trip_id, [])[-limit:]]
 
     # -- people: a name and the token that is them ------------------------
     def add_person(self, person_id: str, token: str, name: str) -> None:
@@ -271,15 +293,29 @@ class PostgresStore:
 
     def wipe(self, trips: bool = True, people: bool = False,
              profiles: bool = False) -> dict:
-        gone = {"trips": 0, "people": 0, "profiles": 0}
+        gone = {"trips": 0, "people": 0, "profiles": 0, "audit": 0}
         with self._conn() as conn:
             if trips:
                 gone["trips"] = conn.execute("DELETE FROM trips").rowcount
+                gone["audit"] = conn.execute("DELETE FROM audit").rowcount
             if people:
                 gone["people"] = conn.execute("DELETE FROM people").rowcount
             if profiles:
                 gone["profiles"] = conn.execute("DELETE FROM profiles").rowcount
         return gone
+
+    def audit(self, trip_id: str, payload: dict) -> None:
+        with self._conn() as conn:
+            conn.execute(
+                "INSERT INTO audit (trip, at, payload) VALUES (%s, %s, %s)",
+                (trip_id, payload["at"], json.dumps(payload)))
+
+    def trail(self, trip_id: str, limit: int = 200) -> list[dict]:
+        with self._conn() as conn:
+            rows = conn.execute(
+                "SELECT payload FROM audit WHERE trip = %s"
+                " ORDER BY id DESC LIMIT %s", (trip_id, limit)).fetchall()
+        return [dict(r[0]) for r in reversed(rows)]
 
     def add_person(self, person_id: str, token: str, name: str) -> None:
         with self._conn() as conn:
