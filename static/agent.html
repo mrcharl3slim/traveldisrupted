@@ -31,11 +31,12 @@
   /* One control -- "break this leg" -- with two ways of breaking it. */
   .break{display:flex;gap:5px;justify-content:flex-end;margin-top:6px}
   select.btn.sm{padding:6px 4px}
-  aside .box{background:var(--card);border:1px solid var(--edge);
-             border-radius:var(--r-lg);padding:16px;margin-bottom:14px;
-             box-shadow:var(--shadow-1)}
-  aside h2{font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;
-           color:var(--faint);margin:0 0 12px}
+  .box{background:var(--card);border:1px solid var(--edge);
+       border-radius:var(--r-lg);padding:16px;margin-bottom:14px;
+       box-shadow:var(--shadow-1)}
+  .box h2{font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;
+          color:var(--faint);margin:0 0 12px}
+  #detail-box{scroll-margin-top:70px}
   .trip{border:1px solid var(--edge);border-left:3px solid var(--ok);
         border-radius:var(--r-md);padding:11px 12px;margin-bottom:9px;
         background:var(--card);box-shadow:var(--shadow-1);cursor:pointer}
@@ -77,10 +78,11 @@
 <div class="site-header"><div class="bar-inner">
   <a class="wordmark" href="/">TripShield</a>
   <nav class="site-nav">
-    <a href="/" aria-current="page">agent</a> <a href="/book">book</a>
-    <a href="/demo">demo</a>
-    <a href="/story">story</a> <a href="/script">script</a>
-    <a href="/test">test</a>
+    <a href="/" aria-current="page">agent</a> <a href="/book">book</a> <a href="/#profile">profile</a>
+    <details class="dev"><summary>developer</summary><div class="menu">
+      <a href="/demo">demo</a> <a href="/story">story</a>
+      <a href="/script">script</a> <a href="/test">test</a>
+    </div></details>
   </nav>
 </div></div>
 <div class="wrap">
@@ -93,6 +95,10 @@
 
   <div class="cols">
     <main class="thread" id="thread">
+      <div class="box" id="detail-box" hidden>
+        <h2 id="detail-title">Itinerary</h2>
+        <div id="detail"></div>
+      </div>
         <div class="msg" id="starter">
           <div class="who">TripShield</div>
           <div class="body">Tell me what you want in a sentence — a trip, or a meeting.
@@ -109,14 +115,10 @@
         <h2>Your itineraries</h2>
         <div id="trips"><div class="note">Nothing booked yet.</div></div>
       </div>
-      <div class="box" id="you-box">
+      <div class="box" id="you-box" hidden>
         <h2>You</h2>
         <div id="me" class="m" style="margin-bottom:8px"></div>
         <div id="you"></div>
-      </div>
-      <div class="box" id="detail-box" hidden>
-        <h2 id="detail-title">Itinerary</h2>
-        <div id="detail"></div>
       </div>
     </aside>
   </div>
@@ -455,6 +457,7 @@ function openTrip(id, quiet){
   document.querySelectorAll('.trip').forEach(el =>
     el.classList.toggle('on', el.dataset.id === id));
   $('#detail-box').hidden = false;
+  if (!quiet) $('#detail-box').scrollIntoView({behavior: 'smooth', block: 'start'});
   // Trimmed on a separator rather than mid-word: "one way · hotel · ch" reads
   // like a country code and is not one.
   const parts = trip.label.split(' · ');
@@ -849,6 +852,16 @@ $('#send').onclick = () => {
   say(text);
 };
 $('#say').addEventListener('keydown', e => { if (e.key === 'Enter') $('#send').click(); });
+
+// The profile lives behind the header's own link: /#profile opens it, from
+// this page or any other.
+const showProfile = () => {
+  const box = $('#you-box'); box.hidden = false;
+  box.scrollIntoView({behavior: 'smooth', block: 'center'});
+};
+if (location.hash === '#profile') showProfile();
+window.addEventListener('hashchange',
+  () => { if (location.hash === '#profile') showProfile(); });
 
 // Feedback while the agent thinks -- from any door into say(): the Send
 // button, Enter, a starter chip, an answer chip.

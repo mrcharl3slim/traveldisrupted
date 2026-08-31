@@ -19,10 +19,13 @@
    with aria-current="page" moved to that page's own link:
 
    <div class="site-header"><div class="bar-inner">
-     <a class="wordmark" href="/">Downstream</a>
+     <a class="wordmark" href="/">TripShield</a>
      <nav class="site-nav">
-       <a href="/">agent</a> <a href="/book">book</a> <a href="/demo">demo</a>
-       <a href="/story">story</a> <a href="/script">script</a> <a href="/test">test</a>
+       <a href="/">agent</a> <a href="/book">book</a> <a href="/#profile">profile</a>
+       <details class="dev"><summary>developer</summary><div class="menu">
+         <a href="/demo">demo</a> <a href="/story">story</a>
+         <a href="/script">script</a> <a href="/test">test</a>
+       </div></details>
      </nav>
    </div></div>
 */
@@ -96,6 +99,25 @@ code{font:13px var(--mono);background:var(--sunken);border:1px solid var(--edge)
 .site-nav a:hover{color:var(--key);text-decoration:none}
 .site-nav a[aria-current="page"]{color:var(--key);font-weight:600;
                                  border-bottom-color:var(--key)}
+/* the developer menu: demo-support doors grouped behind one word, so the
+   traveller-facing nav stays three links wide */
+.site-nav details.dev{position:relative}
+.site-nav details.dev summary{list-style:none;cursor:pointer;color:var(--dim);
+     padding:4px 2px;border-bottom:2px solid transparent}
+.site-nav details.dev summary::-webkit-details-marker{display:none}
+.site-nav details.dev summary::after{content:" \25BE";color:var(--faint)}
+.site-nav details.dev summary:hover{color:var(--key)}
+.site-nav details.dev.here summary{color:var(--key);font-weight:600;
+     border-bottom-color:var(--key)}
+.site-nav details.dev .menu{position:absolute;right:0;top:calc(100% + 6px);
+     display:flex;flex-direction:column;gap:2px;background:var(--card);
+     border:1px solid var(--edge);border-radius:var(--r-md);
+     box-shadow:var(--shadow-2);padding:6px;min-width:110px;z-index:60}
+.site-nav details.dev .menu a{border-bottom:0;border-radius:var(--r-sm);
+     padding:6px 10px}
+.site-nav details.dev .menu a:hover{background:var(--key-tint)}
+.site-nav details.dev .menu a[aria-current="page"]{color:var(--key);
+     font-weight:600;background:var(--key-tint)}
 
 /* ---- cards ----------------------------------------------------------- */
 section{background:var(--card);border:1px solid var(--edge);
