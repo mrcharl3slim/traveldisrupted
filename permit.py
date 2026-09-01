@@ -186,12 +186,15 @@ def judge(plan: Plan, perms: Permissions) -> Verdict:
         if blocked:
             approvals[a.label] = (BLOCKED, blocked)
             continue
-        if a.lane is Lane.AUTO:
-            approvals[a.label] = (AUTO, "no money moves and nothing is irreversible")
-            continue
+        # Asked BEFORE the AUTO shortcut, or always_ask("notify") is a no-op:
+        # notify is an AUTO-lane action -- the one AUTO verb that leaves the
+        # building -- and the shortcut used to wave it through unexamined.
         if a.verb in perms.always_ask:
             approvals[a.label] = (NEEDS_APPROVAL, f"you asked to be asked before any {a.verb}")
             ask = True
+            continue
+        if a.lane is Lane.AUTO:
+            approvals[a.label] = (AUTO, "no money moves and nothing is irreversible")
             continue
         if plan.cash_out <= perms.auto_limit:
             approvals[a.label] = (

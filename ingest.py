@@ -31,6 +31,8 @@ THREE RULES, ALL OF WHICH EXIST BECAUSE THE MODEL WILL SOMETIMES BE WRONG.
 
 from __future__ import annotations
 
+import money
+
 import json
 import re
 from dataclasses import dataclass
@@ -148,6 +150,25 @@ def to_bookings(raw: dict) -> tuple[list[Booking], list[str], dict[str, str]]:
                 + " with a usable timezone")
             continue
 
+        # Money crosses into home currency HERE or never. Stored rows arrive
+        # already in S$ and pass through; a pasted JPY 42,000 used to keep its
+        # number and lose its label, surfacing as S$42,000 -- so a foreign
+        # amount converts at the declared rate and says so in price_source,
+        # and one with no rate keeps its own currency and is named a problem
+        # rather than silently summed into S$ totals.
+        price = float(item.get("price") or 0.0)
+        cur = str(item.get("currency") or money.HOME).upper()
+        source = str(item.get("price_source") or "quoted")
+        if price and cur != money.HOME:
+            in_home, how, _quoted = money.to_home(price, cur)
+            if how == "converted":
+                price, cur, source = in_home, money.HOME, "converted"
+            else:
+                problems.append(
+                    f"no S$ rate for {cur} — kept as {cur} {price:,.0f}, "
+                    "an estimate, not summed as S$")
+                source = "estimate"
+
         kind = KINDS.get(str(item.get("kind") or "").lower(), DEFAULT_KIND)
         bid = _slug(title, taken)
         taken.add(bid)
@@ -163,8 +184,8 @@ def to_bookings(raw: dict) -> tuple[list[Booking], list[str], dict[str, str]]:
             end=_dt(item.get("end")),
             origin=item.get("origin") or None,
             destination=item.get("destination") or None,
-            price=float(item.get("price") or 0.0),
-            currency=str(item.get("currency") or "EUR"),
+            price=price,
+            currency=cur,
             ticket_group=item.get("ticket_group") or None,
             # Engine-side fields. The model never supplies these; they survive a
             # storage round trip and are absent from a fresh extraction, which
@@ -180,7 +201,7 @@ def to_bookings(raw: dict) -> tuple[list[Booking], list[str], dict[str, str]]:
             # was. A stored booking with no provenance is one nobody thought
             # about, not one somebody vouched for -- but calling it an estimate
             # would put a warning on every flight ever filed.
-            price_source=str(item.get("price_source") or "quoted"),
+            price_source=source,
             # Windows arrive already resolved when reading a stored trip, and
             # empty when reading a fresh extraction — `resolve` fills those in
             # against each booking's own times. A Policy with no windows means

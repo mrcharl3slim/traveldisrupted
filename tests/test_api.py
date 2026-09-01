@@ -263,6 +263,74 @@ def test_rules_can_be_changed_after_booking_and_are_listed(client):
 
 
 # --------------------------------------------------------------------------
+# the gate reaches everything that leaves the building
+# --------------------------------------------------------------------------
+
+
+def test_abandon_emails_wait_when_the_rules_say_ask(client):
+    """Cancelling the whole trip is the traveller's own two-step call, but the
+    AUTO-lane emails inside it are the agent acting -- always_ask("notify")
+    must hold them exactly as it would on a recovery plan."""
+    tid = book(client)["trip_id"]
+    client.post("/api/permissions", json={
+        "trip_id": tid, "auto_limit": 0, "always_ask": ["notify"]})
+    r = client.post("/api/abandon",
+                    json={"trip_id": tid, "confirm": True}).json()
+    assert r["sent"] == [], "nothing may leave the building unasked"
+    assert r["held"], "the email is held for the person, not dropped"
+    assert "your rules ask first" in r["held"][0]["note"]
+
+
+def test_a_profile_save_does_not_rearm_a_remembered_kill_switch(client):
+    """/api/permissions remember=true stores disarmed on the profile; the
+    profile form does not carry the field, so saving the profile used to
+    silently re-arm the agent for every future trip."""
+    tid = book(client)["trip_id"]
+    client.post("/api/disarm", json={"trip_id": tid, "disarmed": True})
+    client.post("/api/permissions", json={
+        "trip_id": tid, "auto_limit": 50, "remember": True})
+    assert client.get("/api/profile").json()["profile"]["permissions"]["disarmed"] is True
+
+    client.post("/api/profile", json={"preference": "cheapest", "auto_limit": 50})
+    kept = client.get("/api/profile").json()["profile"]["permissions"]
+    # Restore the shared tester's profile BEFORE asserting: every later book()
+    # inherits it via _default_rules, and a leftover disarmed=True (or a S$50
+    # cap) quietly rewrites what unrelated tests are testing.
+    client.post("/api/profile", json={"preference": "", "auto_limit": 0,
+                                      "disarmed": False})
+    assert kept["disarmed"] is True, "a profile save re-armed the kill switch"
+
+
+# --------------------------------------------------------------------------
+# acting twice is refused, not repeated
+# --------------------------------------------------------------------------
+
+
+def test_replaying_act_is_refused_and_changes_nothing(client):
+    """POSTing the same /api/act twice -- a double-click, a retry, a stale
+    tab -- must be a 409, not a second rewrite. The replay used to re-plan
+    against the already-rewritten itinerary and delete the delayed leg the
+    first act had deliberately kept."""
+    booked = book(client)
+    tid = booked["trip_id"]
+    target = next(b for b in _row(client, tid)["bookings"]
+                  if "MXP" in b["title"] or "BEG" in b["title"])
+    plans = client.post("/api/delay", json={
+        "trip_id": tid, "booking_id": target["id"], "minutes": 720}).json()["plans"]
+    body = {"trip_id": tid, "booking_id": target["id"],
+            "plan_key": plans[0].get("key") or "", "plan_id": plans[0]["id"]}
+    first = client.post("/api/act", json=body)
+    assert first.status_code == 200
+    before = [b["title"] for b in _row(client, tid)["bookings"]]
+
+    second = client.post("/api/act", json=body)
+    assert second.status_code == 409
+    assert "already handled" in second.json()["detail"]
+    after = [b["title"] for b in _row(client, tid)["bookings"]]
+    assert after == before, "a refused replay must not touch the itinerary"
+
+
+# --------------------------------------------------------------------------
 # said before anything breaks
 # --------------------------------------------------------------------------
 

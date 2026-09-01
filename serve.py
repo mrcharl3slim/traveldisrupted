@@ -325,6 +325,10 @@ class ProfileIn(BaseModel):
     hold_limit: float = 0.0
     never: list[str] = []
     always_ask: list[str] = []
+    #: None means "not this form's business" -- the stored value survives.
+    #: The profile form never sends it, so saving the profile used to
+    #: silently re-arm a kill switch that /api/permissions remember stored.
+    disarmed: bool | None = None
 
 
 class Abandon(BaseModel):
@@ -824,8 +828,11 @@ def detect(now: datetime | None = None) -> int:
 async def _watch() -> None:
     while True:
         try:
-            detect()
-            sweep()
+            # In a worker thread, not on the loop: detect() does port HTTP,
+            # and a status call that stalls on the event loop stalls every
+            # request the server is holding at that moment.
+            await asyncio.to_thread(detect)
+            await asyncio.to_thread(sweep)
         except Exception as exc:                        # noqa: BLE001
             # Never let one bad pass end the watch. A notifier that dies
             # quietly is worse than no notifier: the page still promises it.
@@ -1632,6 +1639,19 @@ def act(body: Act, who: roles.Person = Depends(_who)) -> dict:
     from base import PortError
 
     saved, _role = _access(body.trip_id, who, roles.ACT)
+    already = saved.payload.get("acted")
+    current = saved.payload.get("disruption")
+    if already and (current is None or already.get("for") == current):
+        # A replay -- a double-click, a retried request, a stale tab. Either
+        # the stored disruption is the exact one this trip already acted on,
+        # or acting RESOLVED it and nothing new has broken since. The second
+        # case is the dangerous one: with no stored disruption the fallback
+        # below fabricates a fresh cancellation against the rewritten
+        # itinerary, which is how a flight quietly disappeared.
+        raise HTTPException(
+            409, "already handled — that plan was taken at "
+                 f"{already.get('at', 'an earlier moment')}. Break something "
+                 "new, or cancel again to re-plan from here.")
     trip = _load(body.trip_id)
     preference = saved.payload.get("preference", "")
 
@@ -1715,6 +1735,11 @@ def _take(trip_id: str, trip: Trip, recovery, plan, by: str,
     payload = dict(saved.payload)
     payload["bookings"] = ingest.to_dicts(updated.bookings)
     payload["acted"] = {"at": datetime.now(timezone.utc).isoformat(),
+                        # The disruption this act answered, verbatim. /api/act
+                        # compares against it to refuse a replay: acting twice
+                        # on the same event re-planned against the rewritten
+                        # itinerary and deleted a leg the first act had kept.
+                        "for": saved.payload.get("disruption"),
                         "plan": plan.name, "changed": changed, "by": by,
                         "declined": [d.label for d in declined],
                         "resolved": resolved,
@@ -2164,7 +2189,9 @@ def write_profile(body: ProfileIn, who: roles.Person = Depends(_who)) -> dict:
     kept = profile_mod.Profile.from_dict({
         "preference": body.preference, "home": found.code if found else "",
         "permissions": {"auto_limit": body.auto_limit, "hold_limit": body.hold_limit,
-                        "never": body.never, "always_ask": body.always_ask}})
+                        "never": body.never, "always_ask": body.always_ask,
+                        "disarmed": _profile(who).permissions.disarmed
+                        if body.disarmed is None else body.disarmed}})
     store_module.store().save_profile(who.id, kept.to_dict())
     return {"profile": kept.to_dict(), "empty": kept.empty}
 
@@ -2304,9 +2331,22 @@ def abandon(body: Abandon, who: roles.Person = Depends(_who)) -> dict:
     if not body.confirm:
         return payload
 
+    # The same gate every plan passes. Abandoning is the traveller's own
+    # two-step decision, but the AUTO-lane emails inside it are the agent
+    # acting -- and rules like always_ask("notify") apply to those exactly
+    # as they do on a recovery plan.
+    perms = _perms(saved)
+    verdict = permit.judge(plan, perms)
+    rules_hold = any(
+        verdict.approvals.get(a.label, (permit.AUTO, ""))[0] != permit.AUTO
+        for a in plan.actions if a.lane is Lane.AUTO and a.verb == "notify")
+    kill_note = " — kill switch on; the message is yours to send"
+    ask_note = " — your rules ask first; the message is yours to send"
     lines: list[str] = []
-    done = act_mod.perform(plan, trip, body.trip_id, log=lines.append,
-                           armed=not _perms(saved).disarmed)
+    done = act_mod.perform(
+        plan, trip, body.trip_id, log=lines.append,
+        armed=not perms.disarmed and not rules_hold,
+        held_note=kill_note if perms.disarmed else ask_note)
     for outcome in done:
         audit.record(
             store_module.store(), body.trip_id,
@@ -2340,6 +2380,7 @@ def abandon(body: Abandon, who: roles.Person = Depends(_who)) -> dict:
             "bookings": _bookings_out(trip, None, stored["abandoned"]),
             "summary": act_mod.summarise(done, []),
             "sent": [d.__dict__ for d in done if d.state == "sent"],
+            "held": [d.__dict__ for d in done if d.state == "held"],
             "pending": [d.__dict__ for d in done if d.state == "pending"],
             "log": lines}
 

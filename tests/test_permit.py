@@ -192,3 +192,17 @@ def test_rules_survive_a_round_trip_and_tolerate_garbage():
     assert permit.Permissions.from_dict({"auto_limit": "lots", "never": "rail, "}) \
         == permit.Permissions(never=("rail",))
     assert permit.Permissions.from_dict({"auto_limit": -5}).auto_limit == 0.0
+
+
+def test_always_ask_reaches_the_auto_lane_email(plans):
+    """The one AUTO verb that leaves the building. always_ask("notify") used
+    to be a dead setting: the AUTO shortcut ran first and waved the email
+    through unexamined."""
+    best = plans[0]
+    emails = [a for a in best.actions if a.verb == "notify"]
+    assert emails, "the premise: the best plan emails somebody"
+    verdict = permit.judge(best, permit.Permissions(
+        auto_limit=best.cash_out + 1, always_ask=("notify",)))
+    assert not verdict.auto, "a plan whose email needs asking is not auto"
+    kind, why = verdict.approvals[emails[0].label]
+    assert kind == permit.NEEDS_APPROVAL and "notify" in why

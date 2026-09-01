@@ -87,7 +87,9 @@ def _link(plan: Plan, action: Action) -> str:
 
 def perform(plan: Plan, trip: Trip, trip_id: str = "",
             log=print, skip: set[str] | None = None,
-            armed: bool = True) -> list[Done]:
+            armed: bool = True,
+            held_note: str = " — kill switch on; the message is yours to send",
+            ) -> list[Done]:
     """Run every action in the plan, each according to its lane.
 
     ``skip`` names the actions the traveller declined, by `Action.id`. A
@@ -116,8 +118,7 @@ def perform(plan: Plan, trip: Trip, trip_id: str = "",
         if action.lane is Lane.AUTO and action.verb == "notify":
             if not armed:
                 out.append(Done(action.verb, action.label, action.lane.value,
-                                "held", note=(action.note or "") +
-                                " — kill switch on; the message is yours to send"))
+                                "held", note=(action.note or "") + held_note))
                 continue
             channels = notify.deliver(_as_alert(action, trip), trip_id, log=log)
             out.append(Done(action.verb, action.label, action.lane.value,

@@ -210,3 +210,52 @@ def test_a_stored_trip_reproduces_the_original_exactly():
         assert after.mitigation == before.mitigation
         assert after.must_arrive_by == before.must_arrive_by
         assert [w.closes for w in after.policy.windows] == [w.closes for w in before.policy.windows]
+
+
+# -- money crosses the boundary once --------------------------------------
+
+def test_a_foreign_amount_converts_at_the_boundary():
+    """A pasted EUR 100 is S$150 in the store, marked converted -- the number
+    and the label change together or not at all."""
+    raw = _raw()
+    raw["bookings"][0]["price"] = 100.0
+    raw["bookings"][0]["currency"] = "EUR"
+    bookings, problems, _ = ingest.to_bookings(raw)
+    assert bookings[0].price == 150.0
+    assert bookings[0].currency == "SGD"
+    assert bookings[0].price_source == "converted"
+
+
+def test_jpy_no_longer_relabels_forty_two_thousand():
+    """The audit's worst case: JPY 42,000 surfaced as S$42,000."""
+    raw = _raw()
+    raw["bookings"][0]["price"] = 42000.0
+    raw["bookings"][0]["currency"] = "JPY"
+    bookings, _, _ = ingest.to_bookings(raw)
+    assert bookings[0].currency == "SGD"
+    assert 400 < bookings[0].price < 700, bookings[0].price
+
+
+def test_a_currency_without_a_rate_keeps_its_name_and_is_a_problem():
+    """Converting at gunpoint invents a rate; passing through invents a label.
+    Neither -- the amount keeps its own currency and the extraction says so."""
+    raw = _raw()
+    raw["bookings"][0]["price"] = 9000.0
+    raw["bookings"][0]["currency"] = "KRW"
+    bookings, problems, _ = ingest.to_bookings(raw)
+    assert bookings[0].currency == "KRW"
+    assert bookings[0].price == 9000.0
+    assert bookings[0].price_source == "estimate"
+    assert any("KRW" in p for p in problems)
+
+
+def test_stored_sgd_rows_pass_through_untouched():
+    """The same function loads stored trips: a second pass must be a no-op or
+    every reload would compound the conversion."""
+    raw = _raw()
+    raw["bookings"][0]["price"] = 423.0
+    raw["bookings"][0]["currency"] = "SGD"
+    raw["bookings"][0]["price_source"] = "converted"
+    bookings, _, _ = ingest.to_bookings(raw)
+    assert bookings[0].price == 423.0
+    assert bookings[0].price_source == "converted"

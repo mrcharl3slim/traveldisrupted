@@ -22,6 +22,28 @@ def _headers():
             "X-RapidAPI-Host": HOST}
 
 
+#: Live status calls spent today, by UTC day. The free tier is 600 units a
+#: MONTH; a one-minute watch over three trips with three imminent flights each
+#: spends 54 an hour and the month by lunchtime. The budget is a day's
+#: allowance (default 120 -- five demo days of headroom), checked only on the
+#: live path: replay is free, and exhaustion is not an outage -- the meter
+#: raises into `base.call`'s existing fallback, so the answer comes from a
+#: recording and /health says "degraded" instead of the quota dying silently.
+_spent: dict[str, int] = {}
+
+
+def _metered_get(url: str):
+    budget = int(os.environ.get("DOWNSTREAM_ADB_DAILY_BUDGET", "120"))
+    day = f"{datetime.utcnow():%Y-%m-%d}"
+    for gone in [d for d in _spent if d != day]:
+        _spent.pop(gone, None)
+    if _spent.get(day, 0) >= budget:
+        raise TimeoutError(
+            f"aerodatabox: daily budget of {budget} live calls spent")
+    _spent[day] = _spent.get(day, 0) + 1
+    return get_json(url, headers=_headers())
+
+
 def status(flight: str, day: datetime):
     key = {"flight": flight.replace(" ", ""), "on": f"{day:%Y-%m-%d}"}
     # The space really is stripped rather than encoded: "SQ 346" and "SQ346"
@@ -29,7 +51,7 @@ def status(flight: str, day: datetime):
     # is quoted like any other path segment.
     url = url_for(f"https://{HOST}", f"flights/number/"
                   f"{flight.replace(' ', '')}/{day:%Y-%m-%d}")
-    return call("status", key, lambda: get_json(url, headers=_headers()))
+    return call("status", key, lambda: _metered_get(url))
 
 
 def disruption(flight: str, day: datetime, booking_id: str):

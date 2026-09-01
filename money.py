@@ -32,6 +32,7 @@ RATES: dict[str, float] = {
     "USD": float(os.environ.get("FX_USD_SGD", "1.30")),
     "GBP": float(os.environ.get("FX_GBP_SGD", "1.75")),
     "CHF": float(os.environ.get("FX_CHF_SGD", "1.60")),
+    "JPY": float(os.environ.get("FX_JPY_SGD", "0.0115")),
 }
 
 
