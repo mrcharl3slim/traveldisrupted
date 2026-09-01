@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TripShield</title>
-<link rel="stylesheet" href="/static/app.css?v=5">
+<link rel="stylesheet" href="/static/app.css?v=6">
 <style>
   /* Page-local only -- everything shared lives in app.css. */
   .wrap{padding-bottom:150px}   /* clears the fixed composer */
@@ -87,10 +87,7 @@
   <a class="wordmark" href="/">TripShield</a>
   <nav class="site-nav">
     <a href="/" aria-current="page">agent</a> <a href="/book">book</a>
-    <details class="dev"><summary>developer</summary><div class="menu">
-      <a href="/demo">demo</a> <a href="/story">story</a>
-      <a href="/script">script</a> <a href="/test">test</a>
-    </div></details>
+    <a href="/developer">developer</a>
   </nav>
 </div></div>
 <div class="wrap">
@@ -141,7 +138,7 @@
   <button class="btn key" id="send">Send</button>
 </div></div>
 
-<script src="/static/app.js?v=5"></script>
+<script src="/static/app.js?v=6"></script>
 <script>
 // $/esc/eur/at/hhmm/span/late_/DELAYS come from /static/app.js --
 // one set of helpers, one timezone rule.
@@ -910,15 +907,8 @@ window.addEventListener('hashchange',
 
 api('/health').then(h => {
   const boot = $('#boot'); if (boot) boot.remove();
-  // Status only. The starter card above already says how to talk to it --
-  // two near-identical introductions read as a bug, not a welcome.
-  bubble('TripShield',
-    `<div class="ports" style="margin-top:0">ports <b>${esc(h.ports_mode)}</b> · model
-     <b>${esc(h.model)}</b> · storage <b>${esc(h.storage)}</b></div>`
-    + (h.model_status && !h.model_status.ready && h.model_status.configured !== 'none'
-       ? `<div class="banner warn">${esc(h.model_status.label)} is configured but
-          did not start — running on arithmetic. ${esc(h.model_status.why_not)}</div>`
-       : ''));
+  // ports/model/storage is developer information -- it lives on
+  // /developer now, not in the traveller's chat.
   loadProfile();
   loadTrips();
 }).catch(e => { const boot = $('#boot'); if (boot) boot.textContent =

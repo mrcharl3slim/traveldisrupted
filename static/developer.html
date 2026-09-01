@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TripShield — for developers</title>
+<link rel="stylesheet" href="/static/app.css?v=6">
+<style>
+  /* Page-local only -- everything shared lives in app.css. */
+  .doors{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+         gap:12px;margin-top:4px}
+  .door{background:var(--card);border:1px solid var(--edge);
+        border-left:3px solid var(--key);border-radius:var(--r-md);
+        padding:14px 16px;box-shadow:var(--shadow-1)}
+  .door h3{margin:0 0 6px}
+  .door p{font-size:14px;color:var(--dim);margin:0 0 8px}
+  .door .m{display:block}
+</style>
+</head>
+<body>
+<div class="site-header"><div class="bar-inner">
+  <a class="wordmark" href="/">TripShield</a>
+  <nav class="site-nav">
+    <a href="/">agent</a> <a href="/book">book</a>
+    <a href="/developer" aria-current="page">developer</a>
+  </nav>
+</div></div>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>For developers</h1>
+      <div class="sub">What this instance is running on, and the four doors that
+        exist so the claims can be checked rather than believed.</div>
+    </div>
+  </header>
+
+  <section>
+    <h2>This instance, right now</h2>
+    <div id="live" class="banner">reading /health…</div>
+    <div class="note">Ports says where the data comes from: <b>live</b> queries the
+      real providers, <b>replay</b> answers from recordings so the demo cannot be
+      killed by somebody else's outage, and <b>degraded</b> means a live provider
+      timed out and a recording stepped in — said on screen rather than hidden.
+      The model line is the language model reading your sentences; every figure is
+      computed by the engine either way. Storage <b>postgres</b> means trips
+      survive a restart.</div>
+  </section>
+
+  <section>
+    <h2>The four doors</h2>
+    <div class="doors">
+      <div class="door">
+        <h3><a href="/demo">/demo — the worked example</a></h3>
+        <p>One frozen October trip, one delayed flight, and every consequence
+          computed: S$423 lost by doing nothing, what is still catchable, and the
+          ranked recovery plans. The evidence page — the tests assert these exact
+          figures, and <code>python cli.py</code> prints them with no server.</p>
+        <span class="m">for: showing the arithmetic is real</span>
+      </div>
+      <div class="door">
+        <h3><a href="/story">/story — the whole story, one press</a></h3>
+        <p>Eleven chapters run server-side through the same handlers the buttons
+          call: a profile, a booking, a meeting, a share, two disruptions, the
+          permission tiers, the kill switch, and the paper trail. Scripted inputs,
+          computed outcomes — press it twice and it builds a fresh copy.</p>
+        <span class="m">for: seeing everything without typing anything</span>
+      </div>
+      <div class="door">
+        <h3><a href="/script">/script — the presenter's guide</a></h3>
+        <p>The same arc performed by hand: seven acts, about six minutes, every
+          line to type in a box and every line to say in italics, plus the
+          if-it-goes-sideways table for live-demo nerves.</p>
+        <span class="m">for: presenting it to a room</span>
+      </div>
+      <div class="door">
+        <h3><a href="/test">/test — how to test it</a></h3>
+        <p>Six test cases for team members: book, break a leg, add a meeting,
+          cancel the whole trip, let the agent act on its own, and share by role —
+          each with what to expect and what is deliberately not a bug.</p>
+        <span class="m">for: breaking it on purpose</span>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+fetch('/health').then(r => r.json()).then(h => {
+  document.querySelector('#live').innerHTML =
+    `ports <b>${h.ports_mode}</b> · model <b>${h.model_status.ready ? h.model : 'NOT STARTED'}</b>`
+    + ` · storage <b>${h.storage}</b>`
+    + (h.model_status && !h.model_status.ready && h.model_status.configured !== 'none'
+       ? `<br>${h.model_status.label} is configured but did not start — running on
+          arithmetic. ${h.model_status.why_not}`
+       : '');
+}).catch(() => {
+  document.querySelector('#live').textContent =
+    'could not read /health — the instance is waking. Load / once and come back.';
+});
+</script>
+</body>
+</html>

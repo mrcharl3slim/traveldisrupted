@@ -2822,6 +2822,13 @@ def book() -> FileResponse:
     return FileResponse(STATIC / "book.html")
 
 
+@app.get("/developer")
+def developer_page() -> FileResponse:
+    """What this instance runs on and what the four demo doors are for --
+    the information a traveller never needs and a developer always asks."""
+    return FileResponse(STATIC / "developer.html")
+
+
 # The shared sheet and helpers. Explicit routes rather than a StaticFiles
 # mount, matching every other page here -- nothing else that lands in
 # static/ becomes reachable by accident. Pages reference these with ?v=N;
