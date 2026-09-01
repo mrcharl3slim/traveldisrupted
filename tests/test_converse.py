@@ -495,9 +495,9 @@ def test_the_card_spells_the_dates_out_in_full():
     r = rq.answer(parse("zurich to milan 18 to 20 september with a hotel, "
                         "cheapest"), "hotel_dates", "the whole trip", TODAY)
     rows = {row["label"]: row for row in r.card()}
-    assert rows["Out"]["value"] == "Friday 18 September"
-    assert rows["Back"]["value"] == "Sunday 20 September"
-    assert rows["From"]["note"] == "ZRH" and rows["To"]["note"] == "MXP"
+    assert rows["From date"]["value"] == "Friday 18 September"
+    assert rows["To date"]["value"] == "Sunday 20 September"
+    assert rows["From where"]["note"] == "ZRH" and rows["To where"]["note"] == "MXP"
     assert rows["Hotel"]["value"] == "18 Sep – 20 Sep · 2 nights"
 
 

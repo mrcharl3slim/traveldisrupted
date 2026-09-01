@@ -28,7 +28,7 @@ def test_a_blank_is_filled_from_the_profile_and_marked():
     assert req.origin == "SIN" and req.preference == "cheapest"
     assert set(req.from_profile) == {"origin", "preference"}
     notes = {row["label"]: row.get("note", "") for row in req.card()}
-    assert notes["From"].endswith("from your profile")
+    assert notes["From where"].endswith("from your profile")
     assert notes["Sort by"] == "from your profile"
 
 

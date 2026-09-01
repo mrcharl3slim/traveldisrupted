@@ -2608,7 +2608,7 @@ def story() -> dict:
         feed=_feed_for(trip))
     beats.append({
         "title": "A sentence, not a form",
-        "said": "One sentence books it. The card said 'From: Singapore — from "
+        "said": "One sentence books it. The card said 'From where: Singapore — from "
                 "your profile'; under cheapest, the S$108 train ranked in the same "
                 "list as every fare, marked estimated because no API sells "
                 "that ticket. Alex "

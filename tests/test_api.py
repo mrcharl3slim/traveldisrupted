@@ -601,7 +601,7 @@ def test_the_profile_fills_the_blanks_and_the_card_says_so(client, profile):
     assert set(turn["state"]["from_profile"]) == {"origin", "preference"}
     assert [a["field"] for a in turn["asks"]] == ["confirm"], "asked what it already knew"
     card = {r["label"]: r.get("note", "") for r in turn["confirm"]}
-    assert "from your profile" in card["From"] and "from your profile" in card["Sort by"]
+    assert "from your profile" in card["From where"] and "from your profile" in card["Sort by"]
 
 
 def test_a_new_trip_starts_with_the_profile_s_rules(client, profile):

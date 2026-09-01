@@ -178,14 +178,14 @@ class Request:
                 return note
             return f"{note} · from your profile" if note else "from your profile"
         out = [
-            {"label": "From", "value": places.label(self.origin) or "—",
+            {"label": "From where", "value": places.label(self.origin) or "—",
              "note": mark("origin", self.origin)},
-            {"label": "To", "value": places.label(self.destination) or "—",
+            {"label": "To where", "value": places.label(self.destination) or "—",
              "note": self.destination},
-            {"label": "Out", "value": (f"{self.depart:%A %d %B}"
-                                       if self.depart else "—")},
+            {"label": "From date", "value": (f"{self.depart:%A %d %B}"
+                                             if self.depart else "—")},
         ]
-        out.append({"label": "Back",
+        out.append({"label": "To date",
                     "value": (f"{self.ret:%A %d %B}" if self.ret
                               else "one way" if self.one_way else "—")})
         if self.travellers > 1:
