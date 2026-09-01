@@ -95,6 +95,13 @@
            color:var(--faint);min-width:84px}
   .card .v{font-size:14px}
   .card .n{font:11px var(--mono);color:var(--key);margin-left:auto;white-space:nowrap}
+  /* the profile form: a field is a label, a control, and one sentence on
+     what it changes and where that shows up */
+  .field{margin-bottom:16px}
+  .field label{display:block;margin-bottom:5px}
+  .field input,.field select{width:100%;max-width:340px}
+  .field .hint{font-size:12px;color:var(--dim);margin-top:5px;max-width:560px;
+               line-height:1.5}
 </style>
 </head>
 <body>
@@ -459,17 +466,43 @@ async function loadProfile(){
   try { p = (await api('/api/profile')).profile; } catch (e) { return; }
   const r = p.permissions || {auto_limit: 0, never: []};
   $('#you').innerHTML = `
-    <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center">
-      <span class="m">home</span><input id="you-home" placeholder="singapore" value="${esc(p.home_label || '')}">
-      <span class="m">sort by</span>
-        <select id="you-pref"><option value="">ask me</option>${
-          ['cheapest','fastest','direct'].map(x =>
-            `<option value="${x}"${p.preference === x ? ' selected' : ''}>${x}</option>`).join('')}</select>
-      <span class="m">act up to S$</span><input id="you-limit" type="number" min="0" step="10" value="${Number(r.auto_limit) || 0}">
-      <span class="m">hold up to S$</span><input id="you-hold" type="number" min="0" step="10" value="${Number(r.hold_limit) || 0}">
-      <span class="m">never</span><input id="you-never" placeholder="rail, ryanair" value="${esc((r.never || []).join(', '))}">
+    <div class="field">
+      <label for="you-home">Home city</label>
+      <input id="you-home" placeholder="e.g. Singapore" value="${esc(p.home_label || '')}">
+      <div class="hint">Fills the &ldquo;From&rdquo; blank when you book without naming
+        one &mdash; the confirmation card says <em>from your profile</em>, and
+        anything you type in chat still wins.</div>
     </div>
-    <div class="chips" style="margin-top:8px"><button class="btn sm" id="you-save">Save</button></div>`;
+    <div class="field">
+      <label for="you-pref">Sort results by</label>
+      <select id="you-pref"><option value="">ask me each trip</option>${
+        ['cheapest','fastest','direct'].map(x =>
+          `<option value="${x}"${p.preference === x ? ' selected' : ''}>${x}</option>`).join('')}</select>
+      <div class="hint">How flights, trains and hotels are ranked when you book
+        &mdash; and how recovery plans are ranked when something breaks.</div>
+    </div>
+    <div class="field">
+      <label for="you-limit">Act without asking, up to (S$)</label>
+      <input id="you-limit" type="number" min="0" step="10" value="${Number(r.auto_limit) || 0}">
+      <div class="hint">When a trip breaks, the agent may take a recovery plan
+        costing up to this on its own &mdash; it decides, tells you why, and still
+        leaves any purchase to you. 0 means it always asks first.</div>
+    </div>
+    <div class="field">
+      <label for="you-hold">Act but hold everything, up to (S$)</label>
+      <input id="you-hold" type="number" min="0" step="10" value="${Number(r.hold_limit) || 0}">
+      <div class="hint">The middle tier: between the two amounts the agent still
+        decides, but nothing is sent &mdash; every message waits for your review.
+        Only matters if set higher than the amount above.</div>
+    </div>
+    <div class="field">
+      <label for="you-never">Never book</label>
+      <input id="you-never" placeholder="e.g. rail, ryanair" value="${esc((r.never || []).join(', '))}">
+      <div class="hint">Modes or providers the agent must never choose,
+        comma-separated. Excluded options stay visible in the list, with the
+        rule that excluded them.</div>
+    </div>
+    <div class="chips" style="margin-top:4px"><button class="btn key sm" id="you-save">Save profile</button></div>`;
   $('#you-save').onclick = async () => {
     try {
       await api('/api/profile', {home: $('#you-home').value.trim(),
