@@ -18,6 +18,21 @@
   .msg.me .who{color:rgba(255,255,255,.75)}
   .why{font-size:12px;color:var(--dim);margin-top:8px;
        border-top:1px solid var(--hairline);padding-top:8px}
+  /* the welcome: the one card a first-time visitor reads, so it earns a
+     headline and room, and the example sentences read as a menu rather
+     than as confetti */
+  .msg.welcome{max-width:none;border-left:3px solid var(--key)}
+  .msg.welcome h3{font-size:19px;margin:2px 0 4px;letter-spacing:-.01em}
+  .msg.welcome .sub{font-size:14px}
+  .starts{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+  .start{display:flex;align-items:center;justify-content:space-between;gap:12px;
+         font:inherit;font-size:14px;text-align:left;color:var(--ink);
+         background:var(--sunken);border:1px solid var(--edge);
+         border-radius:var(--r-md);padding:11px 14px;cursor:pointer}
+  .start:hover{border-color:var(--key);background:var(--key-tint);
+               color:var(--key-strong)}
+  .start:disabled{opacity:.45;cursor:default}
+  .start .go{color:var(--key);font-weight:600;flex:none}
   .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
   .chip{background:var(--card);border:1px solid var(--key-edge);color:var(--key);
         font:inherit;font-size:13px;padding:7px 14px;border-radius:var(--r-pill);
@@ -111,15 +126,17 @@
         <div id="detail"></div>
       </div>
       <div class="thread" id="thread">
-        <div class="msg" id="starter">
+        <div class="msg welcome" id="starter">
           <div class="who">TripShield</div>
-          <div class="body">Tell me what you want in a sentence — a trip, or a meeting.
-            I ask only what changes the answer, and every question says why.
-            <div class="chips" id="starter-chips" style="margin-top:10px"></div>
-            <div class="ports" id="boot">connecting — a sleeping instance takes ~30s to wake…</div>
-            <div class="m" style="margin-top:8px">Then break the trip from the panel on the
-              right and watch what it costs. Nothing here can spend real money.</div>
-          </div>
+          <h3>Tell me what you want, in a sentence.</h3>
+          <div class="sub">A trip, or a meeting — I ask only what changes the
+            answer, and every question says why.</div>
+          <div class="m" style="margin-top:14px">or tap one to start:</div>
+          <div class="starts" id="starter-chips"></div>
+          <div class="ports" id="boot">connecting — a sleeping instance takes ~30s to wake…</div>
+          <div class="m" style="margin-top:10px">Once booked, break the trip from the
+            panel on the right and watch what it costs. Nothing here can spend
+            real money.</div>
         </div>
       </div>
     </main>
@@ -406,7 +423,7 @@ const STARTERS = [
   const box = $('#starter-chips');
   if (!box) return;
   box.innerHTML = STARTERS.map(t =>
-    `<button class="chip" data-start="${esc(t)}">&ldquo;${esc(t)}&rdquo;</button>`).join('');
+    `<button class="start" data-start="${esc(t)}">&ldquo;${esc(t)}&rdquo;<span class="go">&rarr;</span></button>`).join('');
   box.querySelectorAll('[data-start]').forEach(b =>
     b.onclick = () => { $('#say').value = b.dataset.start; $('#send').click(); });
 })();
