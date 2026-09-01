@@ -56,42 +56,44 @@
     <div class="doors">
       <div class="door">
         <h3>The worked example</h3>
-        <p>A frozen scenario rendered from <code>GET /api/state</code>: one
-          delayed long-haul, the knock-on graph, and ranked recovery plans.
-          Deterministic — the pytest suite asserts the S$423 headline, and
-          <code>python cli.py --base written</code> prints the same figures
-          straight from the engine, no server involved. If a number here ever
-          disagrees with the tests, that is a bug, not a rounding story.</p>
-        <span class="m">use it to: verify the arithmetic is computed, not typed</span>
+        <p>The proof page. One fixed trip, one delayed flight, and every
+          dollar of consequence computed by the engine — nothing typed in.
+          The same S$423 headline is asserted by the test suite and printed
+          by a one-line terminal command, so any stakeholder can check the
+          claim three ways in under a minute, and all three must agree.</p>
+        <span class="m">use it to: show the numbers are computed, not written</span>
         <a class="btn key" href="/demo">Open /demo</a>
       </div>
       <div class="door">
         <h3>The whole story, one press</h3>
-        <p>One press fires <code>POST /api/story</code>, which builds a fresh
-          owner and trip and drives eleven chapters through the same handlers
-          the UI calls — profile, booking, risk flags, share, delay, cancel,
-          permission tiers, kill switch, audit trail. Nothing is seeded: the
-          page only renders the response, and every run creates new rows, so
-          it is safe to press twice.</p>
-        <span class="m">use it to: exercise the whole API surface in ~20s</span>
+        <p>The whole product in one press, about twenty seconds end to end:
+          profile, booking, risk warnings, sharing, two disruptions, spending
+          tiers, the kill switch, and the audit trail — every feature in
+          sequence, running through the same code real users hit, so what
+          you see here is what ships. Each press builds a fresh trip, so it
+          is safe to run in front of anyone, twice.</p>
+        <span class="m">use it to: see full scope demonstrated without typing</span>
         <a class="btn key" href="/story">Open /story</a>
       </div>
       <div class="door">
         <h3>The presenter's guide</h3>
-        <p>The /story arc performed by hand on the live app: seven timed acts,
-          each line to type in a blue box and each line to say in italics, plus
-          a failure table mapping what went wrong (replay route miss, degraded
-          port, cap refused the auto-take) to what to do and say about it.</p>
-        <span class="m">use it to: run the demo for a room without improvising</span>
+        <p>The six-minute live demo, planned like a runbook: seven timed
+          acts, every line to type and every line to say written down, and a
+          recovery table for the things that can go sideways mid-presentation
+          — each mapped to what to do and what to tell the room. Nobody has
+          to improvise on stage.</p>
+        <span class="m">use it to: present to a room with a script, not nerves</span>
         <a class="btn key" href="/script">Open /script</a>
       </div>
       <div class="door">
         <h3>How to test it</h3>
-        <p>Six manual test cases with expected outcomes and deliberate
-          non-bugs called out: book via chat, delay vs cancel a leg, attach a
-          meeting, cancel the whole trip, set a spending cap and watch the
-          agent act (or refuse), and share by role — the host link must show
-          zero prices on every endpoint.</p>
+        <p>The acceptance checklist: six scenarios covering the promises the
+          product makes — booking by sentence, small delay vs real breakage,
+          meetings as commitments, whole-trip cancellation priced first, the
+          agent acting only inside its spending cap, and role-based sharing
+          where a host sees every time and not one price. Each case states
+          the expected result and the known looks-wrong-but-isn't cases, so
+          testers file real bugs instead of design decisions.</p>
         <span class="m">use it to: break it on purpose and know what counts as broken</span>
         <a class="btn key" href="/test">Open /test</a>
       </div>
