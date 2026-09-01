@@ -263,6 +263,35 @@ def test_rules_can_be_changed_after_booking_and_are_listed(client):
 
 
 # --------------------------------------------------------------------------
+# nothing waits for a reload
+# --------------------------------------------------------------------------
+
+
+def test_a_turn_that_writes_to_a_trip_refreshes_the_list(client):
+    """Confirming an appointment saves it onto the trip, and the card went on
+    showing the bookings it had before -- which is exactly how long it took to
+    doubt whether the appointment had saved at all."""
+    chat = client.get("/").text
+    assert "if (turn.trip_id) await loadTrips();" in chat
+
+
+def test_both_windows_hear_about_a_change(client):
+    """A trip's own window and the chat are separate documents, opened with
+    `noopener` so neither can reach into the other. Acting in one left the
+    other showing yesterday's itinerary until somebody reloaded it."""
+    helpers = client.get("/static/app.js").text
+    assert "BroadcastChannel" in helpers
+    assert "const changed" in helpers and "const onChanged" in helpers
+
+    for page in ("/", "/trip"):
+        text = client.get(page).text
+        assert "onChanged(quietTrips)" in text, page
+        assert "changed();" in text, f"{page} never says it changed anything"
+        assert "async function quietTrips()" in text, (
+            f"{page} answers a broadcast by broadcasting")
+
+
+# --------------------------------------------------------------------------
 # the trip has a window; the chat keeps the conversation
 # --------------------------------------------------------------------------
 

@@ -23,6 +23,19 @@ const late_ = m => m >= 60
   : m + 'm';
 const DELAYS = [30, 90, 180, 360, 720];
 
+/* Two windows, one itinerary. A trip's own window and the chat are separate
+   documents -- and it is opened with `noopener`, so neither can reach into
+   the other -- which left whichever one you were not acting in showing
+   yesterday's trip until somebody reloaded it. Same-origin broadcast:
+   whoever changes something says so, and whoever is listening refreshes.
+   `changed()` belongs on the mutating path only; a refresh that answered a
+   broadcast by broadcasting would have the two windows chasing each other. */
+const CHANNEL = (() => {
+  try { return new BroadcastChannel('tripshield'); } catch (e) { return null; }
+})();
+const changed = () => { try { if (CHANNEL) CHANNEL.postMessage('trips'); } catch (e) {} };
+const onChanged = fn => { if (CHANNEL) CHANNEL.onmessage = () => fn(); };
+
 /* Anything wired with .onclick on a div or table row is invisible to the
    keyboard until it gets a tab stop and an Enter/Space handler. Call this
    on every pickable element right where it is wired. */

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TripShield</title>
-<link rel="stylesheet" href="/static/app.css?v=6">
+<link rel="stylesheet" href="/static/app.css?v=7">
 <style>
   /* Page-local only -- everything shared lives in app.css. */
   .wrap{padding-bottom:150px}   /* clears the fixed composer */
@@ -180,7 +180,7 @@
   <button class="btn key" id="send">Send</button>
 </div></div>
 
-<script src="/static/app.js?v=6"></script>
+<script src="/static/app.js?v=7"></script>
 <script>
 // $/esc/eur/at/hhmm/span/late_/DELAYS come from /static/app.js --
 // one set of helpers, one timezone rule.
@@ -388,6 +388,12 @@ async function say(text, answers){
   el.querySelectorAll('.chip[data-field]').forEach(b =>
     b.onclick = () => say('', {[b.dataset.field]: b.dataset.value}));
   wireOffers(el);
+
+  // A turn that wrote to a trip -- confirming an appointment onto it -- has
+  // changed what the list is showing. Without this the card kept its old
+  // bookings until somebody reloaded the page, which is exactly how long it
+  // took to doubt whether the appointment had saved at all.
+  if (turn.trip_id) await loadTrips();
 }
 
 function offerTable(kind, title, rows){
@@ -591,6 +597,12 @@ async function loadProfile(){
 }
 
 async function loadTrips(){
+  await quietTrips();
+  changed();          // the trip's own window is looking at the same itinerary
+}
+
+// The refresh that answers a broadcast: it must not broadcast back.
+async function quietTrips(){
   const listed = await api('/api/itineraries');
   TRIPS = listed.itineraries;
   if (listed.me) { ME = listed.me; paintMe(); }
@@ -703,6 +715,8 @@ window.addEventListener('hashchange',
               send.textContent = was; field.focus(); }
   };
 }
+
+onChanged(quietTrips);
 
 api('/health').then(h => {
   const boot = $('#boot'); if (boot) boot.remove();
