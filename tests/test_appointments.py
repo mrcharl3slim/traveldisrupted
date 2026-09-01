@@ -507,3 +507,31 @@ def test_resaving_the_same_meeting_keeps_one_row():
     stored, _p, _s = ingest.to_bookings({"bookings": ingest.to_dicts(once.bookings)})
     twice = appointment.attach(Trip(stored), appt)
     assert sum(1 for b in twice.bookings if b.commitment) == 1
+
+
+def test_a_sentence_about_the_clock_is_not_the_subject():
+    """"starts 3pm to 6pm" answers the time question from the turn before.
+    The subject regex reads from the start of whatever was last typed, so it
+    took the first word -- and the itinerary read "starts · 12 Oct 15:00 ->
+    18:00 · peter from prudential", naming the one thing nobody needed told."""
+    for said in ("starts at 3pm to 6pm", "it starts at 15:00", "runs at 3pm",
+                 "starts on 12 october at 3pm", "ends at 6pm",
+                 "scheduled at 9am", "that starts at noon"):
+        assert ap.parse(said, TODAY).what == "", said
+
+
+def test_the_title_falls_back_to_who_it_is_with():
+    """With no subject there is still a name worth showing."""
+    # As it actually arrives: "peter from prudential" is typed into the "who
+    # is it with?" question, since the WITH regex stops at "from".
+    assert ap.Appointment(who="peter from prudential").title() == (
+        "Meeting with peter from prudential")
+    # Nothing said at all still reads as something, not as a blank row.
+    assert ap.Appointment().title() == "Meeting"
+
+
+def test_a_real_subject_still_survives():
+    """The fix must not eat the subjects it exists to protect."""
+    assert ap.parse("workshop with the team at MXP", TODAY).what == "workshop"
+    assert ap.parse("site visit at MXP", TODAY).what == "site visit"
+    assert "Meeting" in ap.parse("meeting with peter on 12 october", TODAY).what

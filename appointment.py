@@ -253,6 +253,21 @@ def _minutes(text: str) -> int:
     return max(5, min(int(total), 12 * 60))
 
 
+#: Words that say WHEN a thing happens rather than WHAT it is. A lead ending
+#: in one of these is a sentence about the clock -- "starts 3pm to 6pm",
+#: answering the time question from the turn before -- and the subject regex
+#: below reads from the start of whatever was last typed, so it harvested that
+#: first word happily. The itinerary then read "starts · 12 Oct 15:00 -> 18:00
+#: · peter from prudential", which names the one thing about the appointment
+#: nobody needed to be told.
+SCAFFOLD = frozenset({
+    "start", "starts", "starting", "begin", "begins", "beginning",
+    "end", "ends", "ending", "finish", "finishes", "finishing",
+    "run", "runs", "running", "go", "goes", "going", "happens", "happening",
+    "scheduled", "booked", "set", "time", "it", "that", "this",
+})
+
+
 def parse(text: str, today: date | None = None) -> Appointment:
     """Free text -> whatever can be established. Never a guess about the three."""
     today = today or date.today()
@@ -283,7 +298,12 @@ def parse(text: str, today: date | None = None) -> Appointment:
                     r"([a-z][\w\- ]{2,40}?)\s+(?:with|on|at|in)\b", text, re.I)
     if lead:
         what = " ".join(lead.group(1).split()).strip()[:60]
-        if what.lower() in ("meeting", "appointment", "call", "dinner", "lunch"):
+        # Judged on the last word, so "it starts" goes the same way "starts"
+        # does. An empty `what` is not a loss: `title()` composes "Meeting
+        # with <who>" from what the traveller actually said.
+        if what.lower().split()[-1] in SCAFFOLD:
+            what = ""
+        elif what.lower() in ("meeting", "appointment", "call", "dinner", "lunch"):
             what = f"{what.title()}" + (f" with {who}" if who else "")
 
     return Appointment(what=what, who=who, where=where, place=place,
