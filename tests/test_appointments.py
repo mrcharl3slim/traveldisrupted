@@ -405,3 +405,105 @@ def test_anything_other_than_yes_is_not_a_confirmation():
     a = ap.answer(made("meeting with john on 2 september at 9am at MXP"),
                   "confirm", "no, let me change it", TODAY)
     assert not a.confirmed and not a.ready
+
+
+import appointment
+
+# -- the presence timeline ------------------------------------------------
+
+def _presence_trip():
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    from domain import Booking, Kind, Trip
+    sgt, cet = ZoneInfo("Asia/Singapore"), ZoneInfo("Europe/Zurich")
+    out = Booking(id="out", kind=Kind.FLIGHT, provider="SQ",
+                  title="SQ 346 - SIN to ZRH",
+                  start=datetime(2026, 9, 18, 1, 25, tzinfo=sgt),
+                  end=datetime(2026, 9, 18, 8, 15, tzinfo=cet),
+                  origin="SIN", destination="ZRH", price=1000.0)
+    back = Booking(id="back", kind=Kind.FLIGHT, provider="SQ",
+                   title="SQ 345 - ZRH to SIN",
+                   start=datetime(2026, 9, 21, 11, 0, tzinfo=cet),
+                   end=datetime(2026, 9, 22, 6, 0, tzinfo=sgt),
+                   origin="ZRH", destination="SIN", price=1000.0)
+    return Trip([out, back])
+
+
+def test_a_meeting_in_the_wrong_city_carries_where_you_actually_are():
+    """On the 19th the timeline says Zurich; a Singapore meeting that day is
+    invalid, and the verdict names the city so the reply can."""
+    from datetime import date, datetime
+    from zoneinfo import ZoneInfo
+    appt = appointment.Appointment(
+        what="meeting", who="the board", where="Singapore", place="SIN",
+        day=date(2026, 9, 19),
+        when=datetime(2026, 9, 19, 10, 0, tzinfo=ZoneInfo("Asia/Singapore")),
+        confirmed=True)
+    verdict = appointment.assess(_presence_trip(), appt, home="SIN")
+    assert verdict["invalid"], "the timeline proves they are in Zurich"
+    assert "Zurich" in verdict["invalid"][0]["message"]
+
+
+def test_less_than_two_hours_after_landing_is_tight_not_infeasible():
+    from datetime import date, datetime
+    from zoneinfo import ZoneInfo
+    cet = ZoneInfo("Europe/Zurich")
+    appt = appointment.Appointment(
+        what="meeting", who="a client", where="Zurich", place="ZRH",
+        day=date(2026, 9, 18),
+        when=datetime(2026, 9, 18, 9, 30, tzinfo=cet), confirmed=True)
+    verdict = appointment.assess(_presence_trip(), appt, home="SIN")
+    assert not verdict["invalid"]
+    assert verdict["tight"] and verdict["tight"][0]["gap_minutes"] == 75
+    assert verdict["feasible"], "tight is a warning, not a refusal"
+
+
+def test_the_two_hour_rule_is_between_appointments_too():
+    from datetime import date, datetime
+    from zoneinfo import ZoneInfo
+    cet = ZoneInfo("Europe/Zurich")
+    first = appointment.Appointment(
+        what="meeting", who="ops", where="Zurich", place="ZRH",
+        day=date(2026, 9, 19),
+        when=datetime(2026, 9, 19, 10, 0, tzinfo=cet), confirmed=True)
+    trip = appointment.attach(_presence_trip(), first)
+    second = appointment.Appointment(
+        what="coffee", who="a friend", where="Zurich", place="ZRH",
+        day=date(2026, 9, 19),
+        when=datetime(2026, 9, 19, 12, 30, tzinfo=cet), confirmed=True)
+    verdict = appointment.assess(trip, second, home="SIN")
+    assert verdict["tight"], "11:00 to 12:30 is ninety minutes"
+    assert not verdict["about_this"], "a gap is not an overlap"
+
+
+def test_an_open_ended_trip_lets_a_late_meeting_at_the_last_city_through():
+    from datetime import date, datetime
+    from zoneinfo import ZoneInfo
+    from domain import Trip
+    cet = ZoneInfo("Europe/Zurich")
+    one_way = Trip(list(_presence_trip().bookings)[:1])
+    appt = appointment.Appointment(
+        what="review", who="the team", where="Zurich", place="ZRH",
+        day=date(2026, 10, 2),
+        when=datetime(2026, 10, 2, 15, 0, tzinfo=cet), confirmed=True)
+    verdict = appointment.assess(one_way, appt, home="SIN")
+    assert not verdict["invalid"], "presumed still in Zurich — said, not hidden"
+    assert verdict["presence"]["open_ended"] is True
+
+
+def test_resaving_the_same_meeting_keeps_one_row():
+    """The id survives a storage round trip, so attach() replaces instead of
+    appending. A hash-based id never matched its reloaded self."""
+    from datetime import date, datetime
+    from zoneinfo import ZoneInfo
+    import ingest
+    from domain import Trip
+    cet = ZoneInfo("Europe/Zurich")
+    appt = appointment.Appointment(
+        what="meeting", who="the client", where="Zurich", place="ZRH",
+        day=date(2026, 9, 19),
+        when=datetime(2026, 9, 19, 14, 0, tzinfo=cet), confirmed=True)
+    once = appointment.attach(_presence_trip(), appt)
+    stored, _p, _s = ingest.to_bookings({"bookings": ingest.to_dicts(once.bookings)})
+    twice = appointment.attach(Trip(stored), appt)
+    assert sum(1 for b in twice.bookings if b.commitment) == 1

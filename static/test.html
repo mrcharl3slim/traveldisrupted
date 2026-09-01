@@ -34,7 +34,7 @@
   <header>
     <div>
       <h1>How to test it</h1>
-      <div class="sub">Nine things to try, with what to expect. What this instance
+      <div class="sub">Ten things to try, with what to expect. What this instance
         is running on lives on <a href="/developer">/developer</a>; the presenter's
         run-book on <a href="/script">/script</a>.</div>
     </div>
@@ -226,6 +226,29 @@
       <div class="expect nope"><b>Not a bug:</b> the host from Test 6 cannot open it.
         The trail prices decisions, and the host's whole deal is seeing every time and
         not one price.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Test 10 · It knows where you are</h2>
+    <div class="case">
+      <ol class="steps">
+        <li>With a trip booked (Test 1), ask it to file a meeting in a city the
+          itinerary never visits on a day you are abroad — <code>meeting with the
+          board on the 19th at 10am in Singapore</code>.</li>
+        <li>Then file one in the right city but under two hours after your
+          flight lands, or 90 minutes after another meeting.</li>
+        <li>Then just ask: <code>when is my meeting with the client?</code></li>
+      </ol>
+      <div class="expect"><b>Expect:</b> the wrong-city meeting is <em>refused</em> —
+        not saved — and the reply names where the itinerary actually puts you that
+        day. The tight one gets a warning and a <em>Save it anyway?</em> chip: yes
+        saves, no doesn't. The question is answered from what is stored, with the
+        time in the meeting's own timezone — and creates nothing.</div>
+      <div class="expect nope"><b>Not a bug:</b> a trip with no return leg leaves
+        you <em>presumed</em> at the last destination — said as "open-ended", so a
+        late meeting there is allowed. And a place the engine does not recognise
+        never causes a refusal: no opinion beats an invented one.</div>
     </div>
   </section>
 </div>

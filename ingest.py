@@ -126,7 +126,10 @@ def _windows(raw) -> list[Window]:
 
 
 def _slug(text: str, taken: set[str]) -> str:
-    base = re.sub(r"[^a-z0-9]+", "", text.lower())[:12] or "booking"
+    # Twenty characters, not twelve: "Meeting with the client" and "Meeting
+    # with the auditors" both truncated to "meetingwitht", so two different
+    # appointments shared an id and attach() replaced one with the other.
+    base = re.sub(r"[^a-z0-9]+", "", text.lower())[:20] or "booking"
     candidate, n = base, 2
     while candidate in taken:
         candidate, n = f"{base}{n}", n + 1

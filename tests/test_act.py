@@ -530,14 +530,32 @@ def test_a_meeting_on_a_day_you_are_not_travelling_is_refused_kindly(client, boo
 
 
 def test_a_clash_is_reported_against_the_thing_it_clashes_with(client, booked):
+    """Two meetings in the same hour clash, and the clash names the other one.
+
+    This used to schedule the meeting DURING a flight -- which the presence
+    timeline now refuses outright as a wrong-city save (the traveller is in
+    the air, not in Milan), before any clash could be reported. The refusal
+    is asserted first; the clash contract is then exercised where it still
+    applies: between two events the traveller could genuinely attend.
+    """
     leg = [b for b in booked["bookings"] if b["kind"] == "flight"][0]
     airborne = leg["starts"]["iso"]
     hour = int(airborne[11:13]) + 1
-    turn = tell(client, f"meeting with the vendor on {airborne[:10]} "
-                        f"at {hour}:00 at MXP", booked["trip_id"])
+    refused = tell(client, f"meeting with the vendor on {airborne[:10]} "
+                           f"at {hour}:00 at MXP", booked["trip_id"])
+    assert refused.get("invalid"), "mid-flight Milan is a wrong-city refusal"
+    assert "feasible" not in refused, "refused, not judged"
+
+    day = airborne[:10]
+    first = tell(client, f"meeting with the vendor on {day} at 21:00 at MXP",
+                 booked["trip_id"])
+    assert first.get("saved"), first.get("reply")
+    turn = tell(client, f"call with the vendor on {day} at 21:30 at MXP",
+                booked["trip_id"])
     assert turn["feasible"] is False
     assert turn["about_this"], "said it does not fit and named nothing"
-    assert any(leg["title"] in c for c in turn["about_this"])
+    # the parser strips articles: the stored title is "Meeting with vendor"
+    assert any("Meeting with" in c and "overlaps" in c for c in turn["about_this"])
 
 
 def test_a_meeting_survives_storage_as_a_commitment(client, booked):

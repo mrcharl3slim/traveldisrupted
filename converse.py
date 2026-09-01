@@ -189,6 +189,16 @@ def classify(s: State) -> State:
         return {"kind": "confirmation"}
     # "dinner in Milan" while booking a trip is part of the trip, not a
     # separate arrangement -- so buying language wins when both are present.
+    # A QUESTION about an appointment is not a new appointment. "when is my
+    # lunch appointment" used to create a second lunch titled with the
+    # question -- reading your calendar back must never mutate it. Gated on
+    # the appointment noun so "when does my flight leave?" stays a booking
+    # matter.
+    asking = re.match(r"\s*(when|where|what time|what day|which day|"
+                      r"do i have|what's|what is)\b", low) or \
+        low.rstrip().endswith("?")
+    if asking and appointment and not buying:
+        return {"kind": "asking"}
     if appointment and not buying:
         return {"kind": "appointment"}
     return {"kind": "book"}

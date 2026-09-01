@@ -40,12 +40,6 @@ from request import MONTHS, Ask, _dates, mentions_a_day
 #: by anyone who says "two hours".
 DEFAULT_MINUTES = 60
 
-#: Getting from where you land to where a meeting is. Coarse on purpose: the
-#: engine already knows airport-to-city transit, and this covers the last hop
-#: to an address it has never heard of. Being roughly right and visible beats
-#: being precisely wrong and silent.
-LOCAL_HOP = timedelta(minutes=45)
-
 _TIME = re.compile(
     r"(?<!\d)(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm|a\.m\.|p\.m\.)"
     r"|(?<!\d)(\d{1,2}):(\d{2})(?!\d)", re.I)
@@ -203,9 +197,19 @@ class Appointment:
         return rows
 
     def to_booking(self, booking_id: str = "") -> Booking:
-        """The appointment as the engine sees it: a place, a time, a promise."""
+        """The appointment as the engine sees it: a place, a time, a promise.
+
+        The default id uses the same slug rule as `ingest._slug`, because ids
+        are regenerated from titles when a stored trip is read back -- a
+        hash-based id never matched its own reloaded self, so re-saving the
+        same appointment appended a duplicate instead of replacing it. Two
+        different appointments with the identical title would still collide,
+        which `title()` including `who` makes unlikely rather than impossible.
+        """
         return Booking(
-            id=booking_id or f"appt-{abs(hash(self.summary())) % 10**8}",
+            id=booking_id
+            or (re.sub(r"[^a-z0-9]+", "", self.title().lower())[:20]
+                or "appointment"),
             kind=Kind.ACTIVITY,
             provider=self.who or "appointment",
             title=self.title(),
@@ -502,19 +506,45 @@ def attach(trip, appt: Appointment):
     return _Trip(sorted(kept + [booking], key=lambda b: b.start))
 
 
-def assess(trip, appt: Appointment) -> dict:
+def assess(trip, appt: Appointment, home: str = "") -> dict:
     """Can this be attended, and what does it collide with.
 
-    Reported rather than refused. An appointment that does not fit is still an
-    appointment the traveller has -- telling them it clashes is the product;
-    declining to record it would just move the clash somewhere we cannot see.
+    Reported rather than refused -- with ONE exception, decided at the serve
+    layer, not here: a wrong-city appointment (the timeline proves the
+    traveller is elsewhere) is refused rather than saved, because filing a
+    commitment the itinerary makes unattendable is not recording a fact, it
+    is inventing one. Everything else stays a report: clashes block nothing,
+    and a tight gap is a warning the traveller can approve past.
     """
+    import whereabouts
     from builder import clashes, unplaced
 
     combined = attach(trip, appt)
     found = clashes(combined)
     mine = [c for c in found if appt.title() in c]
     notes = unplaced(combined)
+
+    booking = localise(appt, trip).to_booking()
+    tl = whereabouts.timeline(trip, home)
+    invalid: list[dict] = []
+    if booking.start is not None:
+        city = whereabouts._city(booking.origin or "")
+        span_end = booking.end or booking.start
+        if city and tl and not whereabouts.valid_here(
+                tl, city, booking.start, span_end):
+            there = [iv.city for iv in whereabouts.where_on(
+                tl, appt.day, booking.start.tzinfo) if iv.city]
+            there = list(dict.fromkeys(there))
+            presumed = (whereabouts.open_ended(tl, home)
+                        and bool(there) and tl[-1].city in there)
+            message = (f"On {appt.day:%d %b} you're in "
+                       f"{' and then '.join(there) or 'transit'}, not {city}."
+                       + (" (Presumed — your trip has no return leg.)"
+                          if presumed else ""))
+            invalid.append({"code": "wrong_city", "expected": there,
+                            "message": message})
+    gaps_found = (whereabouts.tight(combined, booking)
+                  if booking.start is not None else [])
     return {
         # Judged on what is known. A location the engine does not recognise is
         # a gap in what we can check, not a verdict -- see `unplaced`.
@@ -523,4 +553,8 @@ def assess(trip, appt: Appointment) -> dict:
         "about_this": mine,
         "notes": notes,
         "trip": combined,
+        "invalid": invalid,
+        "tight": gaps_found,
+        "presence": ({"open_ended": whereabouts.open_ended(tl, home),
+                      "note": "open-ended — no return leg"} if tl else None),
     }

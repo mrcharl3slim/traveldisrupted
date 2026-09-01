@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import re
 import sys
 from contextlib import asynccontextmanager
 from datetime import date, datetime, timedelta, timezone
@@ -1193,6 +1194,15 @@ def _loaded_trips(who: roles.Person = roles.ANON) -> list[tuple[str, Trip, str]]
     return out
 
 
+def _day_of(trip: Trip, settled, context) -> Trip:
+    """Only the bookings that touch the appointment's own local day."""
+    zone = appt_mod.zone_for(settled, context)
+    if settled.day is None or zone is None:
+        return trip
+    return Trip([b for b in trip.in_order() if b.start
+                 and b.start.astimezone(zone).date() == settled.day])
+
+
 def _appointment_turn(body: Chat, who: roles.Person = roles.ANON) -> dict:
     """The other half of the conversation: something to be at, not to buy.
 
@@ -1205,9 +1215,13 @@ def _appointment_turn(body: Chat, who: roles.Person = roles.ANON) -> dict:
     unread: list[str] = []
 
     chosen = ""
+    approve_said = ""
     for field_name, value in (body.answers or {}).items():
         if field_name == "trip":
             chosen = value
+            continue
+        if field_name == "approve":
+            approve_said = value
             continue
         before = base or appt_mod.Appointment()
         base = appt_mod.answer(before, field_name, value)
@@ -1340,7 +1354,45 @@ def _appointment_turn(body: Chat, who: roles.Person = roles.ANON) -> dict:
     trip = next(t for tid, t, _ in trips if tid == trip_id)
     # Adding to somebody else's trip is a capability, not a courtesy.
     _access(trip_id, who, roles.BOOK)
-    verdict = appt_mod.assess(trip, settled)
+    verdict = appt_mod.assess(trip, settled, home=_profile(who).home)
+
+    # WRONG CITY IS REFUSED, the one exception to "reported rather than
+    # refused" (see appointment.assess). The timeline proves the traveller is
+    # elsewhere; saving would file a commitment the itinerary makes
+    # unattendable. Nothing is stored; the state keeps the appointment
+    # unconfirmed so "actually the 20th" flows through the correction path.
+    if verdict["invalid"]:
+        return {**out,
+                "state": _appt_out(replace_dataclass(settled, confirmed=False)),
+                "invalid": verdict["invalid"],
+                "presence": verdict["presence"],
+                "reply": "I can't save that. "
+                         + verdict["invalid"][0]["message"]
+                         + " Change the day or the city — \"actually the "
+                           "20th\", \"make it Zurich\"."}
+
+    # A TIGHT GAP WARNS AND WAITS. Under two hours to a neighbouring event in
+    # the same city is a warning the traveller can approve past -- warn
+    # first, save only on an explicit yes. The ask rides the same chip
+    # machinery as every other question.
+    yes = re.compile(r"\s*(y|yes|yeah|yep|ok|okay|save|go)", re.I)
+    approved = bool(yes.match(approve_said)) or (
+        body.state.get("approve_pending") and bool(yes.match(body.text or "")))
+    if approve_said and request_mod.declined(approve_said):
+        return {**out,
+                "state": _appt_out(replace_dataclass(settled, confirmed=False)),
+                "reply": "What should I change? Tell me the bit to move — "
+                         "\"actually 3pm\", \"make it the 20th\"."}
+    if verdict["tight"] and not approved:
+        why = " · ".join(t["message"] for t in verdict["tight"])
+        return {**out,
+                "state": {**_appt_out(settled), "approve_pending": True},
+                "tight": verdict["tight"],
+                "presence": verdict["presence"],
+                "asks": [{"field": "approve", "question": "Save it anyway?",
+                          "options": ["yes, save it", "no, change the time"],
+                          "why": why, "optional": False}],
+                "reply": f"Heads up — {why}. Save it anyway?"}
 
     saved = store_module.store().get(trip_id)
     payload = dict(saved.payload)
@@ -1361,7 +1413,13 @@ def _appointment_turn(body: Chat, who: roles.Person = roles.ANON) -> dict:
             "clashes": verdict["clashes"],
             "about_this": verdict["about_this"],
             "notes": verdict["notes"],
-            "bookings": _bookings_out(_load(trip_id)),
+            "tight": verdict["tight"],
+            "invalid": [],
+            "presence": verdict["presence"],
+            # "That day now reads" finally reads THAT DAY: the whole
+            # itinerary under a day heading put a 21 Sep flight in an
+            # 18 Sep answer.
+            "bookings": _bookings_out(_day_of(_load(trip_id), settled, trip)),
             "reply": (f"Added to {saved.label}. "
                       + ("That works — nothing else is in the way."
                          if verdict["feasible"]
@@ -1372,6 +1430,40 @@ def replace_dataclass(obj, **changes):
     from dataclasses import replace as _replace
 
     return _replace(obj, **changes)
+
+
+def _appointment_answer(body: Chat, who: roles.Person) -> dict:
+    """Answer a question about saved appointments from the store.
+
+    Matched on the words of the question against the stored commitments'
+    titles; answered in the booking's own timezone; and nothing enters the
+    collecting state, so a question can never become an appointment.
+    """
+    low = (body.text or "").lower()
+    words = [w for w in re.findall(r"[a-z]+", low) if len(w) > 3]
+    hits: list[tuple[int, object, str]] = []
+    for _tid, trip, label in _loaded_trips(who):
+        for b in trip.in_order():
+            if not b.commitment:
+                continue
+            title_low = b.title.lower()
+            score = sum(1 for w in words if w in title_low)
+            if score:
+                hits.append((score, b, label))
+    if hits:
+        hits.sort(key=lambda h: -h[0])
+        _score, b, label = hits[0]
+        place = places.by_code(b.origin or "")
+        when = (f"{b.start:%A %d %B at %H:%M}"
+                + (f" ({place.label} time)" if place else "")
+                if b.start else "no time saved")
+        reply = f"{b.title} — {when}, on “{label}”."
+    else:
+        reply = ("I don't have an appointment like that saved. Tell me about "
+                 "it in a sentence and I'll file it against your trip.")
+    return {"kind": "asking", "state": {}, "asks": [], "unread": [],
+            "ports": [], "note": "", "detail": "", "confirm": None,
+            "flights": [], "returns": [], "stays": [], "reply": reply}
 
 
 @app.post("/api/chat")
@@ -1385,10 +1477,15 @@ def chat(body: Chat, who: roles.Person = Depends(_who)) -> dict:
     from base import PortError
 
     # Which conversation is this? An appointment in flight stays an
-    # appointment; otherwise the text decides.
-    if (body.state.get("kind") == "appointment"
-            or (not body.state and converse.classify(
-                {"text": body.text})["kind"] == "appointment")):
+    # appointment; otherwise the text decides. A QUESTION about the calendar
+    # reads it and must never write it -- "when is my lunch appointment"
+    # once created a second lunch, titled with the question.
+    kind = ("appointment" if body.state.get("kind") == "appointment"
+            else converse.classify({"text": body.text})["kind"]
+            if not body.state else "")
+    if kind == "asking":
+        return _appointment_answer(body, who)
+    if kind == "appointment":
         return _appointment_turn(body, who)
 
     req = _req_in(body.state) if body.state else None

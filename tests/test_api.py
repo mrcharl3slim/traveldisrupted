@@ -263,6 +263,107 @@ def test_rules_can_be_changed_after_booking_and_are_listed(client):
 
 
 # --------------------------------------------------------------------------
+# the presence timeline: location, date and time, every event
+# --------------------------------------------------------------------------
+
+
+def _drive_appointment(client, opening: str, replies: dict) -> dict:
+    """Walk the appointment conversation with canned answers, stopping at any
+    question the test did not expect (that IS the assertion, sometimes)."""
+    turn = client.post("/api/chat", json={"text": opening}).json()
+    for _ in range(10):
+        pending = [a for a in turn.get("asks", []) if not a["optional"]]
+        if not pending or pending[0]["field"] not in replies:
+            break
+        field = pending[0]["field"]
+        turn = client.post("/api/chat", json={
+            "state": turn["state"], "answers": {field: replies[field]}}).json()
+    return turn
+
+
+def _commitments(client, trip_id: str) -> int:
+    return sum(1 for b in _row(client, trip_id)["bookings"] if b.get("commitment"))
+
+
+def test_a_wrong_city_meeting_is_refused_and_not_saved(client):
+    """On the 19th the itinerary has the traveller in Milan; a Singapore
+    meeting that day is refused with the actual city named, and the store is
+    untouched -- filing an unattendable commitment is inventing a fact."""
+    booked = _with_meeting(client, {})
+    tid = booked["trip_id"]
+    before = _commitments(client, tid)
+    turn = _drive_appointment(client, "i have a board meeting", {
+        "who": "the board", "day": "2026-09-19", "at": "10am",
+        "where": "Singapore", "trip": tid, "confirm": "yes, save it"})
+    assert turn.get("invalid"), turn.get("reply")
+    assert "Milan" in turn["invalid"][0]["message"]
+    assert turn["reply"].startswith("I can't save that")
+    assert _commitments(client, tid) == before, "nothing may be stored"
+
+
+def test_a_tight_meeting_warns_first_and_saves_on_yes(client):
+    """Ninety minutes after the client meeting ends is under the two-hour
+    rule: warned, held, and saved only on the explicit yes."""
+    booked = _with_meeting(client, {})
+    tid = booked["trip_id"]
+    before = _commitments(client, tid)
+    replies = {"who": "the auditors", "day": DAY, "at": "11:30pm",
+               "where": "MXP", "trip": tid, "confirm": "yes, save it"}
+    turn = _drive_appointment(client, "another meeting", replies)
+    pending = [a for a in turn.get("asks", []) if not a["optional"]]
+    assert pending and pending[0]["field"] == "approve", turn.get("reply")
+    assert turn.get("tight"), "the warning names the gap"
+    assert _commitments(client, tid) == before, "warned means not yet saved"
+
+    done = client.post("/api/chat", json={
+        "state": turn["state"], "answers": {"approve": "yes, save it"}}).json()
+    assert done.get("saved"), done.get("reply")
+    assert _commitments(client, tid) == before + 1
+
+
+def test_declining_the_warning_does_not_save(client):
+    booked = _with_meeting(client, {})
+    tid = booked["trip_id"]
+    before = _commitments(client, tid)
+    turn = _drive_appointment(client, "another meeting", {
+        "who": "finance", "day": DAY, "at": "11:30pm",
+        "where": "MXP", "trip": tid, "confirm": "yes, save it"})
+    assert [a["field"] for a in turn.get("asks", []) if not a["optional"]] == ["approve"]
+    said_no = client.post("/api/chat", json={
+        "state": turn["state"],
+        "answers": {"approve": "no, change the time"}}).json()
+    assert "change" in said_no["reply"].lower()
+    assert _commitments(client, tid) == before
+
+
+def test_that_day_now_reads_only_that_day(client):
+    """The save-turn's listing is the appointment's own day -- a 20 Sep
+    hotel checkout has no business in an 18 Sep answer."""
+    booked = _with_meeting(client, {})
+    tid = booked["trip_id"]
+    turn = _drive_appointment(client, "i have a dinner", {
+        "who": "an old friend", "day": DAY, "at": "6pm",
+        "where": "MXP", "trip": tid, "confirm": "yes, save it",
+        "approve": "yes, save it"})
+    assert turn.get("saved"), turn.get("reply")
+    days = {b["starts"]["iso"][:10] for b in turn["bookings"]}
+    assert days == {DAY}, days
+
+
+def test_a_question_about_an_appointment_is_answered_not_created(client):
+    """Reading the calendar back must never mutate it."""
+    booked = _with_meeting(client, {})
+    tid = booked["trip_id"]
+    before = _commitments(client, tid)
+    turn = client.post("/api/chat", json={
+        "text": "when is my meeting with the client?"}).json()
+    assert turn["kind"] == "asking"
+    assert "22:00" in turn["reply"], turn["reply"]
+    assert turn["state"] == {} and not turn["asks"]
+    assert _commitments(client, tid) == before
+
+
+# --------------------------------------------------------------------------
 # the gate reaches everything that leaves the building
 # --------------------------------------------------------------------------
 

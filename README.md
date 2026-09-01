@@ -634,6 +634,32 @@ not, what the rules say. A missed meeting also produces the one action that is
 possible for it: telling the person. The scripted trip has no commitments, so
 its ranking and every figure in it are unmoved.
 
+## Where the traveller is, at every moment
+
+`whereabouts.py` derives a location timeline from the itinerary itself: at
+home (the profile's home city) before the first leg, in transit during a leg,
+at each destination until the next leg departs, home again after the return.
+Movement comes only from the trip's own transport legs — the transit table
+knows sixteen *local* hops and is never asked city-to-city questions — and a
+trip with no return leg leaves the traveller *presumed* at the last
+destination, said out loud as "open-ended", never silently believed.
+
+Every appointment is validated against that timeline for location, date and
+time:
+
+- **Wrong city is refused outright** — the one exception to "reported rather
+  than refused": a Singapore meeting on a day the timeline puts you in Zurich
+  is not saved, and the reply names where you actually are. Nothing is refused
+  out of ignorance: an unrecognised place degrades to the old behaviour.
+- **Two hours of breathing room** — an appointment closer than 2h to any
+  neighbouring event in the same city (a landing, another meeting; the gap to
+  a flight runs to its check-in close, not wheels-up) is warned about and
+  saved only on an explicit "yes, save it". Flight-to-flight connections keep
+  their own `MIN_CONNECTION` rule.
+- **A question never writes the calendar** — "when is my lunch appointment"
+  is answered from the stored bookings; it used to create a second lunch,
+  titled with the question.
+
 ## Where the trip is thin, before anything breaks
 
 Everything else in the engine speaks after a disruption. `risk.py` reads the

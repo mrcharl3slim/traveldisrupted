@@ -598,3 +598,15 @@ def test_declining_the_confirmation_is_an_answer_not_a_failure():
     assert rq.declined("change the dates")
     assert not rq.declined("yes, search it")
     assert not rq.declined("")
+
+
+def test_a_question_about_an_appointment_is_not_a_new_one():
+    """Reading your calendar back must never mutate it. "when is my lunch
+    appointment" created a second lunch, titled with the question."""
+    assert converse.classify({"text": "when is my lunch appointment"})["kind"] == "asking"
+    assert converse.classify({"text": "do I have a meeting tomorrow?"})["kind"] == "asking"
+    # statements still create; booking questions stay booking matters
+    assert converse.classify(
+        {"text": "lunch with Priya on friday at 1pm in milan"})["kind"] == "appointment"
+    assert converse.classify(
+        {"text": "when does my flight leave?"})["kind"] == "book"

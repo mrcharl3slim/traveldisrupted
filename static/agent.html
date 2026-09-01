@@ -287,6 +287,18 @@ async function say(text, answers){
   if (shown.summary && !blank.includes(shown.summary.trim()))
     html += `<div class="note">${turn.saved ? '' : 'So far: '}<b>${esc(shown.summary)}</b></div>`;
 
+  // The presence timeline speaks first: a wrong-city refusal, a tight-gap
+  // warning waiting on approval, and the open-ended presumption when the
+  // trip has no return leg.
+  if (turn.kind === 'appointment'){
+    if ((turn.invalid || []).length)
+      html += `<div class="banner bad">` + turn.invalid.map(x => esc(x.message)).join('<br>') + `</div>`;
+    if ((turn.tight || []).length)
+      html += `<div class="banner warn">` + turn.tight.map(x => esc(x.message)).join('<br>') + `</div>`;
+    if (turn.presence && turn.presence.open_ended)
+      html += `<div class="m" style="margin-top:6px">${esc(turn.presence.note)}</div>`;
+  }
+
   // An appointment is judged rather than searched. What it collides with is
   // the answer, so it goes where the offers would have gone.
   if (turn.kind === 'appointment' && turn.feasible !== undefined){
@@ -301,7 +313,7 @@ async function say(text, answers){
     if (turn.bookings)
       html += `<div class="note">That day now reads:</div>` + turn.bookings.map(b => `
         <div class="leg"><div>${esc(b.title)}${b.commitment
-          ? '<span class="tag">commitment</span>' : ''}
+          ? ' <span class="tag">commitment</span>' : ''}
           <div class="m">${esc(b.where)} · ${span(b.starts, b.ends)}</div></div>
         <div class="n">${b.price ? eur(b.price) : ''}</div></div>`).join('');
   }
@@ -567,7 +579,7 @@ function openTrip(id, quiet){
         ${b.pending ? '<span class="tag warn">not paid</span>' : ''}
         ${gone ? '<span class="tag bad">cancelled</span>' : ''}
         ${late ? `<span class="tag warn">delayed ${late_(hit.delay_minutes)}</span>` : ''}
-        ${b.commitment ? '<span class="tag">commitment</span>' : ''}
+        ${b.commitment ? ' <span class="tag">commitment</span>' : ''}
         <div class="m">${span(b.starts, b.ends)}${b.who ? ' · ' + esc(b.who) : ''}</div>
         ${late ? `<div class="m late-line">now in at <b>${at(hit.now_arrives)}</b>
           — was ${at(hit.was)}</div>` : ''}
