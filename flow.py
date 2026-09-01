@@ -37,7 +37,6 @@ import duffel
 import hotels as hotels_port
 import places
 import rail as rail_port
-from base import PortError
 from builder import assemble, infeasible
 from domain import Disruption, Kind, Trip
 from graph import Impact, propagate
@@ -51,10 +50,6 @@ import permit
 #: spend the response's limited length on services nobody takes.
 RAIL_HOUR = 6
 
-#: A recovery search asks about the day the traveller is stranded and, when the
-#: deadline falls after midnight, the next one too. Any wider and the engine is
-#: pricing flights for a day the traveller has no reason to be at the airport.
-SEARCH_DAYS = 2
 
 
 def _is_airport(code: str) -> bool:
@@ -290,20 +285,6 @@ def from_dict(raw: dict | None) -> Disruption | None:
         return None
 
 
-def _city(code: str) -> str:
-    """The airport code for whatever this place is, station codes included.
-
-    A gap that starts at Milano Centrale is a gap that starts in Milan, and
-    Malpensa is fifty minutes away -- which `TRANSIT` already knows, and which
-    is the whole reason a traveller stranded off a train can still fly. Without
-    this the recovery for a cancelled train searched `search_flights` with
-    "MILANO_C", got nothing because that is not an airport, and offered the
-    traveller their own baseline.
-    """
-    place = places.by_code(code)
-    return place.code if place else code
-
-
 def replacements(trip: Trip, disruption: Disruption, gap: Gap | None = None) -> list:
     """Live options for the hole this disruption left, in every mode that fits.
 
@@ -320,25 +301,25 @@ def replacements(trip: Trip, disruption: Disruption, gap: Gap | None = None) -> 
     if gap is None:
         return []
 
-    origin, destination = _city(gap.origin), _city(gap.destination)
-    found: dict = {}
-    for day in range(SEARCH_DAYS):
-        when = gap.not_before + timedelta(days=day)
-        if when.date() > gap.by.date():
-            break
-        for mode in (lambda: search_flights(origin, destination, when,
-                                            after=gap.not_before),
-                     lambda: [o for o in search_rail(origin, destination, when)
-                              if o.depart >= gap.not_before]):
-            try:
-                for offer in mode():
-                    found[offer.id] = offer
-            except PortError:
-                # No recording for this route and date. A missing fixture is a
-                # missing option, not a crash -- the traveller still gets the
-                # baseline and every option that did come back.
-                continue
-    return sorted(found.values(), key=lambda o: o.price)
+    # WHAT TO SEARCH IS ITS OWN QUESTION -- see propose.py. This used to map
+    # each end of the gap to a city with `_city` and ask the two ports
+    # directly, which is right whenever the gap names somewhere an airline or
+    # a timetable has heard of. The gap does not promise that: it names where
+    # the traveller must BE, and for the scripted disruption that is SMG,
+    # Santa Maria delle Grazie -- a church. `_city` passed the code through
+    # untouched, both searches raised PortError, and PortError is swallowed
+    # here as "a missing option, not a crash" -- so the engine answered a
+    # disruption with silence and the traveller was offered their own
+    # baseline. `propose.terminals` derives the places a provider can actually
+    # sell from `domain.TRANSIT`, and the ground time to reach them.
+    #
+    # No model is passed. The seeded probes are derived, deterministic, and
+    # exactly the searches this function ran before wherever it worked; the
+    # model gets to propose only once that is wired deliberately.
+    import propose
+
+    offers, _refused = propose.search(gap)
+    return sorted(offers, key=lambda o: o.price)
 
 
 @dataclass(frozen=True)

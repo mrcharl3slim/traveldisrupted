@@ -481,6 +481,23 @@ def search(gap, model=None, budget: Budget | None = None) -> tuple[list, list[Re
     refused: list[Rejected] = []
     offers: list = []
 
+    # THE FLOOR RUNS FIRST, EVERY TIME, and the model's probes are added to it
+    # rather than standing in for it. As a fallback-on-empty it was not a floor
+    # at all: a model proposing well-formed but fruitless probes -- valid
+    # codes, a narrow window -- burns every round on NO_OFFERS, which is worth
+    # retrying, so the loop keeps going and exits with nothing while the two
+    # derived searches were never run. The cost is two provider calls on a
+    # disruption the model would have answered anyway; the alternative is a
+    # traveller told there is nothing, which is the one answer this must never
+    # invent.
+    for probe in seed(gap):
+        tried.add(probe.key)
+        got = resolve(probe, budget)
+        if isinstance(got, Resolved):
+            offers += got.offers
+        else:
+            refused.append(got)
+
     while True:
         probes, bad = suggest(gap, model, tried, refused, budget)
         refused += bad

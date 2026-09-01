@@ -358,3 +358,26 @@ def test_doing_nothing_still_makes_the_call_it_is_credited_for(trip):
     assert {a.booking_id for a in calls} == noop.at_risk_ids
     # Free and reversible, so it moves no number and cannot flatter inaction.
     assert noop.net_cash == 0.0
+
+
+def test_a_gap_that_names_no_terminal_is_still_answered():
+    """The live hole this closes. `recovery_gap` names where the traveller
+    must BE -- for the scripted disruption that is SMG, a church with a
+    fresco and no departure board. The old search mapped each end to a city
+    and asked the ports directly, both raised PortError, and PortError is
+    swallowed here as "a missing option, not a crash" -- so the engine
+    answered a disruption with silence and offered the traveller their own
+    baseline. The proposer derives what a provider can actually sell."""
+    import aerodatabox
+    from demo_trip import anchor, build_trip
+    from plan import recovery_gap
+
+    trip = build_trip(None)
+    now = anchor(None, 12, 2, 38)
+    hit = aerodatabox.disruption("SQ346", anchor(None, 11, 9, 0), "sq346")
+    gap = recovery_gap(trip, hit, now)
+    assert gap.destination == "SMG", "the premise: the gap names a church"
+
+    offers = flow.replacements(trip, hit, gap)
+    assert offers, "a disruption answered with silence is the bug"
+    assert any(o.mode == "rail" for o in offers), "the train the demo leads with"

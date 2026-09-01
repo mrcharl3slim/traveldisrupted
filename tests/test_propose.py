@@ -11,6 +11,9 @@ from datetime import timedelta
 
 import pytest
 
+import json
+
+import propose
 from demo_trip import TRIP, dt
 from domain import Disruption
 from plan import recovery_gap
@@ -233,3 +236,30 @@ def test_every_refusal_carries_a_hint_a_prompt_can_use(gap):
     assert refused
     for r in refused:
         assert r.hint.strip() and r.reason.value in r.hint
+
+
+# -- the floor holds even when the model is confidently useless -----------
+
+def test_the_seed_runs_even_when_the_model_proposes_fruitless_probes(gap):
+    """The failure this floor exists for. A model proposing well-formed but
+    empty probes -- valid codes, a window nothing departs in -- burns every
+    round on NO_OFFERS, which is worth retrying, so the loop runs to its bound
+    and used to exit with nothing while the two derived searches were never
+    run. The traveller would be told there is nothing, which is the one answer
+    this must never invent."""
+
+    class _Fruitless:
+        """Proposes a real route inside a window with no departures."""
+
+        def invoke(self, messages):
+            class _Reply:
+                content = json.dumps({"probes": [{
+                    "mode": "flight", "origin": "ZRH", "destination": "MXP",
+                    "after_min": -600, "until_min": -1400,
+                    "why": "earlier is better"}]})
+            return _Reply()
+
+    offers, refused = propose.search(gap, model=_Fruitless())
+    assert offers, "the seeded searches must still have run"
+    assert any(r.reason in (propose.Reason.NO_OFFERS, propose.Reason.EMPTY_WINDOW)
+               for r in refused), "and the model's probe is refused by name"
