@@ -54,6 +54,12 @@
   #detail-box{scroll-margin-top:70px}
   main{min-width:0}
   .views{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  /* A panel folds; it does not replace the conversation. */
+  .foldhead{display:flex;align-items:center;gap:8px;cursor:pointer;
+            user-select:none;margin-bottom:0}
+  .foldhead:hover{color:var(--key)}
+  .caret{color:var(--faint);font-size:10px}
+  .box .foldable{margin-top:12px}
   .vtab{font:inherit;font-size:13px;padding:7px 14px;border-radius:var(--r-pill);
         border:1px solid var(--edge);background:var(--card);color:var(--dim);
         cursor:pointer;max-width:220px;overflow:hidden;text-overflow:ellipsis;
@@ -130,13 +136,17 @@
     <main>
       <nav class="views" id="views" aria-label="views"></nav>
       <div class="box" id="you-box" hidden>
-        <h2>User profile</h2>
-        <div id="me" class="m" style="margin-bottom:8px"></div>
-        <div id="you"></div>
+        <h2 class="foldhead" data-fold="#you-box"><span class="caret">▾</span>
+          User profile</h2>
+        <div class="foldable">
+          <div id="me" class="m" style="margin-bottom:8px"></div>
+          <div id="you"></div>
+        </div>
       </div>
       <div class="box" id="detail-box" hidden>
-        <h2 id="detail-title">Itinerary</h2>
-        <div id="detail"></div>
+        <h2 class="foldhead" data-fold="#detail-box"><span class="caret">▾</span>
+          <span id="detail-title">Itinerary</span></h2>
+        <div class="foldable"><div id="detail"></div></div>
       </div>
       <div class="thread" id="thread">
         <div class="msg welcome" id="starter">
@@ -275,7 +285,7 @@ function bubble(who, html, cls){
   el.className = 'msg ' + (cls || (who === 'You' ? 'me' : 'agent'));
   el.innerHTML = `<div class="who">${esc(who)}</div>${html}`;
   $('#thread').appendChild(el);
-  if (typeof VIEW !== 'undefined' && VIEW !== 'chat') showView('chat');
+
   el.scrollIntoView({behavior:'smooth', block:'end'});
   return el;
 }
@@ -603,7 +613,8 @@ function openTrip(id, quiet){
   if (!trip) return;
   document.querySelectorAll('.trip').forEach(el =>
     el.classList.toggle('on', el.dataset.id === id));
-  if (!quiet) showView('trip'); else paintViews();
+  fold('#detail-box', true);
+  if (!quiet) $('#detail-box').scrollIntoView({behavior: 'smooth', block: 'start'});
   // Trimmed on a separator rather than mid-word: "one way · hotel · ch" reads
   // like a country code and is not one.
   const parts = trip.label.split(' · ');
@@ -1059,40 +1070,42 @@ $('#say').addEventListener('keydown', e => { if (e.key === 'Enter') $('#send').c
 // Three views, one at a time: the chat, one itinerary, or the profile --
 // and a tab strip to move between them. The profile view is JUST the
 // profile: the sidebar and the composer step out of the way.
-let VIEW = 'chat';
-// The page introduces the view it is showing: booking talk over the chat,
-// profile talk over the profile.
-const TAGLINES = {
-  chat: "Tell me what you want. I'll book it, watch over it, and fix it when it breaks.",
-  trip: "Tell me what you want. I'll book it, watch over it, and fix it when it breaks.",
-  profile: "Tell me about yourself once — home, how you sort, how far I may act "
-    + "without asking. Every trip starts from it.",
-};
-function showView(name){
-  VIEW = name;
-  $('#tagline').textContent = TAGLINES[name] || TAGLINES.chat;
-  $('#thread').hidden = name !== 'chat';
-  $('.bar').hidden = name !== 'chat';
-  $('#detail-box').hidden = name !== 'trip';
-  $('#you-box').hidden = name !== 'profile';
-  document.querySelector('aside').hidden = name === 'profile';
-  paintViews();
+// Nothing hides the conversation. An itinerary and the profile are panels
+// above the thread that fold away, not views that replace it -- swapping the
+// centre meant answering a question about a trip took the question off the
+// screen, and every reply had to bounce the traveller back to the chat.
+const TAGLINE = "Tell me what you want. I'll book it, watch over it, "
+  + "and fix it when it breaks.";
+
+function fold(boxId, open){
+  const box = $(boxId);
+  if (!box) return;
+  const body = box.querySelector('.foldable');
+  const shut = open === undefined ? !body.hidden : !open;
+  body.hidden = shut;
+  const caret = box.querySelector('.caret');
+  if (caret) caret.textContent = shut ? '\u25b8' : '\u25be';
+  box.hidden = false;
 }
+
+function showProfile(){
+  fold('#you-box', true);
+  $('#you-box').scrollIntoView({behavior: 'smooth', block: 'center'});
+}
+
 function paintViews(){
+  // One door, and it is not a tab: the chat is never behind anything.
   $('#views').innerHTML =
-    `<button class="vtab ${VIEW === 'chat' ? 'on' : ''}" data-view="chat">Chat</button>`
-    + TRIPS.map(t => `<button class="vtab ${
-        VIEW === 'trip' && OPEN === t.trip_id ? 'on' : ''}" data-view="trip"
-        data-id="${esc(t.trip_id)}">${esc(t.label.split(' · ')[0])}</button>`).join('')
-    + `<button class="vtab ${VIEW === 'profile' ? 'on' : ''}" data-view="profile">User profile</button>`;
-  $('#views').querySelectorAll('.vtab').forEach(b => b.onclick = () =>
-    b.dataset.view === 'chat' ? showView('chat')
-    : b.dataset.view === 'profile' ? showView('profile')
-    : openTrip(b.dataset.id));
+    `<button class="vtab" id="open-profile">User profile</button>`;
+  $('#open-profile').onclick = showProfile;
 }
-if (location.hash === '#profile') showView('profile');
+
+document.querySelectorAll('[data-fold]').forEach(head =>
+  head.onclick = () => fold(head.dataset.fold));
+
+if (location.hash === '#profile') showProfile();
 window.addEventListener('hashchange',
-  () => { if (location.hash === '#profile') showView('profile'); });
+  () => { if (location.hash === '#profile') showProfile(); });
 
 // Feedback while the agent thinks -- from any door into say(): the Send
 // button, Enter, a starter chip, an answer chip.
