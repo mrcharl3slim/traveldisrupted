@@ -696,13 +696,13 @@ function openTrip(id, quiet){
     panel += `<div class="note">
       <div class="m" style="margin-bottom:6px">${r.disarmed
         ? ((Number(r.auto_limit) || 0) > 0
-           ? `Your limit is ${eur(r.auto_limit)} — but I am not acting on this
-              trip at all at the moment. See below.`
-           : `Nothing is pre-authorised, and I am not acting on this trip
-              anyway. See below.`)
+           ? `Your limit is ${eur(r.auto_limit)}, but automatic actions are paused
+              on this trip — see below.`
+           : `Nothing is pre-authorised, and automatic actions are paused on this
+              trip anyway — see below.`)
         : (Number(r.auto_limit) || 0) > 0
-        ? `Within ${eur(r.auto_limit)} I act the moment a leg breaks and leave the
-           purchase link for you. Nothing is bought.`
+        ? `Within ${eur(r.auto_limit)} TripShield acts the moment a leg breaks and
+           leaves the purchase link for you. Nothing is bought.`
         : `Nothing is pre-authorised — every plan that costs money waits for you.`}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
         <span class="m">up to S$</span>
@@ -719,18 +719,17 @@ function openTrip(id, quiet){
           <input type="checkbox" id="rule-remember"> for every trip</label></div>
       <div class="killrow">
         <div>${r.disarmed
-          ? `<b style="color:var(--bad)">I am not doing anything on my own.</b>
-             I am still watching this trip and I will still tell you what broke
-             and what it costs — but every plan waits for you to press a button,
-             and no message goes to anybody.`
-          : `<b>I can act without asking you first.</b> When something breaks I
-             may take a plan within your limit and email the places that need
-             telling. Press this and I stop: I keep watching and warning you,
-             but nothing happens until you say so.`}
-          <div class="m">Works the moment you press it — nothing to save. This
-            trip only. (The demo calls this the kill switch.)</div></div>
+          ? `<b style="color:var(--bad)">Automatic actions are paused.</b>
+             TripShield keeps watching and still tells you what broke and what it
+             costs — every plan waits for your approval, and nothing is sent.`
+          : `<b>Automatic actions are on.</b> When something breaks, TripShield
+             may take a plan within your limit and notify the places that need
+             telling. Pausing stops that: the watching and the warnings carry
+             on, but nothing is performed or sent until you approve it.`}
+          <div class="m">Takes effect at once — nothing to save. This trip only.
+            (The demo calls this the kill switch.)</div></div>
         <button class="btn sm ${r.disarmed ? '' : 'bad'}" id="rule-kill">${
-          r.disarmed ? 'Let me act again' : 'Stop me acting'}</button></div></div>`;
+          r.disarmed ? 'Resume automation' : 'Pause automation'}</button></div></div>`;
   }
 
   // Calling the whole thing off. Under the legs rather than beside them: it is
