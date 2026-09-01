@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TripShield — how to test it</title>
-<link rel="stylesheet" href="/static/app.css?v=4">
+<link rel="stylesheet" href="/static/app.css?v=5">
 <style>
   /* Page-local only -- everything shared lives in app.css. */
   ol.steps{margin:0;padding-left:20px}
@@ -26,7 +26,7 @@
 <div class="site-header"><div class="bar-inner">
   <a class="wordmark" href="/">TripShield</a>
   <nav class="site-nav">
-    <a href="/">agent</a> <a href="/book">book</a> <a href="/#profile">profile</a>
+    <a href="/">agent</a> <a href="/book">book</a>
     <details class="dev here"><summary>developer</summary><div class="menu">
       <a href="/demo">demo</a> <a href="/story">story</a>
       <a href="/script">script</a> <a href="/test" aria-current="page">test</a>
@@ -132,7 +132,7 @@
         reason reads like a sentence: <em>keeps the meeting; costs S$108 more than doing
         nothing, which would miss it</em>. Set the cap to <code>50</code> and repeat: it
         waits, and says by how much it is over.</div>
-      <div class="expect"><b>Then say it once:</b> in the <b>You</b> box on <a href="/">/</a>,
+      <div class="expect"><b>Then say it once:</b> in the <b>User profile</b> tab on <a href="/">/</a>,
         set home <code>singapore</code>, sort by <code>cheapest</code>, act up to
         <code>300</code>. Type <code>one way to zurich on 18 september, no hotel</code> — it
         should go straight to the confirmation card with <em>From: Singapore · from your
@@ -163,7 +163,7 @@
         list, not somebody else's trips.</div>
       <div class="expect nope"><b>Not a bug, and worth knowing:</b> there is no login. The
         link <em>is</em> the identity — anyone holding it is that person. Losing a link means
-        <b>remove</b> and share again; it cannot be looked up. "Forget it" in the You box
+        <b>remove</b> and share again; it cannot be looked up. "Forget it" in the User profile tab
         drops the token from this browser.</div>
     </div>
   </section>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TripShield — the demo, as a script</title>
-<link rel="stylesheet" href="/static/app.css?v=4">
+<link rel="stylesheet" href="/static/app.css?v=5">
 <style>
   /* Page-local only -- everything shared lives in app.css. */
   .act{display:grid;grid-template-columns:52px 1fr;gap:14px;
@@ -30,7 +30,7 @@
 <div class="site-header"><div class="bar-inner">
   <a class="wordmark" href="/">TripShield</a>
   <nav class="site-nav">
-    <a href="/">agent</a> <a href="/book">book</a> <a href="/#profile">profile</a>
+    <a href="/">agent</a> <a href="/book">book</a>
     <details class="dev here"><summary>developer</summary><div class="menu">
       <a href="/demo">demo</a> <a href="/story">story</a>
       <a href="/script" aria-current="page">script</a> <a href="/test">test</a>
@@ -50,7 +50,7 @@
     <h2>Before you start</h2>
     <div id="live" class="banner">reading /health…</div>
     <p class="watchfor" style="margin-top:10px">Open <a href="/">/</a> a few minutes early — a
-      free instance takes ~30s to wake. If the <b>You</b> box or an old trip is left over from a
+      free instance takes ~30s to wake. If the <b>User profile</b> tab or an old trip is left over from a
       previous run, press <em>forget it</em> and clear the profile fields first: the script
       assumes a blank slate. Keep <a href="/demo">/demo</a> in a second tab for the closer.</p>
     <p class="watchfor">Short on time, or the room is remote? <a href="/story">/story</a> runs
@@ -67,7 +67,7 @@
 
     <div class="act"><div class="clock">0:00</div><div>
       <h3>Act 1 — Say it once</h3>
-      <p>In the <b>You</b> box on the right: home <code>singapore</code>, sort by
+      <p>In the <b>User profile</b> tab: home <code>singapore</code>, sort by
         <code>cheapest</code>, act up to <code>300</code>. Save.</p>
       <div class="say">Everything I tell it here is said once, applied to every trip, and shown
         on screen whenever it is used. The S$300 is the interesting one — it is what I

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TripShield</title>
-<link rel="stylesheet" href="/static/app.css?v=4">
+<link rel="stylesheet" href="/static/app.css?v=5">
 <style>
   /* Page-local only -- everything shared lives in app.css. */
   .wrap{padding-bottom:150px}   /* clears the fixed composer */
@@ -86,7 +86,7 @@
 <div class="site-header"><div class="bar-inner">
   <a class="wordmark" href="/">TripShield</a>
   <nav class="site-nav">
-    <a href="/" aria-current="page">agent</a> <a href="/book">book</a> <a href="/#profile">profile</a>
+    <a href="/" aria-current="page">agent</a> <a href="/book">book</a>
     <details class="dev"><summary>developer</summary><div class="menu">
       <a href="/demo">demo</a> <a href="/story">story</a>
       <a href="/script">script</a> <a href="/test">test</a>
@@ -105,7 +105,7 @@
     <main>
       <nav class="views" id="views" aria-label="views"></nav>
       <div class="box" id="you-box" hidden>
-        <h2>You</h2>
+        <h2>User profile</h2>
         <div id="me" class="m" style="margin-bottom:8px"></div>
         <div id="you"></div>
       </div>
@@ -141,7 +141,7 @@
   <button class="btn key" id="send">Send</button>
 </div></div>
 
-<script src="/static/app.js?v=4"></script>
+<script src="/static/app.js?v=5"></script>
 <script>
 // $/esc/eur/at/hhmm/span/late_/DELAYS come from /static/app.js --
 // one set of helpers, one timezone rule.
@@ -885,7 +885,7 @@ function paintViews(){
     + TRIPS.map(t => `<button class="vtab ${
         VIEW === 'trip' && OPEN === t.trip_id ? 'on' : ''}" data-view="trip"
         data-id="${esc(t.trip_id)}">${esc(t.label.split(' · ')[0])}</button>`).join('')
-    + `<button class="vtab ${VIEW === 'profile' ? 'on' : ''}" data-view="profile">Profile</button>`;
+    + `<button class="vtab ${VIEW === 'profile' ? 'on' : ''}" data-view="profile">User profile</button>`;
   $('#views').querySelectorAll('.vtab').forEach(b => b.onclick = () =>
     b.dataset.view === 'chat' ? showView('chat')
     : b.dataset.view === 'profile' ? showView('profile')

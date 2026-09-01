@@ -21,7 +21,7 @@
    <div class="site-header"><div class="bar-inner">
      <a class="wordmark" href="/">TripShield</a>
      <nav class="site-nav">
-       <a href="/">agent</a> <a href="/book">book</a> <a href="/#profile">profile</a>
+       <a href="/">agent</a> <a href="/book">book</a>
        <details class="dev"><summary>developer</summary><div class="menu">
          <a href="/demo">demo</a> <a href="/story">story</a>
          <a href="/script">script</a> <a href="/test">test</a>
@@ -58,6 +58,9 @@
 
 /* ---- base ------------------------------------------------------------ */
 *{box-sizing:border-box}
+/* the hidden attribute must beat any display: the view engine relies on it,
+   and .thread{display:flex} was quietly winning otherwise */
+[hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);
      font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,
           "Helvetica Neue",Arial,sans-serif}
