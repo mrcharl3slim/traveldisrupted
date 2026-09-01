@@ -263,6 +263,31 @@ def test_rules_can_be_changed_after_booking_and_are_listed(client):
 
 
 # --------------------------------------------------------------------------
+# the panel is written once, then wired
+# --------------------------------------------------------------------------
+
+
+def test_the_itinerary_panel_wires_its_buttons_after_the_last_write(client):
+    """`innerHTML +=` re-serialises and re-parses the whole subtree, throwing
+    away every listener already attached inside it. The kill switch, Save and
+    "Cancel the whole trip" were drawn and dead -- wired, then unwired by the
+    next section appended below them -- while the share box and the leg
+    buttons, wired after the last +=, worked and hid the pattern. One
+    assignment, then the handlers."""
+    panel = client.get("/").text.split("function openTrip")[1] \
+                               .split("async function breakLeg")[0]
+    code = [l for l in panel.split("\n") if not l.lstrip().startswith("//")]
+    assert not [l for l in code if "innerHTML +=" in l], (
+        "appending to the panel unwires every button above it")
+    assert "\n".join(code).count("$('#detail').innerHTML =") == 1
+
+    wired = panel.index("$('#detail').innerHTML =")
+    for button in ("#rule-kill", "#rule-save", "#abandon", "#share-go"):
+        assert panel.index(button + "'", wired) > wired, (
+            f"{button} is wired before the panel is final")
+
+
+# --------------------------------------------------------------------------
 # a delay outlives its disruption, and the flights can be dropped
 # --------------------------------------------------------------------------
 

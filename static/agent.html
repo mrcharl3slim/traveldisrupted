@@ -606,7 +606,7 @@ function openTrip(id, quiet){
     title += ' · ' + part;
   }
   $('#detail-title').textContent = title;
-  $('#detail').innerHTML = trip.bookings.map(b => {
+  let panel = trip.bookings.map(b => {
     // What has happened to this row. The panel is painted from the stored
     // itinerary, which knew a trip was disrupted and not what had happened to
     // it -- so a flight running three hours late showed its original times
@@ -642,7 +642,7 @@ function openTrip(id, quiet){
   // Where this trip is thin -- said before anything breaks, from the booked
   // times and the engine's own stress test. Facts about slack, not forecasts.
   if ((trip.risks || []).length && !trip.abandoned) {
-    $('#detail').innerHTML += `<div class="note"><b>Where this trip is thin</b>${
+    panel += `<div class="note"><b>Where this trip is thin</b>${
       trip.risks.slice(0, 4).map(r => `
         <div class="leg"><div>${esc(r.sentence)}</div>
           <span class="tag ${r.kind === 'unprotected' ? 'bad' : 'warn'}">${esc(r.kind)}${
@@ -654,7 +654,7 @@ function openTrip(id, quiet){
   // may see money, because the citations quote fares and caps -- the decision
   // log is the ledger with reasons attached.
   if (may(trip, 'money')) {
-    $('#detail').innerHTML += `<div class="note"><b>Paper trail</b>
+    panel += `<div class="note"><b>Paper trail</b>
       <span class="m">· <a href="/api/trail.txt?trip=${esc(id)}${TOKEN ? '&token=' + TOKEN : ''}"
         target="_blank" rel="noopener">plain text, for reading aloud</a></span>
       <div id="trail" class="m" style="margin-top:6px">loading…</div></div>`;
@@ -674,19 +674,19 @@ function openTrip(id, quiet){
   // has to say so in the panel, or the traveller finds a new pending leg on
   // their itinerary with no idea who put it there.
   if (trip.acted && trip.acted.by === 'the agent')
-    $('#detail').innerHTML += `<div class="note" style="border-left:3px solid var(--ok)">
+    panel += `<div class="note" style="border-left:3px solid var(--ok)">
       <b>Taken for you</b> — ${esc(trip.acted.plan)}${trip.acted.permission
         ? ', ' + esc(trip.acted.permission) : ''}. ${esc((trip.acted.changed || []).join('; '))}</div>`;
   else if (trip.detected && trip.disrupted)
-    $('#detail').innerHTML += `<div class="note" style="border-left:3px solid var(--warn)">
+    panel += `<div class="note" style="border-left:3px solid var(--warn)">
       <b>Found by the watch</b> — recommended ${esc(trip.detected.plan)}, waiting for
       your approval. Press a leg's Late or Cancel to see the plans again.</div>`;
 
   // What the agent may do on its own about this trip. Under the legs, above
   // "cancel the whole trip": the rules are about the trip as it stands.
+  const r = trip.permissions || {auto_limit: 0, never: []};
   if (!trip.abandoned && may(trip, 'rules')) {
-    const r = trip.permissions || {auto_limit: 0, never: []};
-    $('#detail').innerHTML += `<div class="note">
+    panel += `<div class="note">
       <div class="m" style="margin-bottom:6px">${r.disarmed
         ? `<b style="color:var(--bad)">Kill switch on.</b> Everything waits for a person —
            the cap is ignored and even the hotel emails are held for you to send.`
@@ -709,30 +709,12 @@ function openTrip(id, quiet){
           <input type="checkbox" id="rule-remember"> for every trip</label>
         <button class="btn sm ${r.disarmed ? '' : 'bad'}" id="rule-kill">${
           r.disarmed ? 'Re-arm' : 'Kill switch'}</button></div></div>`;
-    $('#rule-kill').onclick = async () => {
-      try { await api('/api/disarm', {trip_id: id, disarmed: !r.disarmed}); }
-      catch (e) { return bubble('TripShield',
-        `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
-      await loadTrips();
-    };
-    $('#rule-save').onclick = async () => {
-      try {
-        await api('/api/permissions', {trip_id: id,
-          auto_limit: Number($('#rule-limit').value) || 0,
-          hold_limit: Number($('#rule-hold').value) || 0,
-          never: $('#rule-never').value.split(',').map(x => x.trim()).filter(Boolean),
-          remember: $('#rule-remember').checked});
-        if ($('#rule-remember').checked) await loadProfile();
-      } catch (e) { return bubble('TripShield',
-        `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
-      await loadTrips();
-    };
   }
 
   // Calling the whole thing off. Under the legs rather than beside them: it is
   // not a bigger version of "cancel this flight", it is a different decision,
   // and putting it in the row of per-leg buttons invites the wrong one.
-  $('#detail').innerHTML += trip.abandoned
+  panel += trip.abandoned
     ? `<div class="note">This trip is cancelled.${trip.abandoned.refund == null ? '' :
        ` ${eur(trip.abandoned.refund)} is coming back, ${eur(trip.abandoned.lost)} is gone.`}</div>`
     : may(trip, 'abandon')
@@ -741,8 +723,6 @@ function openTrip(id, quiet){
        <button class="btn bad sm" id="abandon">Cancel the whole trip</button></div>`
     : `<div class="m">You are the ${esc(trip.role)} on this trip — you can see it${
        may(trip, 'act') ? ' and act on it' : ', and that is all'}.</div>`;
-  const off = $('#abandon');
-  if (off) off.onclick = () => priceAbandon(id);
 
   // Letting somebody in, as a role. Owner only. The link is shown once and
   // says so: the token is not readable back, so a lost link is one to revoke
@@ -751,7 +731,7 @@ function openTrip(id, quiet){
     const who = (trip.members || []).map(m => `<div class="leg"><div>${esc(m.name)}
         <span class="tag">${esc(m.role)}</span></div>
         <button class="btn sm" data-revoke="${esc(m.person)}">remove</button></div>`).join('');
-    $('#detail').innerHTML += `<div class="note"><b>Who else sees this</b>${who ||
+    panel += `<div class="note"><b>Who else sees this</b>${who ||
         '<div class="m">nobody yet</div>'}
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px">
         <input id="share-name" placeholder="name" style="width:110px">
@@ -759,24 +739,56 @@ function openTrip(id, quiet){
           .map(r => `<option value="${r}">${r}</option>`).join('')}</select>
         <button class="btn sm" id="share-go">Share</button></div>
       <div id="share-out" class="m"></div></div>`;
-    $('#share-go').onclick = async () => {
-      let r;
-      try { r = await api('/api/share', {trip_id: id, name: $('#share-name').value,
-                                         role: $('#share-role').value}); }
-      catch (e) { return bubble('TripShield', `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
-      const link = location.origin + r.link;
-      bubble('TripShield', `Give <b>${esc(r.name)}</b> this link — it is shown once, and it is a key:<br>
-        <code style="user-select:all">${esc(link)}</code><br>
-        As ${esc(r.role)} they can: ${r.can.join(', ')}.`);
-      await loadTrips();
-    };
-    $('#detail').querySelectorAll('[data-revoke]').forEach(el => el.onclick = async () => {
-      try { await api('/api/revoke', {trip_id: id, person: el.dataset.revoke}); }
-      catch (e) { return bubble('TripShield', `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
-      await loadTrips();
-    });
   }
 
+  // WRITTEN ONCE, THEN WIRED. `innerHTML +=` re-serialises and re-parses the
+  // whole subtree, so every listener already attached inside it is thrown
+  // away -- which left the kill switch, Save and "Cancel the whole trip"
+  // drawn and dead, while the share box and the leg buttons, wired after the
+  // last +=, worked and hid the pattern. The panel is one string, assigned
+  // once; handlers go on after it is final, and adding a section can no
+  // longer silently unwire the ones above it.
+  $('#detail').innerHTML = panel;
+
+  const kill = $('#rule-kill');
+  if (kill) kill.onclick = async () => {
+    try { await api('/api/disarm', {trip_id: id, disarmed: !r.disarmed}); }
+    catch (e) { return bubble('TripShield',
+      `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
+    await loadTrips();
+  };
+  const save = $('#rule-save');
+  if (save) save.onclick = async () => {
+    try {
+      await api('/api/permissions', {trip_id: id,
+        auto_limit: Number($('#rule-limit').value) || 0,
+        hold_limit: Number($('#rule-hold').value) || 0,
+        never: $('#rule-never').value.split(',').map(x => x.trim()).filter(Boolean),
+        remember: $('#rule-remember').checked});
+      if ($('#rule-remember').checked) await loadProfile();
+    } catch (e) { return bubble('TripShield',
+      `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
+    await loadTrips();
+  };
+  const off = $('#abandon');
+  if (off) off.onclick = () => priceAbandon(id);
+  const shareGo = $('#share-go');
+  if (shareGo) shareGo.onclick = async () => {
+    let got;
+    try { got = await api('/api/share', {trip_id: id, name: $('#share-name').value,
+                                         role: $('#share-role').value}); }
+    catch (e) { return bubble('TripShield', `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
+    const link = location.origin + got.link;
+    bubble('TripShield', `Give <b>${esc(got.name)}</b> this link — it is shown once, and it is a key:<br>
+      <code style="user-select:all">${esc(link)}</code><br>
+      As ${esc(got.role)} they can: ${got.can.join(', ')}.`);
+    await loadTrips();
+  };
+  $('#detail').querySelectorAll('[data-revoke]').forEach(el => el.onclick = async () => {
+    try { await api('/api/revoke', {trip_id: id, person: el.dataset.revoke}); }
+    catch (e) { return bubble('TripShield', `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
+    await loadTrips();
+  });
   $('#detail').querySelectorAll('[data-break]').forEach(el =>
     el.onclick = () => breakLeg(id, {booking_id: el.dataset.break}, '/api/cancel'));
   $('#detail').querySelectorAll('[data-late]').forEach(el =>
