@@ -551,6 +551,23 @@ def test_remembering_the_rules_does_not_remember_the_kill_switch(client):
     client.post("/api/profile", json={"preference": "", "auto_limit": 0})
 
 
+def test_a_stale_profile_switch_cannot_disarm_new_trips(client):
+    """Belt and braces for profiles written before `remember` stopped carrying
+    the switch. A `disarmed` left in a profile would switch the agent off on
+    every trip booked afterwards, with nothing on screen to say why -- so a
+    new trip simply does not inherit it."""
+    client.post("/api/profile", json={"preference": "cheapest", "auto_limit": 200,
+                                      "disarmed": True})
+    assert client.get("/api/profile").json()["profile"]["permissions"]["disarmed"] is True
+
+    row = _row(client, book(client)["trip_id"])
+    assert row["permissions"]["disarmed"] is False, "a new trip starts armed"
+    assert row["permissions"]["auto_limit"] == 200, "the cap still travels"
+
+    client.post("/api/profile", json={"preference": "", "auto_limit": 0,
+                                      "disarmed": False})
+
+
 # --------------------------------------------------------------------------
 # acting twice is refused, not repeated
 # --------------------------------------------------------------------------

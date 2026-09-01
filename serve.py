@@ -2354,7 +2354,14 @@ def _default_rules(given: dict, who: roles.Person = roles.ANON) -> dict:
     """
     if given:
         return permit.Permissions.from_dict(given).to_dict()
-    return _profile(who).permissions.to_dict()
+    # A NEW TRIP STARTS ARMED. The kill switch is per trip -- a state somebody
+    # flipped about a trip in front of them -- so it is not among the rules a
+    # new one inherits. This is also the cure for profiles written before
+    # `remember` stopped carrying it: a stale `disarmed` sitting in a profile
+    # would otherwise switch the agent off on every trip booked afterwards,
+    # and there is no way for the traveller to see why. Making it structural
+    # beats a migration that only reaches the rows I can see.
+    return {**_profile(who).permissions.to_dict(), "disarmed": False}
 
 
 @app.get("/api/profile")
