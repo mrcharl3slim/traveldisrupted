@@ -55,6 +55,7 @@ from plan import Gap, Lane, generate                          # noqa: E402
 import permit                                                 # noqa: E402
 import profile as profile_mod                                 # noqa: E402
 import risk as risk_mod                                       # noqa: E402
+import whereabouts                                            # noqa: E402
 import roles                                                  # noqa: E402
 
 STATIC = ROOT / "static"
@@ -2736,6 +2737,39 @@ def story() -> dict:
                 "counted, never priced — and it is about to decide a ranking.",
         "feasible": verdict["feasible"],
         "clashes": verdict["about_this"]})
+
+    # -- it knows where Alex is --------------------------------------------
+    tl = whereabouts.timeline(trip, home="SIN")
+    cities = list(dict.fromkeys(iv.city for iv in tl if iv.city))
+    flights_now = [b for b in trip.in_order() if b.kind is Kind.FLIGHT]
+    landed_at = flights_now[-1].end
+    wrong = appt_mod.Appointment(
+        what="board meeting", who="the board", where="Singapore", place="SIN",
+        day=_date.fromisoformat(day),
+        when=datetime(2026, 9, 18, 10, 0, tzinfo=ZoneInfo("Asia/Singapore")),
+        confirmed=True)
+    refused = appt_mod.assess(trip, wrong, home="SIN")
+    hurried = appt_mod.Appointment(
+        what="coffee", who="a supplier", where="MXP", place="MXP",
+        day=landed_at.date(), when=landed_at + timedelta(minutes=75),
+        confirmed=True)
+    warned = appt_mod.assess(trip, hurried, home="SIN")
+    beats.append({
+        "title": "It knows where Alex is",
+        "said": "The itinerary is also a map of Alex's day: Singapore until "
+                "the first flight, in the air, Zurich between legs, Milan "
+                "after — and every meeting is held to it. A Singapore board "
+                "meeting on travel day is refused with the actual city named; "
+                "a coffee 75 minutes after landing gets a warning and a 'save "
+                "it anyway?' — Alex's call, not the machine's. No return leg "
+                "booked yet, so 'still in Milan' is a presumption, said out "
+                "loud.",
+        "cities": cities,
+        "refused": (refused["invalid"][0]["message"]
+                    if refused["invalid"] else ""),
+        "warned": (warned["tight"][0]["message"] if warned["tight"] else ""),
+        "open_ended": bool(refused["presence"]
+                           and refused["presence"]["open_ended"])})
 
     # -- where this trip is thin, said before anything breaks --------------
     thin = risk_mod.assess(trip)

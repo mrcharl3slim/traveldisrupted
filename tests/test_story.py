@@ -33,8 +33,8 @@ def beat(told, title_start: str) -> dict:
     return next(b for b in told["beats"] if b["title"].startswith(title_start))
 
 
-def test_the_story_runs_and_has_all_eleven_chapters(told):
-    assert len(told["beats"]) == 11
+def test_the_story_runs_and_has_all_twelve_chapters(told):
+    assert len(told["beats"]) == 12
     assert told["trip_id"]
 
 
@@ -188,3 +188,15 @@ def test_the_story_trip_is_real_and_still_actionable(told):
     listed = client.get("/api/itineraries").json()["itineraries"]
     row = next((t for t in listed if t["trip_id"] == told["trip_id"]), None)
     assert row is None, "the story trip belongs to Alex, not to the anonymous traveller"
+
+
+def test_the_presence_chapter_refuses_warns_and_presumes(told):
+    """The timeline speaks three ways in one chapter: a wrong-city meeting is
+    refused with the actual city named, a 75-minute coffee is warned about,
+    and the missing return leg is a presumption said out loud."""
+    b = beat(told, "It knows where Alex is")
+    assert b["cities"][0] == "Singapore" and b["cities"][-1] == "Milan"
+    assert b["refused"] and "Singapore" not in b["refused"].split("not")[0].split("in ")[0]
+    assert "not Singapore" in b["refused"]
+    assert b["warned"] and "75 minutes" in b["warned"]
+    assert b["open_ended"] is True

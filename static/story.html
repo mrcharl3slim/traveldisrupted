@@ -70,6 +70,16 @@ const RENDER = {
       A commitment has no fare and is <b>counted, never priced</b> — watch what it does to the
       ranking two chapters from now.</div>`,
 
+  'It knows where Alex is': b => `
+    <div class="banner">${b.cities.map(esc).join(' \u2192 ')} — read straight off the
+      itinerary, nothing typed in.</div>
+    ${b.refused ? `<div class="banner warn" style="border-left-color:var(--bad)">
+      <b>Refused:</b> ${esc(b.refused)}</div>` : ''}
+    ${b.warned ? `<div class="banner warn"><b>Warned:</b> ${esc(b.warned)}
+      — saved only on an explicit yes.</div>` : ''}
+    ${b.open_ended ? `<div class="m" style="margin-top:6px">open-ended — no return
+      leg, so the last city is a presumption, said rather than believed.</div>` : ''}`,
+
   'Where this trip is thin': b => `<div class="banner ${b.premise_flagged ? 'warn' : 'ok'}">
       Flagged on day one, before any disruption exists:</div>
     ${(b.risks || []).map(r => `<div class="leg"><span>${esc(r.sentence)}</span>
