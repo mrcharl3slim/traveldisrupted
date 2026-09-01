@@ -3188,6 +3188,14 @@ def book() -> FileResponse:
     return FileResponse(STATIC / "book.html")
 
 
+@app.get("/trip")
+def trip_page() -> FileResponse:
+    """One trip, in its own window: every leg with its controls, what is thin,
+    the rules, the paper trail, who else sees it. The chat window keeps the
+    conversation and this one keeps the record, so neither hides the other."""
+    return FileResponse(STATIC / "trip.html")
+
+
 @app.get("/developer")
 def developer_page() -> FileResponse:
     """What this instance runs on and what the four demo doors are for --

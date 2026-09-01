@@ -263,6 +263,37 @@ def test_rules_can_be_changed_after_booking_and_are_listed(client):
 
 
 # --------------------------------------------------------------------------
+# the trip has a window; the chat keeps the conversation
+# --------------------------------------------------------------------------
+
+
+def test_the_chat_page_carries_no_itinerary_panel(client):
+    """The conversation is never displaced. The legs, their controls, the
+    rules and the paper trail live in the trip's own window now -- the chat
+    page lists trips and folds a card open for a glance, and that is all."""
+    chat = client.get("/").text
+    assert "function openTrip" not in chat, "the panel moved out"
+    assert "async function breakLeg" not in chat and "priceAbandon" not in chat
+    assert 'id="detail-box"' not in chat
+    assert 'data-detail=' in chat and 'data-open=' in chat, (
+        "the card still folds open and offers the window")
+    assert 'id="thread"' in chat and 'class="bar"' in chat
+
+
+def test_the_trip_window_is_a_whole_console(client):
+    """Everything the side panel used to hold, in the window that replaced
+    it: the legs, the break controls, the rules and their pause, the trail,
+    sharing, and calling the trip off."""
+    page = client.get("/trip").text
+    for wanted in ("function openTrip", "async function breakLeg",
+                   "async function takePlan", "priceAbandon",
+                   "data-break", "data-late", "rule-kill", "Pause automation",
+                   "Cancel the whole trip", "Paper trail", "Who else sees this"):
+        assert wanted in page, wanted
+    assert "/static/app.js" in page, "it uses the shared helpers"
+
+
+# --------------------------------------------------------------------------
 # the panel is written once, then wired
 # --------------------------------------------------------------------------
 
@@ -274,8 +305,8 @@ def test_the_itinerary_panel_wires_its_buttons_after_the_last_write(client):
     next section appended below them -- while the share box and the leg
     buttons, wired after the last +=, worked and hid the pattern. One
     assignment, then the handlers."""
-    panel = client.get("/").text.split("function openTrip")[1] \
-                               .split("async function breakLeg")[0]
+    panel = client.get("/trip").text.split("function openTrip")[1] \
+                                   .split("async function breakLeg")[0]
     code = [l for l in panel.split("\n") if not l.lstrip().startswith("//")]
     assert not [l for l in code if "innerHTML +=" in l], (
         "appending to the panel unwires every button above it")
@@ -1133,7 +1164,7 @@ def test_every_door_a_tester_is_given_opens(client):
     """Four URLs go to people who did not build this. A 404 on any of them is
     the first thing they will see and the last thing they will report."""
     for path in ("/", "/demo", "/book", "/test", "/script", "/story",
-                 "/developer"):
+                 "/developer", "/trip"):
         assert client.get(path).status_code == 200, path
 
 
