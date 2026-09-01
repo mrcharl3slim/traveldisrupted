@@ -33,8 +33,8 @@ def beat(told, title_start: str) -> dict:
     return next(b for b in told["beats"] if b["title"].startswith(title_start))
 
 
-def test_the_story_runs_and_has_all_twelve_chapters(told):
-    assert len(told["beats"]) == 12
+def test_the_story_runs_and_has_all_thirteen_chapters(told):
+    assert len(told["beats"]) == 13
     assert told["trip_id"]
 
 
@@ -200,3 +200,12 @@ def test_the_presence_chapter_refuses_warns_and_presumes(told):
     assert "not Singapore" in b["refused"]
     assert b["warned"] and "75 minutes" in b["warned"]
     assert b["open_ended"] is True
+
+
+def test_the_room_chapter_keys_the_search_to_the_landing(told):
+    """The rooms shown are searched from the picked flight's arrival date,
+    and the chapter proves it with a real count, not a claim."""
+    b = beat(told, "The room follows the flight")
+    assert b["rooms"] >= 1, "the recorded inventory has Milan rooms"
+    assert b["check_in"] == b["lands"].rsplit(" ", 1)[0], (
+        "check-in must be the day the flight lands")

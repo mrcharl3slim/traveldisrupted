@@ -70,6 +70,13 @@ const RENDER = {
       A commitment has no fare and is <b>counted, never priced</b> — watch what it does to the
       ranking two chapters from now.</div>`,
 
+  'The room follows the flight': b => `
+    <div class="banner">${esc(b.flight)} lands <b>${esc(b.lands)}</b> — so the room
+      search runs from <b>${esc(b.check_in)}</b>: ${b.rooms} room${b.rooms === 1 ? '' : 's'}
+      found for the night Alex actually arrives.</div>
+    <div class="m" style="margin-top:6px">no stays are shown before a flight is picked;
+      a typed range of nights is honoured as given.</div>`,
+
   'It knows where Alex is': b => `
     <div class="banner">${b.cities.map(esc).join(' \u2192 ')} — read straight off the
       itinerary, nothing typed in.</div>

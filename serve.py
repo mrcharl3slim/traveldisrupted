@@ -2735,6 +2735,26 @@ def story() -> dict:
         "total": round(sum(b.price for b in trip.bookings), 2),
         "rules": _perms(store_module.store().get(trip_id)).to_dict()})
 
+    # -- the room follows the flight ---------------------------------------
+    rooms_from_arrival = flow.search_hotels(
+        "Milan", "IT", _day(f"{picked.arrive:%Y-%m-%d}", _zone("Europe/Rome")),
+        _day("2026-09-20", _zone("Europe/Rome")), code="MXP")
+    beats.append({
+        "title": "The room follows the flight",
+        "said": "'With a hotel, the whole trip' would key the nights to the "
+                "departure date — and a red-eye departs one day and lands the "
+                "next. So span-derived nights wait: no rooms are shown until "
+                "a flight is picked, and the search then runs from that "
+                "flight's actual arrival, again server-side at booking time. "
+                "Alex's hop lands the same afternoon, so the dates agree — "
+                "the discipline is what's on show, not a difference. A typed "
+                "range ('from the 17th' — the room wanted the night before) "
+                "is the traveller's own decision and is searched as given.",
+        "flight": picked.label,
+        "lands": f"{picked.arrive:%d %b %H:%M}",
+        "check_in": f"{picked.arrive:%d %b}",
+        "rooms": len(rooms_from_arrival)})
+
     # -- chapter 3: the reason the trip exists ---------------------------
     zone = ZoneInfo("Europe/Rome")
     meeting = appt_mod.Appointment(
