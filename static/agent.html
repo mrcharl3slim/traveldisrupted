@@ -95,6 +95,13 @@
            color:var(--faint);min-width:84px}
   .card .v{font-size:14px}
   .card .n{font:11px var(--mono);color:var(--key);margin-left:auto;white-space:nowrap}
+  /* The kill switch is not a field you edit and Save -- it fires on click --
+     so it gets its own line under the rules rather than a slot at the end of
+     their row, where it read as one more value and sat beside a checkbox
+     that used to make it permanent. */
+  .killrow{display:flex;justify-content:space-between;align-items:center;gap:12px;
+           margin-top:10px;padding-top:10px;border-top:1px solid var(--hairline)}
+  .killrow .m{margin-top:3px}
   /* the profile form: a field is a label, a control, and one sentence on
      what it changes and where that shows up */
   .field{margin-bottom:16px}
@@ -687,10 +694,7 @@ function openTrip(id, quiet){
   const r = trip.permissions || {auto_limit: 0, never: []};
   if (!trip.abandoned && may(trip, 'rules')) {
     panel += `<div class="note">
-      <div class="m" style="margin-bottom:6px">${r.disarmed
-        ? `<b style="color:var(--bad)">Kill switch on.</b> Everything waits for a person —
-           the cap is ignored and even the hotel emails are held for you to send.`
-        : (Number(r.auto_limit) || 0) > 0
+      <div class="m" style="margin-bottom:6px">${(Number(r.auto_limit) || 0) > 0
         ? `Within ${eur(r.auto_limit)} I act the moment a leg breaks and leave the
            purchase link for you. Nothing is bought.`
         : `Nothing is pre-authorised — every plan that costs money waits for you.`}</div>
@@ -706,9 +710,16 @@ function openTrip(id, quiet){
                value="${esc((r.never || []).join(', '))}">
         <button class="btn sm" id="rule-save">Save</button>
         <label class="m" style="display:inline;text-transform:none;letter-spacing:0">
-          <input type="checkbox" id="rule-remember"> for every trip</label>
+          <input type="checkbox" id="rule-remember"> for every trip</label></div>
+      <div class="killrow">
+        <div>${r.disarmed
+          ? `<b style="color:var(--bad)">Everything waits for you.</b> Nothing is sent —
+             the cap above is ignored and even the hotel emails are held for you.`
+          : `<b>The agent may act on this trip</b>, inside the rules above.`}
+          <div class="m">Takes effect the moment you press it — no Save. This trip
+            only; your other trips keep their own setting.</div></div>
         <button class="btn sm ${r.disarmed ? '' : 'bad'}" id="rule-kill">${
-          r.disarmed ? 'Re-arm' : 'Kill switch'}</button></div></div>`;
+          r.disarmed ? 'Let it act again' : 'Kill switch'}</button></div></div>`;
   }
 
   // Calling the whole thing off. Under the legs rather than beside them: it is

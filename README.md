@@ -549,6 +549,14 @@ permissions; changing the profile later does not silently change a trip already
 under way, and a trip's own rules can be kept *for every trip* with one
 checkbox. Stored per owner in its own table, next to the trips.
 
+The kill switch is the one thing that checkbox does **not** carry. It used to:
+pressing the switch and then Save with the box ticked wrote `disarmed` onto the
+profile, so every trip booked afterwards started with the agent switched off —
+from a click that said Save. Caps and never-lists are preferences worth
+carrying; a kill switch is a state you flip about the trip in front of you. It
+is per trip, it says so, and it sits on its own line rather than at the end of
+a row of fields you edit and Save.
+
 ## What the agent may do on its own
 
 Two questions decide whether anything happens without a click, and until

@@ -2403,9 +2403,19 @@ def permissions(body: Permit, who: roles.Person = Depends(_who)) -> dict:
     stored["permissions"] = perms.to_dict()
     store_module.store().update(body.trip_id, stored)
     if body.remember:
+        # THE KILL SWITCH IS NOT A PREFERENCE. "For every trip" belongs to
+        # Save, and it swept up the disarmed state sitting beside it: press
+        # the kill switch, then Save with the box ticked, and every trip
+        # booked afterwards started with the agent switched off -- from a
+        # click that said Save and a checkbox that said nothing about it. The
+        # caps and the never-list are preferences worth carrying; a kill
+        # switch is a state you flip about the trip in front of you, so the
+        # profile keeps whatever it already had.
         kept = _profile(who)
         store_module.store().save_profile(who.id, {
-            **kept.to_dict(), "permissions": perms.to_dict()})
+            **kept.to_dict(),
+            "permissions": {**perms.to_dict(),
+                            "disarmed": kept.permissions.disarmed}})
     return {"trip_id": body.trip_id, "permissions": perms.to_dict(),
             "remembered": body.remember}
 

@@ -523,24 +523,32 @@ def test_abandon_emails_wait_when_the_rules_say_ask(client):
     assert "your rules ask first" in r["held"][0]["note"]
 
 
-def test_a_profile_save_does_not_rearm_a_remembered_kill_switch(client):
-    """/api/permissions remember=true stores disarmed on the profile; the
-    profile form does not carry the field, so saving the profile used to
-    silently re-arm the agent for every future trip."""
+def test_remembering_the_rules_does_not_remember_the_kill_switch(client):
+    """"For every trip" belongs to Save, and it swept up the kill switch
+    sitting beside it: press the switch, then Save with the box ticked, and
+    every trip booked afterwards started with the agent switched off -- from
+    a click that said Save and a checkbox that said nothing about it. The
+    caps and the never-list are preferences worth carrying; a kill switch is
+    a state you flip about the trip in front of you, and it is per trip."""
     tid = book(client)["trip_id"]
     client.post("/api/disarm", json={"trip_id": tid, "disarmed": True})
     client.post("/api/permissions", json={
         "trip_id": tid, "auto_limit": 50, "remember": True})
-    assert client.get("/api/profile").json()["profile"]["permissions"]["disarmed"] is True
 
-    client.post("/api/profile", json={"preference": "cheapest", "auto_limit": 50})
-    kept = client.get("/api/profile").json()["profile"]["permissions"]
-    # Restore the shared tester's profile BEFORE asserting: every later book()
-    # inherits it via _default_rules, and a leftover disarmed=True (or a S$50
-    # cap) quietly rewrites what unrelated tests are testing.
-    client.post("/api/profile", json={"preference": "", "auto_limit": 0,
-                                      "disarmed": False})
-    assert kept["disarmed"] is True, "a profile save re-armed the kill switch"
+    profile = client.get("/api/profile").json()["profile"]["permissions"]
+    assert profile["auto_limit"] == 50, "the cap is a preference and travels"
+    assert profile["disarmed"] is False, "the switch is not"
+
+    fresh = book(client)["trip_id"]
+    row = _row(client, fresh)
+    assert row["permissions"]["disarmed"] is False, (
+        "a trip booked later must not start switched off")
+    assert _row(client, tid)["permissions"]["disarmed"] is True, (
+        "and the trip it was pressed on stays switched off")
+
+    # Restore the shared tester's profile: every later book() inherits it via
+    # _default_rules, and a leftover S$50 cap rewrites unrelated tests.
+    client.post("/api/profile", json={"preference": "", "auto_limit": 0})
 
 
 # --------------------------------------------------------------------------
