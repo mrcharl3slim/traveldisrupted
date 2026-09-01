@@ -11,11 +11,14 @@
          gap:12px;margin-top:4px}
   .door{background:var(--card);border:1px solid var(--edge);
         border-left:3px solid var(--key);border-radius:var(--r-md);
-        padding:14px 16px;box-shadow:var(--shadow-1)}
+        padding:14px 16px;box-shadow:var(--shadow-1);
+        display:flex;flex-direction:column}
   .door h3{margin:0 0 6px}
   .door p{font-size:14px;color:var(--dim);margin:0 0 8px}
   .door .m{display:block}
-  .door .btn{display:inline-block;margin-top:10px}
+  .door .btn{display:inline-block;margin-top:auto;align-self:flex-start;
+             padding-top:9px}
+  .door .m{margin-bottom:10px}
   .door .btn:hover{text-decoration:none}
 </style>
 </head>
@@ -53,36 +56,43 @@
     <div class="doors">
       <div class="door">
         <h3>The worked example</h3>
-        <p>One frozen October trip, one delayed flight, and every consequence
-          computed: S$423 lost by doing nothing, what is still catchable, and the
-          ranked recovery plans. The evidence page — the tests assert these exact
-          figures, and <code>python cli.py</code> prints them with no server.</p>
-        <span class="m">for: showing the arithmetic is real</span>
+        <p>A frozen scenario rendered from <code>GET /api/state</code>: one
+          delayed long-haul, the knock-on graph, and ranked recovery plans.
+          Deterministic — the pytest suite asserts the S$423 headline, and
+          <code>python cli.py --base written</code> prints the same figures
+          straight from the engine, no server involved. If a number here ever
+          disagrees with the tests, that is a bug, not a rounding story.</p>
+        <span class="m">use it to: verify the arithmetic is computed, not typed</span>
         <a class="btn key" href="/demo">Open /demo</a>
       </div>
       <div class="door">
         <h3>The whole story, one press</h3>
-        <p>Eleven chapters run server-side through the same handlers the buttons
-          call: a profile, a booking, a meeting, a share, two disruptions, the
-          permission tiers, the kill switch, and the paper trail. Scripted inputs,
-          computed outcomes — press it twice and it builds a fresh copy.</p>
-        <span class="m">for: seeing everything without typing anything</span>
+        <p>One press fires <code>POST /api/story</code>, which builds a fresh
+          owner and trip and drives eleven chapters through the same handlers
+          the UI calls — profile, booking, risk flags, share, delay, cancel,
+          permission tiers, kill switch, audit trail. Nothing is seeded: the
+          page only renders the response, and every run creates new rows, so
+          it is safe to press twice.</p>
+        <span class="m">use it to: exercise the whole API surface in ~20s</span>
         <a class="btn key" href="/story">Open /story</a>
       </div>
       <div class="door">
         <h3>The presenter's guide</h3>
-        <p>The same arc performed by hand: seven acts, about six minutes, every
-          line to type in a box and every line to say in italics, plus the
-          if-it-goes-sideways table for live-demo nerves.</p>
-        <span class="m">for: presenting it to a room</span>
+        <p>The /story arc performed by hand on the live app: seven timed acts,
+          each line to type in a blue box and each line to say in italics, plus
+          a failure table mapping what went wrong (replay route miss, degraded
+          port, cap refused the auto-take) to what to do and say about it.</p>
+        <span class="m">use it to: run the demo for a room without improvising</span>
         <a class="btn key" href="/script">Open /script</a>
       </div>
       <div class="door">
         <h3>How to test it</h3>
-        <p>Six test cases for team members: book, break a leg, add a meeting,
-          cancel the whole trip, let the agent act on its own, and share by role —
-          each with what to expect and what is deliberately not a bug.</p>
-        <span class="m">for: breaking it on purpose</span>
+        <p>Six manual test cases with expected outcomes and deliberate
+          non-bugs called out: book via chat, delay vs cancel a leg, attach a
+          meeting, cancel the whole trip, set a spending cap and watch the
+          agent act (or refuse), and share by role — the host link must show
+          zero prices on every endpoint.</p>
+        <span class="m">use it to: break it on purpose and know what counts as broken</span>
         <a class="btn key" href="/test">Open /test</a>
       </div>
     </div>
