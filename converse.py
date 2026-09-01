@@ -60,6 +60,9 @@ class State(TypedDict, total=False):
     flights: list
     returns: list
     stays: list
+    #: Set when the room search is deferred to the flight pick --
+    #: declared here or the graph's state merge silently drops it.
+    hotel_after_pick: dict | None
     note: str
     detail: str
     missing: list[str]
@@ -285,6 +288,7 @@ def search(s: State) -> State:
 
     req = s["req"]
     out: State = {"flights": [], "returns": [], "stays": [],
+                  "hotel_after_pick": None,
                   "note": "", "detail": "", "missing": []}
     plain: list[str] = []
     raw: list[str] = []
@@ -347,10 +351,11 @@ def search(s: State) -> State:
                              req.destination, req.origin,
                              _noon(req.ret, _zone(req.destination)))))
 
-    if req.hotel:
+    if req.hotel and not (getattr(req, 'hotel_span', False) or not req.hotel_in):
+        # A TYPED range is the traveller's own decision -- searched now,
+        # as given. (The red-eye case: 'from the 17th' means the night
+        # before, and deriving from the flight would override it.)
         place = places.by_code(req.destination)
-        # The whole trip, from `Request.check_out` -- a return date when there
-        # is one, and otherwise the nights the traveller was asked for.
         checkout = req.check_out
         jobs.append(("stays",
                      f"no stays recorded in {place.hotel_city} for those nights",
@@ -359,6 +364,18 @@ def search(s: State) -> State:
                          _noon(req.check_in, _zone(req.destination)),
                          _noon(checkout, _zone(req.destination)),
                          code=req.destination)))
+    elif req.hotel:
+        # SPAN-DERIVED nights wait for the flight. 'The whole trip' keys
+        # to the departure date, and a red-eye departs the 18th and lands
+        # the 19th -- so the room search runs only once a flight is
+        # picked, from that flight's actual arrival. The page gets what
+        # it needs to run that search the moment the pick happens.
+        place = places.by_code(req.destination)
+        out['hotel_after_pick'] = {
+            'city': place.hotel_city, 'country': place.country,
+            'code': req.destination,
+            'check_out': req.check_out.isoformat() if req.check_out else '',
+            'nights': req.nights}
 
     with ThreadPoolExecutor(max_workers=len(jobs)) as pool:
         futures = {pool.submit(attempt, what, human, call): what

@@ -67,12 +67,31 @@ def book(client, text="one way flight zurich to milan on 18 september "
     # every fare -- which is the agent working, and leaves these tests, which
     # are about cancelling and rebooking a flight, with no flight in the trip.
     leg = next(o for o in turn["flights"] if o.get("mode", "flight") == "flight")
+    stays = turn["stays"]
+    if not stays and turn.get("hotel_after_pick"):
+        # The deferred flow, exactly as the page runs it: the room search
+        # waits for the chosen flight and keys to its actual arrival.
+        stays = _stays_for(client, turn["hotel_after_pick"], leg)
     return client.post("/api/chat/choose", json={
         "state": turn["state"],
         "flight_key": leg["key"],
         "flight_price": leg["price"],
         "flight_mode": leg.get("mode", "flight"),
-        "hotel_id": turn["stays"][0]["id"] if turn["stays"] else ""}).json()
+        "hotel_id": stays[0]["id"] if stays else ""}).json()
+
+
+def _stays_for(client, after: dict, leg: dict) -> list:
+    """The page's deferred room search, in helper form."""
+    from datetime import date as _date, timedelta as _td
+
+    check_in = leg["arrive"]["iso"][:10]
+    check_out = after.get("check_out") or ""
+    if not check_out or check_out <= check_in:
+        check_out = (_date.fromisoformat(check_in)
+                     + _td(days=after.get("nights") or 1)).isoformat()
+    return client.get("/api/search/hotels", params={
+        "city": after["city"], "country": after["country"],
+        "check_in": check_in, "check_out": check_out}).json()["stays"]
 
 
 def walk(client, text: str) -> dict:
@@ -625,3 +644,57 @@ def test_the_room_is_asked_about_before_anything_is_searched(client):
     assert turn["asks"][0]["field"] == "hotel_dates"
     assert turn["asks"][0]["options"], "asked without offering the obvious answer"
     assert not turn["flights"], "searched before the room dates were settled"
+
+
+# -- the room follows the flight ------------------------------------------
+
+def test_whole_trip_nights_wait_for_the_flight(client):
+    """"The whole trip" keys the room to the departure date, and a red-eye
+    lands the next morning -- so the first turn ships NO stays, and instead
+    hands the page what it needs to search once a flight is picked."""
+    answers = {"hotel": "yes", "preference": "cheapest", "ret": "one way",
+               "hotel_dates": "the whole trip", "confirm": "yes, search it"}
+    turn = client.post("/api/chat", json={
+        "text": "one way zurich to milan on 18 september with a hotel"}).json()
+    for _ in range(10):
+        if not turn["asks"] or turn["state"]["ready"]:
+            break
+        field = turn["asks"][0]["field"]
+        assert field in answers, field
+        turn = client.post("/api/chat", json={
+            "state": turn["state"], "answers": {field: answers[field]}}).json()
+    assert turn["flights"], turn.get("note")
+    assert turn["stays"] == [], "the room must wait for the flight"
+    after = turn.get("hotel_after_pick")
+    assert after and after["city"] == "Milan" and after["nights"] >= 1
+
+
+def test_the_room_is_keyed_to_the_chosen_flights_arrival(client):
+    """Server-side too: choose re-searches the hotel from the arrival of the
+    flight it has just re-matched, not from the requested departure date."""
+    booked = book(client)
+    trip = booked["bookings"]
+    flight = next(b for b in trip if b["kind"] == "flight")
+    stay = next((b for b in trip if b["kind"] == "lodging"), None)
+    assert stay is not None, "the premise: a room was booked"
+    assert stay["starts"]["iso"][:10] == flight["ends"]["iso"][:10], (
+        "check-in must be the day the chosen flight actually lands")
+
+
+def test_a_typed_range_of_nights_is_searched_immediately(client):
+    """"from the 17th" is the traveller's own decision -- the red-eye case,
+    the room wanted from the night before -- and is honoured as given."""
+    answers = {"hotel": "yes", "preference": "cheapest", "ret": "one way",
+               "hotel_dates": "18 to 20 september", "confirm": "yes, search it"}
+    turn = client.post("/api/chat", json={
+        "text": "one way zurich to milan on 18 september with a hotel"}).json()
+    for _ in range(10):
+        if not turn["asks"] or turn["state"]["ready"]:
+            break
+        field = turn["asks"][0]["field"]
+        assert field in answers, field
+        turn = client.post("/api/chat", json={
+            "state": turn["state"], "answers": {field: answers[field]}}).json()
+    assert turn["flights"], turn.get("note")
+    assert turn["stays"], "typed nights are searched now, as given"
+    assert not turn.get("hotel_after_pick")

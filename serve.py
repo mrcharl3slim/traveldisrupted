@@ -1070,6 +1070,7 @@ def _req_out(req) -> dict:
         "confirmed": req.confirmed, "shown": req.shown, "nights": req.nights,
         "hotel_in": req.hotel_in.isoformat() if req.hotel_in else None,
         "hotel_out": req.hotel_out.isoformat() if req.hotel_out else None,
+        "hotel_span": getattr(req, "hotel_span", False),
         "preference": req.preference, "summary": req.summary(),
         "ready": req.ready,
         "from_profile": list(req.from_profile),
@@ -1103,6 +1104,7 @@ def _req_in(raw: dict):
         hotel=raw.get("hotel") if isinstance(raw.get("hotel"), bool) else None,
         hotel_area=str(raw.get("hotel_area") or "")[:60],
         hotel_in=when(raw.get("hotel_in")), hotel_out=when(raw.get("hotel_out")),
+        hotel_span=bool(raw.get("hotel_span")),
         confirmed=bool(raw.get("confirmed")), shown=bool(raw.get("shown")),
         preference=(str(raw.get("preference") or "").lower()
                     if str(raw.get("preference") or "").lower()
@@ -1573,6 +1575,10 @@ def _chat_payload(state, out, asks, pending, unread) -> dict:
         "flights": [_offer(o) for o in (state.get("flights") or [])],
         "returns": [_offer(o) for o in (state.get("returns") or [])],
         "stays": [_stay(h) for h in (state.get("stays") or [])],
+        # Present when the room search is waiting on a flight pick: the page
+        # runs it the moment the traveller chooses, from that flight's actual
+        # arrival -- a red-eye departs the 18th and lands the 19th.
+        "hotel_after_pick": state.get("hotel_after_pick"),
     }
 
 
@@ -1620,11 +1626,21 @@ def choose(body: Choice, who: roles.Person = Depends(_owner)) -> dict:
         stays = []
         if body.hotel_id and req.hotel:
             place = places.by_code(req.destination)
-            checkout = req.check_out
+            # Span-derived nights key to the CHOSEN flight's actual arrival,
+            # which this very handler has just re-searched -- the honest date
+            # regardless of what any client sent. A typed range is the
+            # traveller's own decision and stands as given.
+            if getattr(req, "hotel_span", False) or not req.hotel_in:
+                cin = picked[0].arrive.date()
+                cout = req.ret or (cin + timedelta(days=req.nights))
+                if cout <= cin:
+                    cout = cin + timedelta(days=1)
+            else:
+                cin, cout = req.check_in, req.check_out
             found = flow.search_hotels(
                 place.hotel_city, place.country,
-                _day(req.check_in.isoformat(), zone_back),
-                _day(checkout.isoformat(), zone_back), code=req.destination)
+                _day(cin.isoformat(), zone_back),
+                _day(cout.isoformat(), zone_back), code=req.destination)
             stays = [h for h in found if h["id"] == body.hotel_id]
             if not stays:
                 raise HTTPException(409, "that rate is no longer available")

@@ -79,6 +79,12 @@ class Request:
     #: from the flights is right often enough to be trusted and wrong quietly.
     hotel_in: date | None = None
     hotel_out: date | None = None
+    #: True when the nights came from "the whole trip" rather than from a
+    #: typed range. Span-derived dates are a default keyed to the DEPARTURE
+    #: date, and a red-eye departs the 18th and lands the 19th -- so the room
+    #: search waits for the chosen flight and keys to its actual arrival. A
+    #: typed range is the traveller's own decision and is honoured as given.
+    hotel_span: bool = False
     preference: str = ""
     confirmed: bool = False
     #: Whether the summary card has actually been PUT IN FRONT of the
@@ -720,10 +726,12 @@ def answer(base: Request, field_name: str, value: str,
     if field_name == "hotel_dates":
         span = base.trip_span
         if span and re.search(r"whole trip|same|all of it|entire|yes", value, re.I):
-            return replace(base, hotel_in=span[0], hotel_out=span[1], filled=filled)
+            return replace(base, hotel_in=span[0], hotel_out=span[1],
+                           hotel_span=True, filled=filled)
         start, end = _dates(value.lower(), today, base.depart)
         if start and end:
-            return replace(base, hotel_in=start, hotel_out=end, filled=filled)
+            return replace(base, hotel_in=start, hotel_out=end,
+                           hotel_span=False, filled=filled)
         nights = re.search(r"(\d+)\s*nights?", value, re.I)
         if nights and base.depart:
             from datetime import timedelta as _td

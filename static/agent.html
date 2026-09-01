@@ -347,6 +347,13 @@ async function say(text, answers){
   if ((turn.flights || []).length) html += offerTable('flight', 'Outbound', turn.flights);
   if ((turn.returns || []).length) html += offerTable('ret', 'Return', turn.returns);
   if ((turn.stays || []).length)   html += stayTable(turn.stays);
+  if (turn.hotel_after_pick && (turn.flights || []).length)
+    html += `<div class="stays-slot" data-city="${esc(turn.hotel_after_pick.city)}"
+      data-country="${esc(turn.hotel_after_pick.country)}"
+      data-checkout="${esc(turn.hotel_after_pick.check_out || '')}"
+      data-nights="${turn.hotel_after_pick.nights || 1}">
+      <div class="note">Pick a flight first — I'll search rooms for the night you
+        actually land, not the night you take off.</div></div>`;
   if ((turn.flights || []).length)
     // A class, not an id. Every completed turn left another element with the
     // same id in the document, which is invalid and means any global lookup
@@ -369,6 +376,7 @@ function offerTable(kind, title, rows){
     <th class="n">Fare</th></tr></thead><tbody>` + rows.map(o => `
     <tr class="pick" data-kind="${kind}" data-id="${esc(o.id)}"
         data-key="${esc(o.key)}" data-price="${o.price}"
+        data-arrive="${esc(o.arrive && o.arrive.iso || '')}"
         data-mode="${esc(o.mode || 'flight')}">
       <td>${o.mode === 'rail' ? '<span class="tag">train</span> ' : ''}${esc(o.label)}
         <div class="m">${esc(o.carrier)}${
@@ -404,9 +412,45 @@ function wireOffers(el){
       r.classList.toggle('sel', PICK[kind] && r.dataset.id === PICK[kind].id));
     const go = el.querySelector('.confirm');
     if (go) go.disabled = !PICK.flight;
+    if (kind === 'flight') staysAfterPick(el, tr.dataset.arrive);
   });
   const go = el.querySelector('.confirm');
   if (go) go.onclick = () => confirm(go);
+}
+
+let STAYS_RUN = 0;
+async function staysAfterPick(el, arriveIso){
+  // The deferred room search: nights were "the whole trip", which keys to the
+  // departure date -- but a red-eye lands the next morning, so the search
+  // waits for the chosen flight and runs from its actual arrival.
+  const slot = el.querySelector('.stays-slot');
+  if (!slot || !PICK.flight || !arriveIso) return;
+  const run = ++STAYS_RUN;
+  const checkIn = arriveIso.slice(0, 10);
+  let checkOut = slot.dataset.checkout || '';
+  if (!checkOut || checkOut <= checkIn){
+    const d = new Date(checkIn + 'T12:00:00Z');
+    d.setUTCDate(d.getUTCDate() + (parseInt(slot.dataset.nights, 10) || 1));
+    checkOut = d.toISOString().slice(0, 10);
+  }
+  slot.innerHTML = `<div class="note">searching rooms from ${esc(checkIn)}…</div>`;
+  let found;
+  try {
+    found = await api(`/api/search/hotels?city=${encodeURIComponent(slot.dataset.city)}`
+      + `&country=${encodeURIComponent(slot.dataset.country)}`
+      + `&check_in=${checkIn}&check_out=${checkOut}`);
+  } catch (e) {
+    if (run === STAYS_RUN)
+      slot.innerHTML = `<div class="banner warn">${esc(e.message)}</div>`;
+    return;
+  }
+  if (run !== STAYS_RUN) return;      // a newer pick superseded this search
+  PICK.hotel = null;
+  slot.innerHTML = (found.stays || []).length
+    ? `<div class="note">rooms from <b>${esc(checkIn)}</b> — the night you land:</div>`
+      + stayTable(found.stays)
+    : `<div class="note">no rooms found from ${esc(checkIn)}</div>`;
+  wireOffers(el);
 }
 
 async function confirm(button){

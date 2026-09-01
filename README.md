@@ -660,6 +660,17 @@ time:
   is answered from the stored bookings; it used to create a second lunch,
   titled with the question.
 
+## The room follows the flight
+
+Booking a hotel together with flights or rail, "the whole trip" used to key
+the room search to the *departure* date — and a red-eye departs the 18th and
+lands the 19th. Span-derived nights now wait: the stays search runs only once
+the traveller picks a flight, from that flight's actual arrival, on the page
+and again server-side at booking time (`choose` re-searches the room from the
+arrival of the flight it just re-matched, whatever any client sent). A typed
+range of nights — "from the 17th", the room wanted the night before — is the
+traveller's own decision and is honoured as given, searched immediately.
+
 ## Where the trip is thin, before anything breaks
 
 Everything else in the engine speaks after a disruption. `risk.py` reads the
