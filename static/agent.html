@@ -797,6 +797,12 @@ async function breakLeg(tripId, what, path){
   // Said in the traveller's own words, and the two are different events: one
   // leaves them where they started and the other lands them late somewhere.
   const gone = d.signal.cancelled;
+  // What the walk says is UNREACHABLE, which is not the same question as
+  // "is there a leg to re-book". A missed meeting produces no gap -- nobody
+  // sells a replacement meeting -- and the reply used to read "nothing
+  // downstream is out of reach" over the top of a broken commitment, with
+  // S$0 destroyed beside it because a commitment is counted, never priced.
+  const missed = (d.impact.nodes || []).filter(n => n.severity === 'critical');
   bubble('You', gone
     ? `My ${esc(d.signal.title)} has been cancelled.`
     : `My ${esc(d.signal.title)} is running ${late_(d.signal.delay_minutes)} late.`);
@@ -809,7 +815,13 @@ async function breakLeg(tripId, what, path){
        ? `${gone ? 'You are at' : 'You land at'} ${esc(d.gap.origin)}, and you are due
           in ${esc(d.gap.destination)} by ${at(d.gap.by)}. I searched
           ${d.searched.length} replacements.`
-       : `Nothing downstream is out of reach — there is nothing to fix.`)
+       : missed.length
+         ? `${missed.map(n => `<b>${esc(n.title)}</b>`).join(', ')}
+            ${missed.length === 1 ? 'is' : 'are'} out of reach.${
+            missed.every(n => !n.price)
+              ? ' There is no replacement to buy — a commitment is not a leg, and'
+                + ' it is counted, never priced. What it needs is a call.' : ''}`
+         : `Nothing downstream is out of reach — there is nothing to fix.`)
     + `<div class="note">Destroyed <b>${eur(d.impact.do_nothing)}</b> ·
        held by a phone call <b>${eur(d.impact.at_risk)}</b> ·
        acting is worth <b>${eur(d.saved)}</b>.</div>`;
@@ -845,8 +857,15 @@ async function breakLeg(tripId, what, path){
       ? '<span class="m">Taken already — pick a different row only if you want to change it.</span>'
       : '<button class="btn key do-it" disabled>Take this plan</button>'}</div>`;
 
+  // The other answer to a twelve-hour delay: not flying it at all. Priced
+  // before anything is sent, and scoped -- the hotel and the meetings stand.
+  html += `<div class="chips"><button class="btn bad sm drop-flights">
+    Cancel the flights instead</button></div>`;
+
   html += `<div class="lines"></div>`;
   const el = bubble('TripShield', html);
+  const drop = el.querySelector('.drop-flights');
+  if (drop) drop.onclick = () => priceAbandon(tripId, 'flights');
   let chosen = null;
   // Approve, reject, per line. Picking a plan lays out what it would do, one
   // box each, all ticked; unticking one declines it and the rest still
@@ -885,15 +904,18 @@ async function breakLeg(tripId, what, path){
 // consequence in this product is argued in the thread -- what breaks, what it
 // costs, what the options are -- and the one decision that destroys value on
 // purpose should not be the exception that happens quietly in a sidebar.
-async function priceAbandon(tripId){
+async function priceAbandon(tripId, scope){
   let quote;
-  try { quote = await api('/api/abandon', {trip_id: tripId}); }
+  try { quote = await api('/api/abandon', {trip_id: tripId, scope: scope || 'trip'}); }
   catch (e) { return bubble('TripShield',
     `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
 
-  bubble('You', `I am not going on this trip at all.`);
+  const flightsOnly = scope === 'flights';
+  bubble('You', flightsOnly
+    ? `Cancel the flights — I am not flying that.`
+    : `I am not going on this trip at all.`);
 
-  let html = `Cancelling <b>${esc(quote.label)}</b> costs you
+  let html = `Cancelling <b>${flightsOnly ? 'the flights on ' : ''}${esc(quote.label)}</b> costs you
     <b>${eur(quote.lost)}</b> of the ${eur(quote.paid)} you paid.
     <b>${eur(quote.refund)}</b> comes back.
     <div class="note">Worked out at ${at(quote.as_of)} — a window that is open
@@ -910,20 +932,28 @@ async function priceAbandon(tripId){
       <div class="leg"><div>${esc(a.label)}<div class="m">${esc(a.note || '')}</div></div>
         <span class="n">${a.cash_in ? eur(a.cash_in) + ' back' : '—'}</span></div>`).join('')}</div>`;
   }
+  if (flightsOnly)
+    html += `<div class="note">The hotel and anything you are due at stay
+      exactly as they are — this cancels the flights, both directions, and
+      nothing else.</div>`;
   html += `<div class="chips">
-      <button class="btn bad abandon-go">Yes, cancel it all</button>
-      <button class="btn abandon-no">Keep the trip</button></div>`;
+      <button class="btn bad abandon-go">${flightsOnly
+        ? 'Yes, cancel the flights' : 'Yes, cancel it all'}</button>
+      <button class="btn abandon-no">${flightsOnly
+        ? 'Keep them' : 'Keep the trip'}</button></div>`;
 
   const el = bubble('TripShield', html);
   el.querySelector('.abandon-no').onclick = () =>
     bubble('TripShield', 'Left as it is — nothing was cancelled.');
-  el.querySelector('.abandon-go').onclick = (e) => confirmAbandon(e.target, tripId);
+  el.querySelector('.abandon-go').onclick = (e) =>
+    confirmAbandon(e.target, tripId, scope);
 }
 
-async function confirmAbandon(button, tripId){
+async function confirmAbandon(button, tripId, scope){
   button.disabled = true;
   let done;
-  try { done = await api('/api/abandon', {trip_id: tripId, confirm: true}); }
+  try { done = await api('/api/abandon', {trip_id: tripId, confirm: true,
+                                          scope: scope || 'trip'}); }
   catch (e) { button.disabled = false; return bubble('TripShield',
     `<span style="color:var(--bad)">${esc(e.message)}</span>`); }
 

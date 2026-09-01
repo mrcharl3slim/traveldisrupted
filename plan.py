@@ -526,9 +526,16 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
     )
 
 
-def abandon(trip: Trip, now: datetime) -> Plan:
+def abandon(trip: Trip, now: datetime, only: set[str] | None = None) -> Plan:
     """The traveller is not going. What has to happen to each booking, and who
     can do it.
+
+    ``only`` scopes the decision to some of the bookings -- dropping the
+    flights out of a trip whose hotel and meetings stand. The arithmetic is
+    identical either way: one action per booking in scope, the refund the
+    policy still returns at ``now``, and the rest in the waste column. What it
+    is NOT is a partial abandonment of the trip: the trip goes on, which is
+    why the caller stores the outcome somewhere other than `abandoned`.
 
     NOT A DISRUPTION, and the difference is the whole reason this is its own
     function rather than a `Disruption` with a flag. Nothing broke; the
@@ -556,6 +563,8 @@ def abandon(trip: Trip, now: datetime) -> Plan:
     wasted = 0.0
 
     for b in trip.in_order():
+        if only is not None and b.id not in only:
+            continue
         # Nothing was bought, so there is nothing to cancel. A replacement the
         # traveller approved and never paid for leaves with the trip, and
         # listing it as an errand would send somebody to a provider that has
@@ -701,7 +710,34 @@ def generate(trip: Trip, disruption: Disruption, now: datetime,
     built = [build(trip, disruption, now, baseline, o) for o in [None, *offers]]
     plans = [p for p in built if p is not None]
     latest = datetime.max.replace(tzinfo=now.tzinfo)
+
+    # STRANDED BEATS CHEAP. When the disruption leaves the traveller short of
+    # somewhere they are contractually due -- `recovery_gap` returns None
+    # unless it does -- a plan that gets them there outranks one that does
+    # not, whatever it costs. Without this, cancelling a long-haul was
+    # answered with "do nothing": the S$240 of downstream bookings it wastes
+    # is genuinely cheaper than any S$555 replacement, so inaction won the
+    # arithmetic and the traveller was advised not to take their trip. The
+    # ledger was right and the recommendation was absurd, because the ledger
+    # prices what is lost and not the journey itself.
+    #
+    # Doing nothing stays in the list with its real damage beside it -- it is
+    # still an option and the page still shows what it costs. It just stops
+    # being the recommendation while somewhere the traveller must be is out
+    # of reach. Where nothing is stranded, the old order is untouched: a
+    # thirty-minute delay the connection absorbs still recommends inaction,
+    # and that restraint is the point.
+    gap = recovery_gap(trip, disruption, now)
+
+    def strands(p) -> int:
+        if gap is None:
+            return 0
+        closes = (gap.for_booking in p.delivered
+                  or (p.arrives_where and p.arrives_where == gap.destination))
+        return 0 if closes else 1
+
     return sorted(plans, key=lambda p: (len(p.missed_ids),
+                                        strands(p),
                                         round(p.total_damage, 2),
                                         _preference_key(p, preference),
                                         p.arrives_at or latest))

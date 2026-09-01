@@ -263,6 +263,122 @@ def test_rules_can_be_changed_after_booking_and_are_listed(client):
 
 
 # --------------------------------------------------------------------------
+# a delay outlives its disruption, and the flights can be dropped
+# --------------------------------------------------------------------------
+
+
+def test_the_delayed_label_survives_taking_a_plan(client):
+    """Taking a plan resolves the event -- even "do nothing" does -- and the
+    aircraft is still twelve hours late. The row went back to reading its
+    booked time with nothing to say otherwise, which is the one fact the
+    traveller kept it for."""
+    booked = book(client)
+    leg = [b for b in booked["bookings"] if b["kind"] == "flight"][1]
+    out = client.post("/api/delay", json={
+        "trip_id": booked["trip_id"], "booking_id": leg["id"],
+        "minutes": 720}).json()
+    plan = out["plans"][0]
+    assert client.post("/api/act", json={
+        "trip_id": booked["trip_id"], "booking_id": leg["id"],
+        "plan_key": plan.get("key") or "",
+        "plan_id": plan["id"]}).status_code == 200
+
+    row = next(b for b in _row(client, booked["trip_id"])["bookings"]
+               if b["id"] == leg["id"])
+    hit = row.get("disruption")
+    assert hit and hit["delay_minutes"] == 720, "the leg is still late"
+    assert hit["was"] and hit["now_arrives"], "both times, or the label says nothing"
+    assert row["starts"]["iso"] == leg["starts"]["iso"], (
+        "and what was booked does not move -- that is the comparison")
+
+
+def test_dropping_the_flights_prices_first_and_leaves_the_trip_standing(client):
+    """A twelve-hour delay is answered by not flying it, without calling the
+    whole trip off: the flights go, both directions, and the hotel stands."""
+    booked = book(client)
+    tid = booked["trip_id"]
+
+    quote = client.post("/api/abandon", json={
+        "trip_id": tid, "scope": "flights"}).json()
+    assert quote["scope"] == "flights" and quote["confirmed"] is False
+    priced = {a["booking_id"] for a in quote["plan"]["actions"] if a.get("booking_id")}
+    flights = {b["id"] for b in booked["bookings"] if b["kind"] == "flight"}
+    stays = {b["id"] for b in booked["bookings"] if b["kind"] == "lodging"}
+    assert flights <= priced and not (stays & priced), (
+        "every flight, no hotel")
+    assert _row(client, tid)["bookings"], "pricing changes nothing"
+
+    done = client.post("/api/abandon", json={
+        "trip_id": tid, "scope": "flights", "confirm": True}).json()
+    assert done["summary"]
+
+    row = _row(client, tid)
+    assert not row.get("abandoned"), "the trip itself is still on"
+    gone = {b["id"] for b in row["bookings"] if b.get("cancelled")}
+    assert gone == flights, "the flights read cancelled and nothing else does"
+    room = next(b for b in row["bookings"] if b["kind"] == "lodging")
+    assert not room.get("cancelled"), "the room is still booked"
+
+
+# --------------------------------------------------------------------------
+# nothing to re-book is not nothing lost
+# --------------------------------------------------------------------------
+
+
+def test_a_delay_past_a_meeting_reports_it_out_of_reach(client):
+    """A twelve-hour delay that lands after the client meeting must not
+    answer "nothing downstream is out of reach". Nobody sells a replacement
+    meeting, so there is no gap and no plan worth taking -- and the reply used
+    to read as "nothing happened", with S$0 destroyed beside it because a
+    commitment is counted, never priced. The page's sentence is built from
+    these nodes, so this is the contract it depends on."""
+    booked = _with_meeting(client, {})
+    onward = [b for b in booked["bookings"] if b["kind"] == "flight"][1]
+    out = client.post("/api/delay", json={
+        "trip_id": booked["trip_id"], "booking_id": onward["id"],
+        "minutes": 720}).json()
+
+    critical = [n for n in out["impact"]["nodes"] if n["severity"] == "critical"]
+    missed = [n for n in critical if "client" in n["title"].lower()]
+    assert missed, [n["title"] for n in critical]
+    assert out["impact"]["broken"] >= 1
+    assert missed[0]["price"] == 0, "a commitment is counted, never priced"
+    assert "miss" in missed[0]["reason"]
+
+
+def test_the_alert_names_the_commitment_when_there_is_nothing_to_rebook():
+    """The watch's own sentence, same rule. `_Found` chose its words from
+    whether a PLAN existed; a missed meeting produces none."""
+    from datetime import datetime as _dt
+    from zoneinfo import ZoneInfo
+
+    import flow
+    from domain import Booking, Disruption, Kind, Trip
+
+    sgt, cet = ZoneInfo("Asia/Singapore"), ZoneInfo("Europe/Zurich")
+    flight = Booking(id="sq0177", kind=Kind.FLIGHT, provider="SQ",
+                     title="SQ 0177 - SIN to ZRH",
+                     start=_dt(2026, 10, 1, 23, 55, tzinfo=sgt),
+                     end=_dt(2026, 10, 2, 6, 15, tzinfo=cet),
+                     origin="SIN", destination="ZRH", price=1200.0)
+    meeting = Booking(id="mtg", kind=Kind.ACTIVITY, provider="the client",
+                      title="Meeting with the client", commitment=True,
+                      fixed_slot=True, who="the client", price=0.0,
+                      start=_dt(2026, 10, 2, 10, 0, tzinfo=cet),
+                      end=_dt(2026, 10, 2, 11, 0, tzinfo=cet), origin="ZRH")
+    trip = Trip([flight, meeting])
+    late = Disruption("sq0177", _dt(2026, 10, 2, 18, 15, tzinfo=cet),
+                      "late inbound aircraft", 0.9)
+    recovery = flow.replan(trip, late, preference="cheapest")
+    assert recovery.best is None or recovery.best.id == "noop", (
+        "the premise: there is nothing to buy for a missed meeting")
+
+    said = serve._Found(late, trip, recovery, taken=None).message
+    assert "would miss" in said and "Meeting with the client" in said
+    assert "nothing downstream is out of reach" not in said
+
+
+# --------------------------------------------------------------------------
 # the presence timeline: location, date and time, every event
 # --------------------------------------------------------------------------
 

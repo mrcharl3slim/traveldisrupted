@@ -660,6 +660,30 @@ time:
   is answered from the stored bookings; it used to create a second lunch,
   titled with the question.
 
+## Not going is not a recovery plan
+
+Doing nothing is scored by the same arithmetic as everything else and is meant
+to lose on the merits — but the ledger prices what is *lost*, not the journey
+itself. Cancel a long-haul and inaction wastes only the downstream bookings
+(S$240), which is genuinely cheaper than any replacement fare (S$555+), so the
+engine recommended not taking the trip. Now, when `recovery_gap` says the
+traveller is stranded short of somewhere they are due, **a plan that gets them
+there outranks one that does not, whatever it costs**. Inaction keeps its place
+in the list with its real damage beside it; it just stops being the
+recommendation. Where nothing is stranded the old order stands, so a
+thirty-minute delay the connection absorbs still recommends restraint.
+
+Two consequences of the same honesty:
+
+- **A delay outlives its disruption.** Taking a plan resolves the event — even
+  "do nothing" does — so the watch stops counting down deadlines already dealt
+  with. The aircraft is still late, so the leg keeps its *delayed* label and
+  both times; what was booked never moves, because that is the comparison.
+- **The flights can be dropped without calling off the trip.** `scope:
+  "flights"` prices the transport legs — outbound and return together, since
+  half a journey is nobody's decision — then cancels them on confirm and leaves
+  the hotel and the meetings standing.
+
 ## The room follows the flight
 
 Booking a hotel together with flights or rail, "the whole trip" used to key

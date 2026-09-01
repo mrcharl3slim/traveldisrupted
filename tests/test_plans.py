@@ -345,3 +345,59 @@ def test_a_defusable_booking_is_priced_the_same_way_under_every_plan():
     for plan in ranked:
         assert "tour" in plan.at_risk_ids, plan.id
         assert "tour" not in plan.wasted_ids, plan.id
+
+
+# -- stranded beats cheap -------------------------------------------------
+
+def test_a_cancelled_journey_is_never_answered_with_do_nothing():
+    """Cancelling the long-haul strands the traveller at home. Doing nothing
+    wastes only what was booked downstream -- genuinely cheaper than any
+    replacement fare -- so inaction won the arithmetic and the engine advised
+    the traveller not to take their trip. A plan that gets them there outranks
+    it now, whatever it costs; inaction keeps its place in the list with its
+    real damage beside it."""
+    from datetime import datetime as _dt
+    from zoneinfo import ZoneInfo
+    from domain import Booking, Disruption, Kind, Trip
+    from offers import Offer
+
+    sgt, cet = ZoneInfo("Asia/Singapore"), ZoneInfo("Europe/Zurich")
+    out = Booking(id="out", kind=Kind.FLIGHT, provider="SQ",
+                  title="SQ 0177 - SIN to ZRH",
+                  start=_dt(2026, 10, 1, 23, 55, tzinfo=sgt),
+                  end=_dt(2026, 10, 2, 6, 15, tzinfo=cet),
+                  origin="SIN", destination="ZRH", price=1200.0)
+    room = Booking(id="room", kind=Kind.LODGING, provider="A hotel",
+                   title="A hotel - 2 nights",
+                   start=_dt(2026, 10, 2, 14, 0, tzinfo=cet),
+                   end=_dt(2026, 10, 4, 10, 0, tzinfo=cet),
+                   origin="ZRH", price=300.0)
+    trip = Trip([out, room])
+    now = _dt(2026, 10, 1, 20, 0, tzinfo=cet)
+    killed = Disruption("out", _dt(2026, 10, 1, 23, 55, tzinfo=sgt),
+                        "cancelled", 1.0, cancelled=True)
+    later = [Offer("alt", "flight", "LX", "LX 0999 - SIN to ZRH",
+                   _dt(2026, 10, 2, 1, 0, tzinfo=sgt),
+                   _dt(2026, 10, 2, 9, 0, tzinfo=cet), "SIN", "ZRH", 900.0)]
+
+    ranked = generate(trip, killed, now, later)
+    assert ranked[0].id != "noop", "not going is not a recovery plan"
+    assert any(p.id == "noop" for p in ranked), (
+        "and inaction stays on the table, priced")
+    noop = next(p for p in ranked if p.id == "noop")
+    assert ranked[0].total_damage > noop.total_damage, (
+        "the premise: the replacement really is dearer, and still wins")
+
+
+def test_a_delay_nothing_can_reach_still_recommends_restraint():
+    """The rule is gated on being stranded. A small delay the connection
+    absorbs leaves nothing out of reach, so doing nothing stays the answer --
+    that restraint is why the alerts that fire mean something."""
+    from demo_trip import anchor, build_trip
+    from domain import Disruption
+    from offers import build_offers
+
+    trip = build_trip(None)
+    small = Disruption("sq346", anchor(None, 12, 6, 45), "minor delay", 0.9)
+    ranked = generate(trip, small, anchor(None, 12, 2, 38), build_offers(None))
+    assert ranked[0].id == "noop", "nothing is at risk, so nothing is worth buying"

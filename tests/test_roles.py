@@ -273,8 +273,17 @@ def test_an_assistant_runs_the_trip_and_is_named_in_the_record(client, world):
     trip_id = world["trip"]["trip_id"]
     assistant = world["members"]["assistant"]["token"]
     leg = [b for b in world["trip"]["bookings"] if b["kind"] == "flight"][1]
+    # Finance raised the cap in the test above, and a plan that gets the
+    # traveller to Milan now outranks doing nothing -- so the agent would take
+    # it before the assistant touched anything, and this test is about the
+    # ASSISTANT acting. Put the cap back first: with nothing pre-authorised,
+    # the plan waits for a person, which is the situation being tested.
+    owner = world["owner"]["token"]
+    client.post("/api/permissions", headers=as_(owner),
+                json={"trip_id": trip_id, "auto_limit": 0})
     outcome = client.post("/api/cancel", headers=as_(assistant),
                           json={"trip_id": trip_id, "booking_id": leg["id"]}).json()
+    assert not outcome.get("auto_taken"), "the premise: nobody acted first"
     plan = outcome["plans"][0]
     done = client.post("/api/act", headers=as_(assistant), json={
         "trip_id": trip_id, "booking_id": leg["id"], "plan_key": plan.get("key") or plan["id"]})

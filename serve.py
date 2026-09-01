@@ -334,14 +334,24 @@ class ProfileIn(BaseModel):
 
 
 class Abandon(BaseModel):
-    """Cancel the whole trip.
+    """Cancel the whole trip, or just the flights.
 
     Two steps, and not because a form wants a confirm box: this is the one
     action in the product that destroys value on purpose and cannot be undone
     by pressing it again. `confirm=false` prices it -- every booking, what each
     is still worth, who can cancel it and by when -- and does nothing. Only the
     second call sends anything.
+
+    ``scope="flights"`` prices and drops the transport legs alone -- the
+    outbound and its return together, because half a journey is not a
+    decision anybody makes -- and leaves the hotel, the meetings and the trip
+    itself standing. A twelve-hour delay is the case it exists for: the
+    traveller is not going to fly that, and cancelling the whole trip is the
+    wrong shape of answer.
     """
+
+    #: "trip" (everything) or "flights" (every transport leg).
+    scope: str = "trip"
 
     trip_id: str
     confirm: bool = False
@@ -749,6 +759,14 @@ class _Found:
                           if taken["pending"] else "nothing left to do"))
         elif best is not None and best.id != "noop":
             outcome = f"recommended {best.name}, waiting for your approval"
+        elif recovery.impact.broken:
+            # Nothing to re-book is not the same as nothing lost. Nobody sells
+            # a replacement meeting, so a missed commitment produces no plan
+            # worth taking -- and this alert used to announce that everything
+            # was fine over the top of the reason the trip existed.
+            outcome = ("you would miss "
+                       + "; ".join(n.booking.title
+                                   for n in recovery.impact.broken))
         else:
             outcome = "nothing downstream is out of reach"
         self.message = f"{source.title} {what} — {outcome}"
@@ -1739,7 +1757,9 @@ def itineraries(who: roles.Person = Depends(_who)) -> dict:
             "detected": saved.payload.get("detected"),
             "checked": saved.payload.get("checked"),
             "bookings": _bookings_out(trip, disruption,
-                                      saved.payload.get("abandoned")),
+                                      saved.payload.get("abandoned")
+                                      or saved.payload.get("dropped"),
+                                      delays=saved.payload.get("delays")),
         }, role))
     return {"itineraries": rows, "me": {"id": who.id, "name": who.name,
                                         "anonymous": who.anonymous}}
@@ -1759,7 +1779,10 @@ def act(body: Act, who: roles.Person = Depends(_who)) -> dict:
     saved, _role = _access(body.trip_id, who, roles.ACT)
     already = saved.payload.get("acted")
     current = saved.payload.get("disruption")
-    if already and (current is None or already.get("for") == current):
+    wanted = body.plan_key or body.plan_id
+    same_plan = already is not None and already.get("plan_key") == wanted
+    if already and (current is None
+                    or (already.get("for") == current and same_plan)):
         # A replay -- a double-click, a retried request, a stale tab. Either
         # the stored disruption is the exact one this trip already acted on,
         # or acting RESOLVED it and nothing new has broken since. The second
@@ -1768,8 +1791,9 @@ def act(body: Act, who: roles.Person = Depends(_who)) -> dict:
         # itinerary, which is how a flight quietly disappeared.
         raise HTTPException(
             409, "already handled — that plan was taken at "
-                 f"{already.get('at', 'an earlier moment')}. Break something "
-                 "new, or cancel again to re-plan from here.")
+                 f"{already.get('at', 'an earlier moment')}. Pick a different "
+                 "option to change it, break something new, or cancel again "
+                 "to re-plan from here.")
     trip = _load(body.trip_id)
     preference = saved.payload.get("preference", "")
 
@@ -1858,12 +1882,31 @@ def _take(trip_id: str, trip: Trip, recovery, plan, by: str,
                         # on the same event re-planned against the rewritten
                         # itinerary and deleted a leg the first act had kept.
                         "for": saved.payload.get("disruption"),
-                        "plan": plan.name, "changed": changed, "by": by,
+                        "plan": plan.name,
+                        # Which plan, not just its name: the guard below has
+                        # to tell "pressed twice" from "changed their mind",
+                        # and the product documents the second -- the page
+                        # says so under an auto-take.
+                        "plan_key": getattr(plan, "key", "") or plan.id,
+                        "changed": changed, "by": by,
                         "declined": [d.label for d in declined],
                         "resolved": resolved,
                         "permission": recovery.verdict.why
                         if recovery.verdict and by == "the agent" else ""}
     if resolved:
+        # The leg is still late even though the event is closed -- see
+        # `_bookings_out.deviation`. Remembered before the disruption is
+        # dropped, and only for a delay: a cancelled leg leaves the itinerary
+        # entirely and has no row left to label.
+        hit = recovery.disruption
+        if not hit.cancelled and any(b.id == hit.booking_id
+                                     for b in updated.bookings):
+            was = trip.by_id(hit.booking_id).end
+            payload["delays"] = {**(payload.get("delays") or {}), hit.booking_id: {
+                "delay_minutes": int(hit.delay(trip).total_seconds() // 60),
+                "reason": hit.reason,
+                "was": was.isoformat() if was else "",
+                "now_arrives": hit.new_end.isoformat()}}
         # This itinerary is no longer the broken one, so the watch stops
         # counting down deadlines that have been dealt with.
         payload.pop("disruption", None)
@@ -1886,7 +1929,8 @@ def _take(trip_id: str, trip: Trip, recovery, plan, by: str,
     }
 
 
-def _bookings_out(trip: Trip, disruption=None, abandoned=None) -> list[dict]:
+def _bookings_out(trip: Trip, disruption=None, abandoned=None,
+                  delays=None) -> list[dict]:
     """The trip's rows, with the deviation attached to the one it happened to.
 
     KEPT SEPARATE FROM start AND end, deliberately. Those are what was booked
@@ -1919,7 +1963,27 @@ def _bookings_out(trip: Trip, disruption=None, abandoned=None) -> list[dict]:
 
     def deviation(b: Booking) -> dict | None:
         if disruption is None or disruption.booking_id != b.id:
-            return None
+            # A DELAY OUTLIVES ITS DISRUPTION. Taking a plan resolves the
+            # event -- even "do nothing" does -- and the stored disruption is
+            # dropped so the watch stops counting down deadlines that have
+            # been dealt with. The aircraft is still twelve hours late: the
+            # leg went back to reading 15:10 with nothing to say otherwise,
+            # which is the one fact the traveller kept the row for. So a
+            # delay that was acted on is remembered here, and the live
+            # disruption above still wins while there is one.
+            kept = (delays or {}).get(b.id)
+            if not kept:
+                return None
+            def _iso(value):
+                try:
+                    return _when(datetime.fromisoformat(value))
+                except (TypeError, ValueError):
+                    return None
+            return {"cancelled": False,
+                    "delay_minutes": kept.get("delay_minutes", 0),
+                    "reason": kept.get("reason", ""),
+                    "was": _iso(kept.get("was")),
+                    "now_arrives": _iso(kept.get("now_arrives"))}
         late = int(disruption.delay(trip).total_seconds() // 60)
         return {"cancelled": disruption.cancelled,
                 "delay_minutes": late,
@@ -2072,6 +2136,12 @@ def _respond(trip_id: str, saved, trip: Trip, disruption, injected: bool,
     stored["disruption"] = flow.to_dict(recovery.disruption, injected=injected)
     stored.pop("watermark", None)      # a new disruption starts a new clock
     stored.pop("last_sent", None)
+    # A NEW EVENT RE-ARMS ACTING. The replay guard compares the stored
+    # disruption against the one already acted on, and breaking the same leg
+    # twice produces an identical dict -- so without this, the second genuine
+    # break was refused as a double-click. Acting is per event; a fresh event
+    # is a fresh decision.
+    stored.pop("acted", None)
     store_module.store().update(trip_id, stored)
 
     source = trip.by_id(disruption.booking_id)
@@ -2172,7 +2242,8 @@ def _injected(trip_id: str, booking_id: str, make,
     # to. Returned so the page has ONE source for what is wrong with a leg --
     # it had two, the row it was holding and the signal in this response, and
     # the second does not survive a refresh.
-    payload["bookings"] = _bookings_out(trip, recovery.disruption)
+    payload["bookings"] = _bookings_out(trip, recovery.disruption,
+                                        delays=saved.payload.get("delays"))
     if taken:
         payload["auto_taken"] = taken
         payload["bookings"] = taken["bookings"]
@@ -2427,11 +2498,22 @@ def abandon(body: Abandon, who: roles.Person = Depends(_who)) -> dict:
 
     trip = _load(body.trip_id)
     now = datetime.now(timezone.utc)
-    plan = plan_mod.abandon(trip, now)
+    flights_only = body.scope == "flights"
+    only = None
+    if flights_only:
+        # Every transport leg, outbound and return together: "cancel the
+        # flight" is not a decision anybody makes about one direction.
+        already = set((saved.payload.get("dropped") or {}).get("bookings") or [])
+        only = {b.id for b in trip.in_order()
+                if b.kind in (Kind.FLIGHT, Kind.RAIL) and b.id not in already}
+        if not only:
+            raise HTTPException(409, "there are no flights left on this trip")
+    plan = plan_mod.abandon(trip, now, only=only)
 
     payload = {
         "trip_id": body.trip_id,
         "label": saved.label,
+        "scope": body.scope,
         "confirmed": body.confirm,
         "plan": _plan(plan, best=True),
         # What the traveller gets back and what the decision costs, both, at
@@ -2476,6 +2558,33 @@ def abandon(body: Abandon, who: roles.Person = Depends(_who)) -> dict:
             feed=f"{outcome.lane} lane; executing the cancellation (no feed)")
 
     stored = dict(saved.payload)
+    if flights_only:
+        # The flights are gone and the trip is not. Stored somewhere other
+        # than `abandoned`, which every other part of this file reads as "the
+        # whole thing is off" -- the watch would stop, the buttons would go,
+        # and the hotel the traveller is still keeping would read as cancelled.
+        stored["dropped"] = {
+            "at": now.isoformat(), "by": who.name, "reason": body.reason,
+            "refund": payload["refund"], "lost": payload["lost"],
+            "bookings": sorted(only),
+            "actions": [_action(a) for a in plan.actions],
+        }
+        # A disruption on a leg nobody is flying is nothing to answer.
+        hit = flow.from_dict(stored.get("disruption"))
+        if hit is not None and hit.booking_id in only:
+            stored.pop("disruption", None)
+            stored.pop("watermark", None)
+            stored.pop("last_sent", None)
+        store_module.store().update(body.trip_id, stored)
+        return {**payload,
+                "bookings": _bookings_out(trip, None, stored["dropped"],
+                                          delays=stored.get("delays")),
+                "summary": act_mod.summarise(done, []),
+                "sent": [d.__dict__ for d in done if d.state == "sent"],
+                "held": [d.__dict__ for d in done if d.state == "held"],
+                "pending": [d.__dict__ for d in done if d.state == "pending"],
+                "log": lines}
+
     # The trip is KEPT, marked. Deleting it would take with it the one thing
     # the traveller now needs -- which refunds were promised, which calls are
     # still theirs to make -- and there is no undoing a delete either.
@@ -2495,7 +2604,8 @@ def abandon(body: Abandon, who: roles.Person = Depends(_who)) -> dict:
     store_module.store().update(body.trip_id, stored)
 
     return {**payload,
-            "bookings": _bookings_out(trip, None, stored["abandoned"]),
+            "bookings": _bookings_out(trip, None, stored["abandoned"],
+                                      delays=stored.get("delays")),
             "summary": act_mod.summarise(done, []),
             "sent": [d.__dict__ for d in done if d.state == "sent"],
             "held": [d.__dict__ for d in done if d.state == "held"],
