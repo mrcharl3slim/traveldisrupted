@@ -39,27 +39,62 @@ def test_a_delay_still_lands_them_where_they_were_going():
     assert "ZRH" in model.arrivals
 
 
-def test_a_cancellation_never_settles():
-    """"The itinerary resumes as booked once today is over" is a statement
-    about a traveller who is late. One whose flight is not going is not late,
-    they are in another country, and no amount of tomorrow moves them.
+def test_a_cancellation_settles_late_rather_than_never():
+    """"The itinerary resumes once today is over" is a statement about a
+    traveller who is late. One whose flight is not going is not late, they are
+    in another country, and tomorrow morning does not move them. Letting a
+    cancellation settle at end of day was the bug that made a cancelled
+    outbound look free.
 
-    Letting a cancellation settle was the bug that made a cancelled outbound
-    look free: everything downstream fell on a later day, came back "reachable
-    under this plan", and the recovery search found nothing to fix.
+    NEVER settling was the overcorrection, and it cost more than the bug it
+    fixed: cancelling the 75-minute ZRH->MXP hop charged S$1,569, of which
+    S$1,359 was a Florence hotel and two trains three to five days out --
+    unreachable only because `transit("ZRH","FLR")` is not one of fifteen rows
+    in a table of local ground links. The horizon is the day after the leg was
+    due to land: inside it the traveller is where they are, beyond it we stop
+    claiming this disruption owns their week.
     """
-    assert no_action_model(CANCELLED, TRIP).settled_from is None
-    assert no_action_model(DELAYED, TRIP).settled_from is not None
+    cancelled = no_action_model(CANCELLED, TRIP)
+    assert cancelled.settled_from is not None
+    # Not tonight, and not tomorrow either -- the two the bug got wrong.
+    assert cancelled.settled_from > CANCELLED.new_end + timedelta(days=1)
+    # A delay still resumes the same evening; nothing about that changed.
+    assert no_action_model(DELAYED, TRIP).settled_from < DELAYED.new_end + timedelta(days=1)
 
 
-def test_a_cancellation_does_not_reach_the_destination_by_waiting():
-    """The rule above, in the terms the graph actually asks it in. There is no
-    ground route from Singapore to Milan, and a week of patience does not
-    build one."""
+def test_a_cancellation_does_not_reach_the_destination_by_waiting_a_night():
+    """The rule above, in the terms the graph asks it in.
+
+    The earlier version of this test asserted the same thing a week out, on the
+    grounds that "there is no ground route from Singapore to Milan, and a week
+    of patience does not build one". True, and it proves too much: a week of
+    patience buys another flight, which is precisely what every recovery plan
+    on offer does. What the engine can honestly say is that nobody crosses that
+    distance tonight or tomorrow -- and that beyond the horizon its silence is
+    ignorance, not a claim of destruction.
+    """
     model = no_action_model(CANCELLED, TRIP)
-    next_week = CANCELLED.new_end + timedelta(days=7)
-    assert model.presence("MXP", next_week) is None
-    assert model.presence("SIN", next_week) == CANCELLED.new_end
+    tomorrow = CANCELLED.new_end + timedelta(hours=20)
+    assert model.presence("MXP", tomorrow) is None
+    assert model.presence("SIN", tomorrow) == CANCELLED.new_end
+
+
+def test_a_short_hop_does_not_destroy_the_far_end_of_the_trip():
+    """The regression the horizon exists for, in money.
+
+    A cancelled 75-minute hop must not charge a hotel four days later in
+    another city. The same-day damage is real and stays; what leaves is the
+    part that was never a fact about the traveller.
+    """
+    trip = build_trip(None)
+    hop = Disruption("lx1608", anchor(None, 12, 5, 0), "cancelled", 1.0, cancelled=True)
+    impact = propagate(trip, hop, anchor(None, 12, 2, 38))
+
+    charged = {n.id for n in impact.nodes if n.exposure}
+    assert "palazzo" not in charged, "a Florence hotel on 15 Oct is not this hop's doing"
+    assert "fr9520" not in charged and "fr9508" not in charged
+    assert {"transfer", "lastsupper"} <= charged, "the same-day damage is real"
+    assert impact.do_nothing_cost < 1000
 
 
 def test_a_cancellation_has_no_delay_to_report():

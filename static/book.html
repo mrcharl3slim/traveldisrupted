@@ -227,10 +227,37 @@ const iso = (d, plus) => {
 };
 
 // The same token the agent page keeps: a link somebody shared, or nothing.
-const TOKEN = (() => { try { return localStorage.getItem('downstream.token') || ''; } catch (e) { return ''; } })();
-const AUTH = TOKEN ? {'authorization': 'Bearer ' + TOKEN} : {};
+let TOKEN = (() => { try { return localStorage.getItem('downstream.token') || ''; } catch (e) { return ''; } })();
+let AUTH = TOKEN ? {'authorization': 'Bearer ' + TOKEN} : {};
+// One identity per browser, minted on first use and kept here.
+//
+// There is still no login: the token IS the identity. What changed is that a
+// browser without one now owns nothing at all -- `roles.role_of` refuses to
+// call an anonymous visitor the owner of anything, because "anonymous" was a
+// single shared id and every tokenless visitor was therefore the owner of
+// every tokenless visitor's trip. Without this bootstrap a traveller could
+// paste an itinerary and never see it again.
+//
+// Every call waits on this promise, so no trip can be created by a browser
+// that has no way back to it. If the mint fails the page still reads; it
+// simply owns nothing, which is the safe direction.
+const READY = (async () => {
+  if (TOKEN) return;
+  try {
+    const r = await fetch('/api/people', {
+      method: 'POST', headers: {'content-type': 'application/json'},
+      body: JSON.stringify({name: 'the traveller'})});
+    if (!r.ok) return;
+    const me = await r.json();
+    TOKEN = me.token || '';
+    if (TOKEN) { try { localStorage.setItem('downstream.token', TOKEN); } catch (e) {} }
+    AUTH = TOKEN ? {'authorization': 'Bearer ' + TOKEN} : {};
+  } catch (e) { /* offline: reads still work, nothing is owned */ }
+})();
+
 
 async function api(path, body){
+  await READY;
   const r = await fetch(path, body
     ? {method:'POST', headers:Object.assign({'content-type':'application/json'}, AUTH),
        body:JSON.stringify(body)}

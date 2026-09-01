@@ -143,6 +143,26 @@ def _access(trip_id: str, who: roles.Person, need: str):
     return saved, role
 
 
+def _owner(who: roles.Person = Depends(_who)) -> roles.Person:
+    """Whoever is about to own something. Never the anonymous traveller.
+
+    Reading anonymously is fine and always was. OWNING anonymously is what
+    could not work: trips are stored under `who.id`, and every tokenless
+    visitor shares the single id "anon", so an anonymous trip belonged to
+    everyone who had not been handed a token.
+
+    `roles.role_of` now refuses to call an anonymous visitor an owner, which
+    closes the leak -- but on its own it turns a create into a trip that
+    vanishes the moment it is saved. This is the loud half: a browser that
+    wants to own something asks for an identity first (POST /api/people, which
+    every page does before its first call), and one that has not is told so
+    rather than handed a write it can never read back.
+    """
+    if who.anonymous:
+        raise HTTPException(401, "ask for an identity first: POST /api/people")
+    return who
+
+
 class Paste(BaseModel):
     text: str
     label: str = ""
@@ -885,7 +905,7 @@ def health() -> dict:
 
 
 @app.post("/api/trip")
-def add_trip(body: Paste, who: roles.Person = Depends(_who)) -> dict:
+def add_trip(body: Paste, who: roles.Person = Depends(_owner)) -> dict:
     """Pasted or forwarded confirmations -> a stored, checked trip.
 
     Problems and warnings come back with the trip rather than blocking it: a
@@ -1448,7 +1468,7 @@ def _chat_payload(state, out, asks, pending, unread) -> dict:
 
 
 @app.post("/api/chat/choose")
-def choose(body: Choice, who: roles.Person = Depends(_who)) -> dict:
+def choose(body: Choice, who: roles.Person = Depends(_owner)) -> dict:
     """The chosen options become an itinerary, stored under its own id.
 
     Re-searched rather than held: the offers were never kept on the server, so
@@ -1551,6 +1571,13 @@ def itineraries(who: roles.Person = Depends(_who)) -> dict:
         except HTTPException:
             continue
         role = roles.role_of(saved.payload, saved.owner, who)
+        if not role:
+            # No membership, no row. `_access` has always answered 404 here on
+            # the grounds that a trip you were not let into does not exist to
+            # you; this list did not, and returned the label, the legs and the
+            # flight numbers with an empty `can`. Redaction blanks money, not
+            # titles.
+            continue
         disruption = flow.from_dict(saved.payload.get("disruption"))
         rows.append(roles.redact({
             "role": role,
@@ -1774,7 +1801,7 @@ def _bookings_out(trip: Trip, disruption=None, abandoned=None) -> list[dict]:
 
 
 @app.post("/api/select")
-def select(body: Selection, who: roles.Person = Depends(_who)) -> dict:
+def select(body: Selection, who: roles.Person = Depends(_owner)) -> dict:
     """Chosen offers -> a stored trip, plus every reason it could not be taken.
 
     Problems come back WITH the trip rather than instead of it. A selection with

@@ -10,7 +10,14 @@ from __future__ import annotations
 
 import pytest
 
-fastapi = pytest.importorskip("fastapi")
+# fastapi is a HARD requirement (see requirements.txt), not an optional extra,
+# so this is a plain import. It was `pytest.importorskip("fastapi")`, and with
+# fastapi absent from a virtualenv the entire HTTP surface -- every route, the
+# whole capability model, the audit trail -- reduced to one skip line in a run
+# that printed "268 passed" and read as healthy. Two ship-blocking bugs lived
+# behind that green: an identity hole and a 500 on the headline flow. A missing
+# dependency must now fail loudly.
+import fastapi  # noqa: F401
 from fastapi.testclient import TestClient          # noqa: E402
 
 import roles                                        # noqa: E402
@@ -129,6 +136,62 @@ def test_no_token_is_the_anonymous_traveller_as_before(client, world):
     body = client.get("/api/itineraries").json()
     assert body["me"]["anonymous"] is True
     assert world["trip"]["trip_id"] not in {t["trip_id"] for t in body["itineraries"]}
+
+
+def test_one_anonymous_visitor_is_not_every_other_one(client):
+    """The hole this file exists to guard, which it did not guard.
+
+    `ANON.id` is the constant "anon" and trips were saved under `who.id`, so
+    `role_of`'s `person.id == owner` handed OWNER to any stranger who arrived
+    without a token. The front door sends no token, so this was the ordinary
+    path, not an edge case: one visitor pasted an itinerary and the next
+    visitor to open the URL could read the names and prices, mint themselves a
+    share link, and cancel the trip.
+
+    Reproduced here as two tokenless browsers. Alice buys; Bob arrives with no
+    token and must be a stranger to it -- 404 on every door, not 403, because
+    a trip you were not let into does not exist to you.
+    """
+    alice = client.post("/api/people", json={"name": "Alice"}).json()
+    trip_id = book(client, alice["token"])["trip_id"]
+
+    # Bob: a browser that has never been handed anything.
+    assert client.get("/api/itineraries").json()["itineraries"] == []
+    for path, body in (("/api/cancel", {"booking_id": "x"}),
+                       ("/api/abandon", {}),
+                       ("/api/permissions", {"auto_limit": 1}),
+                       ("/api/share", {"name": "Bob", "role": "assistant"})):
+        assert client.post(path, json={"trip_id": trip_id, **body}
+                           ).status_code == 404, path
+    assert client.get("/api/trail", params={"trip": trip_id}).status_code == 404
+    assert client.get("/api/state", params={"trip": trip_id}).status_code == 404
+
+
+def test_owning_anonymously_is_refused_loudly_not_silently(client):
+    """The half that keeps a create from becoming a trip that vanishes.
+
+    Refusing anonymous ownership at the identity layer is correct and, on its
+    own, awful: the write succeeds, the row is stored under "anon", and the
+    traveller never sees it again. 401 with the remedy in it is the honest
+    answer, and it is what a page that forgot to bootstrap will hit in
+    development rather than in front of a judge.
+    """
+    for path, body in (("/api/trip", {"text": "SQ 346 tomorrow"}),
+                       ("/api/select", {"flights": []})):
+        r = client.post(path, json=body)
+        assert r.status_code == 401, path
+        assert "/api/people" in r.json()["detail"]
+
+
+def test_a_trip_stored_under_the_old_anonymous_owner_stays_shut():
+    """Belt and braces for anything a previous deployment already wrote.
+
+    Closing the hole at the identity layer is not enough on its own: rows
+    already in the database carry owner "anon", and a fix that only stopped
+    NEW anonymous writes would leave those readable forever.
+    """
+    assert roles.role_of({}, "anon", roles.ANON) == ""
+    assert roles.role_of({}, "anon", roles.Person("anon", "someone else")) == ""
 
 
 def test_everyone_let_in_sees_the_same_trip_and_knows_their_role(client, world):

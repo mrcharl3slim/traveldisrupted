@@ -302,3 +302,46 @@ def test_every_plan_carries_its_offer_s_price_provenance(plans):
 
     assert any(o.price_source == "estimate" for o in OFFERS), (
         "the scenario has stopped exercising an estimated fare at all")
+
+
+# -- one ledger, every kind -----------------------------------------------
+
+def test_a_defusable_booking_is_priced_the_same_way_under_every_plan():
+    """The bug that made the engine recommend inaction.
+
+    `noop` takes its waste from `Impact.do_nothing_cost`, which counts BROKEN
+    only -- so a booking the graph judged AT_RISK is free to doing nothing by
+    construction. Every rescue charged it at full price. The lodging branch had
+    already spotted this and fixed it *for lodging*, so a defusable tour or
+    transfer went on being priced in two different ledgers depending on which
+    branch of `build` happened to reach it.
+
+    Concretely: a S$300 tour that a phone call joins late, which no plan on the
+    table reaches. Identical outcome under all of them -- and inaction used to
+    win, because inaction alone got it for nothing.
+    """
+    import flow
+    from demo_trip import anchor, build_trip
+    from offers import Offer
+
+    trip = build_trip(None)
+    tour = Booking(id="tour", kind=Kind.ACTIVITY, provider="A Local Guide",
+                   title="Walking tour", start=anchor(None, 12, 14, 0),
+                   origin="MILAN", price=300.0,
+                   mitigation="call the operator to join late")
+    trip = Trip(trip.bookings + [tour])
+
+    disruption = flow.cancel(trip, "lx1608")
+    now = anchor(None, 12, 2, 38)
+    offers = [Offer(f"r{i}", "flight", "SWISS", f"LX 9{i} - ZRH to MXP",
+                    anchor(None, 12, 16 + i, 0), anchor(None, 12, 17 + i, 0),
+                    "ZRH", "MXP", 100.0 + i) for i in (1, 2)]
+
+    ranked = generate(trip, disruption, now, offers)
+    assert ranked[0].id != "noop", "a rescue must beat inaction on an equal ledger"
+
+    # The tour is unreached under every plan, so it belongs in the same column
+    # under every plan -- and never in the one that ranks.
+    for plan in ranked:
+        assert "tour" in plan.at_risk_ids, plan.id
+        assert "tour" not in plan.wasted_ids, plan.id

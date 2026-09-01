@@ -11,7 +11,14 @@ from __future__ import annotations
 
 import pytest
 
-fastapi = pytest.importorskip("fastapi")
+# fastapi is a HARD requirement (see requirements.txt), not an optional extra,
+# so this is a plain import. It was `pytest.importorskip("fastapi")`, and with
+# fastapi absent from a virtualenv the entire HTTP surface -- every route, the
+# whole capability model, the audit trail -- reduced to one skip line in a run
+# that printed "268 passed" and read as healthy. Two ship-blocking bugs lived
+# behind that green: an identity hole and a 500 on the headline flow. A missing
+# dependency must now fail loudly.
+import fastapi  # noqa: F401
 from fastapi.testclient import TestClient          # noqa: E402
 
 import serve                                        # noqa: E402

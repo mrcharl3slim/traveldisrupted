@@ -116,8 +116,23 @@ def redact(value, role: str):
 
 
 def role_of(payload: dict, owner: str, person: Person) -> str:
-    """This person's role on this trip, or empty for no access at all."""
-    if person.id == owner:
+    """This person's role on this trip, or empty for no access at all.
+
+    THE ANONYMOUS EXCEPTION, which is the whole reason this function is not two
+    lines. `ANON.id` is the constant "anon", shared by every visitor who
+    arrives without a token -- so while trips could be owned by "anon", this
+    comparison returned "owner" to STRANGERS. Not an edge case: the front door
+    sends no token, so it was the ordinary path. One visitor pasted an
+    itinerary and the next visitor to open the URL was its owner: read the
+    names and prices, mint themselves a share link, cancel the trip.
+
+    Anonymity and ownership are therefore mutually exclusive. A browser that
+    wants to own something asks for an identity first (POST /api/people); this
+    is the backstop that makes forgetting to do so a broken flow rather than a
+    silent leak, and it holds even for trips a previous deployment stored under
+    "anon".
+    """
+    if person.id == owner and not person.anonymous:
         return "owner"
     for m in payload.get("members") or []:
         if m.get("person") == person.id:

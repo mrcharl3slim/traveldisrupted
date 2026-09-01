@@ -121,6 +121,7 @@ class Plan:
     at_risk_ids: set[str] = field(default_factory=set)
     at_risk: float = 0.0
     tightest: tuple[str, timedelta] | None = None
+
     #: The commitments -- meetings, the reason the trip exists -- this plan
     #: keeps and the ones it loses. Counted, never priced, exactly as the
     #: impact graph counts them; but counted HERE too, because they rank.
@@ -334,6 +335,39 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
     wasted = 0.0
     at_risk_ids: set[str] = set()
     at_risk = 0.0
+    #: Bookings the impact graph judged defusable rather than destroyed -- a
+    #: room held past check-in for the price of a phone call. `noop` takes its
+    #: waste straight from `Impact.do_nothing_cost`, which counts BROKEN only,
+    #: so anything in here is free to inaction by construction.
+    defusable = {n.id for n in baseline.nodes if n.severity is Severity.AT_RISK}
+
+    def write_off(b: Booking) -> None:
+        """Book an undelivered booking to the column the baseline used.
+
+        THE BUG THIS EXISTS TO END. The lodging branch below already carries a
+        long comment explaining that charging an AT_RISK room at full price
+        made inaction cheaper than every alternative, because the two were
+        priced in different ledgers. That reasoning was written out, agreed
+        with, and then applied to `Kind.LODGING` alone -- transfers and fixed
+        slots went on charging full price for exactly the bookings `noop` got
+        for nothing.
+
+        The consequence is not a rounding error: with a defusable S$300 tour
+        that no plan reaches, every rescue was charged S$300 for an outcome
+        identical to doing nothing, and `generate` ranked DOING NOTHING FIRST.
+        A disruption engine that recommends inaction because of a ledger
+        mismatch has failed at the only thing it does.
+
+        As that comment says: whatever the right answer is, it cannot depend on
+        which branch of this function computed it. So it is decided in one
+        place, for every kind, by what the impact graph already concluded.
+        """
+        nonlocal wasted, at_risk
+        if b.id in defusable:
+            at_risk_ids.add(b.id); at_risk += b.price
+        else:
+            wasted_ids.add(b.id); wasted += b.price
+
     tightest: tuple[str, timedelta] | None = None
     # Commitments this plan keeps, including the ones the disruption never
     # threatened: a plan is judged on the whole trip's goals, not only on the
@@ -367,14 +401,14 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
                     tightest = (b.id, buffer)
                 continue
             if offer is None:
-                wasted_ids.add(b.id); wasted += b.price
+                write_off(b)
                 continue
             actions.append(Action(
                 verb="cancel", booking_id=b.id, lane=lane_for(b.provider, "cancel"),
                 label=f"Cancel {b.title} before {b.must_arrive_by:%H:%M}",
                 cash_in=recover, deadline=cut.closes if cut else None,
                 note=cut.label if cut else ""))
-            wasted_ids.add(b.id); wasted += b.price
+            write_off(b)
             continue
 
         # --- a transfer you only need if you land where it starts ---------
@@ -392,9 +426,9 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
                     label=f"Cancel the transfer for a S${recover:,.0f} refund",
                     cash_in=recover, deadline=cut.closes if cut else None,
                     note="not needed on this routing"))
-                wasted_ids.add(b.id); wasted += b.price
+                write_off(b)
             else:
-                wasted_ids.add(b.id); wasted += b.price
+                write_off(b)
             continue
 
         # --- lodging: a message, not money --------------------------------
@@ -426,7 +460,7 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
                     deadline=b.must_arrive_by))
                 at_risk_ids.add(b.id); at_risk += b.price
             else:
-                wasted_ids.add(b.id); wasted += b.price
+                write_off(b)
             continue
 
         # --- fixed slots: keep if you can get there, move if you cannot ---
@@ -459,7 +493,7 @@ def build(trip: Trip, disruption: Disruption, now: datetime,
                 cash_out=window.fee, deadline=window.closes, note=window.label))
             delivered.add(b.id)
         else:
-            wasted_ids.add(b.id); wasted += b.price
+            write_off(b)
 
     if offer is not None:
         actions.insert(1, Action(

@@ -13,5 +13,9 @@ boto3>=1.35                   # imported directly by _model.py, so pinned here
 langchain-anthropic>=0.3      # LLM_PROVIDER=anthropic
 fastapi>=0.115                # day 9-10
 uvicorn>=0.32
+# starlette's TestClient needs httpx. Pinned here rather than left to a
+# developer's virtualenv: the HTTP tests silently skipping is how two
+# ship-blocking bugs reached a deployed instance behind a green suite.
+httpx>=0.27
 mcp>=1.2                      # the engine as MCP tools
 psycopg[binary]>=3.2       # only used when DATABASE_URL is set

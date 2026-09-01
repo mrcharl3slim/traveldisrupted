@@ -170,7 +170,7 @@ let TRIPS = [], OPEN = null, RECOVERY = null;
 // Who you are, as far as this page knows: a token from a link somebody shared,
 // kept in this browser and sent with every call. There is no login; a token is
 // a key, and it is said so on /test. No token means the anonymous traveller.
-const TOKEN = (() => {
+let TOKEN = (() => {
   const url = new URL(location.href), given = url.searchParams.get('token');
   try {
     if (given) { localStorage.setItem('downstream.token', given);
@@ -178,11 +178,38 @@ const TOKEN = (() => {
     return localStorage.getItem('downstream.token') || '';
   } catch (e) { return given || ''; }
 })();
-const AUTH = TOKEN ? {'authorization': 'Bearer ' + TOKEN} : {};
+let AUTH = TOKEN ? {'authorization': 'Bearer ' + TOKEN} : {};
+// One identity per browser, minted on first use and kept here.
+//
+// There is still no login: the token IS the identity. What changed is that a
+// browser without one now owns nothing at all -- `roles.role_of` refuses to
+// call an anonymous visitor the owner of anything, because "anonymous" was a
+// single shared id and every tokenless visitor was therefore the owner of
+// every tokenless visitor's trip. Without this bootstrap a traveller could
+// paste an itinerary and never see it again.
+//
+// Every call waits on this promise, so no trip can be created by a browser
+// that has no way back to it. If the mint fails the page still reads; it
+// simply owns nothing, which is the safe direction.
+const READY = (async () => {
+  if (TOKEN) return;
+  try {
+    const r = await fetch('/api/people', {
+      method: 'POST', headers: {'content-type': 'application/json'},
+      body: JSON.stringify({name: 'the traveller'})});
+    if (!r.ok) return;
+    const me = await r.json();
+    TOKEN = me.token || '';
+    if (TOKEN) { try { localStorage.setItem('downstream.token', TOKEN); } catch (e) {} }
+    AUTH = TOKEN ? {'authorization': 'Bearer ' + TOKEN} : {};
+  } catch (e) { /* offline: reads still work, nothing is owned */ }
+})();
+
 let ME = {name: 'the traveller', anonymous: true};
 const may = (trip, cap) => (trip.can || []).includes(cap);
 
 async function api(path, body){
+  await READY;
   // Every failure has to name itself. The first version answered "unreadable
   // response" for anything that was not JSON, which is every proxy error page
   // there is — so a 502 from a request that outran the gateway and a crash in

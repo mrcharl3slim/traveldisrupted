@@ -11,7 +11,14 @@ from __future__ import annotations
 
 import pytest
 
-fastapi = pytest.importorskip("fastapi")
+# fastapi is a HARD requirement (see requirements.txt), not an optional extra,
+# so this is a plain import. It was `pytest.importorskip("fastapi")`, and with
+# fastapi absent from a virtualenv the entire HTTP surface -- every route, the
+# whole capability model, the audit trail -- reduced to one skip line in a run
+# that printed "268 passed" and read as healthy. Two ship-blocking bugs lived
+# behind that green: an identity hole and a 500 on the headline flow. A missing
+# dependency must now fail loudly.
+import fastapi  # noqa: F401
 from fastapi.testclient import TestClient          # noqa: E402
 
 import audit                                        # noqa: E402
@@ -23,6 +30,13 @@ import store as store_module                        # noqa: E402
 def told():
     """The scripted run: booked, met, shared, delayed, cancelled, answered."""
     client = TestClient(serve.app)
+    # A browser with no identity owns nothing -- see roles.role_of. The page
+    # asks for one before it does anything, and so does the suite: a fixture
+    # that stayed anonymous was, until this line, silently sharing one identity
+    # with every other anonymous visitor, which is precisely the hole these
+    # tests are meant to be guarding.
+    who = client.post("/api/people", json={"name": "the tester"}).json()
+    client.headers.update({"Authorization": f"Bearer {who['token']}"})
     story = client.post("/api/story").json()
     return client, story, store_module.store().trail(story["trip_id"])
 

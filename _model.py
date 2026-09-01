@@ -25,8 +25,10 @@ quota, and a demo asking questions quickly will hit it.
 
 from __future__ import annotations
 
+import json
 import os
 import pathlib
+import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
@@ -85,6 +87,50 @@ def effective() -> dict:
         # a fault, and must not be reported as one.
         "why_not": unavailable,
     }
+
+
+def ask_json(model, system: str, user: str) -> dict | None:
+    """One prompt in, one JSON object out, or None. NEVER raises.
+
+    Every caller of this is a place where the model is an improvement on a
+    deterministic answer, not a replacement for one: `ingest.extract` falls
+    back to a regex over flight numbers, `parse.parse_policy` falls back to
+    non-refundable. So the contract here is None-on-anything-unexpected, and
+    the reason goes to `note_failure` so /health can say what broke instead of
+    the traveller discovering it.
+
+    WHY THIS FUNCTION EXISTS AT ALL. `ingest.py:241` has been calling
+    `_model.ask_json` since the extractor was written, and this module has
+    never defined it. Locally that is invisible -- with no provider configured
+    `get_model()` returns None, the call site short-circuits on `if model`, and
+    the fallback runs. On the deployed instance, where render.yaml sets
+    LLM_PROVIDER=bedrock, `model` is truthy and pasting a confirmation raised
+    AttributeError into an unguarded call: a 500 on the product's headline
+    flow, on the only machine a judge would use. The single extract test passes
+    no model, so the suite stayed green throughout.
+
+    The JSON is dug out with a regex rather than parsed whole because models
+    wrap objects in prose and fenced code blocks however firmly they are asked
+    not to. A non-object (a bare list, a number) is None: every caller expects
+    keys, and a list arriving where a dict is expected fails later and further
+    away.
+    """
+    if model is None:
+        return None
+    try:
+        reply = model.invoke([{"role": "system", "content": system},
+                              {"role": "user", "content": user}])
+        body = getattr(reply, "content", reply)
+        if not isinstance(body, str):
+            body = str(body)
+        match = re.search(r"\{.*\}", body, re.S)
+        if not match:
+            return None
+        found = json.loads(match.group(0))
+    except Exception as exc:                            # noqa: BLE001
+        note_failure(exc)
+        return None
+    return found if isinstance(found, dict) else None
 
 
 def note_failure(exc: BaseException) -> None:

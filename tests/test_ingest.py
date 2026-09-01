@@ -9,6 +9,7 @@ answer at all.
 from __future__ import annotations
 
 import dataclasses
+import json
 from datetime import datetime, timedelta, timezone
 
 import ingest
@@ -114,6 +115,66 @@ def test_no_model_extracts_nothing_and_says_so():
     result = ingest.extract("Your flight SQ346 departs tomorrow at 11pm")
     assert result.trip.bookings == []
     assert result.problems and "no model" in result.problems[0]
+    assert not result.ok
+
+
+# -- with a model ---------------------------------------------------------
+
+class _Reply:
+    def __init__(self, content): self.content = content
+
+
+class _Model:
+    """Stands in for Bedrock. Records what it was asked."""
+
+    def __init__(self, content): self.content, self.calls = content, []
+
+    def invoke(self, messages):
+        self.calls.append(messages)
+        return _Reply(self.content)
+
+
+class _DeadModel:
+    def invoke(self, messages):
+        raise RuntimeError("bedrock: ThrottlingException")
+
+
+def test_extraction_runs_the_model_when_there_is_one():
+    """The test that was missing, and the reason a 500 shipped.
+
+    Every other extract test passes no model, so `if model else None` short
+    circuits and the call into `_model` is never made. That is exactly the
+    branch the deployed instance takes -- render.yaml sets LLM_PROVIDER=bedrock
+    -- and `_model.ask_json` did not exist, so pasting a confirmation raised
+    AttributeError through an unguarded call. Green suite, dead headline flow.
+    """
+    model = _Model(json.dumps({"bookings": [_raw()["bookings"][0]], "problems": []}))
+    result = ingest.extract("Your Singapore Airlines confirmation", model=model)
+    assert model.calls, "the model was never asked"
+    assert [b.id for b in result.trip.bookings]
+    assert result.trip.bookings[0].origin == "SIN"
+
+
+def test_a_model_that_fails_costs_extraction_not_the_request():
+    """Throttling, an expired token, a region without the model enabled. All
+    of them mean a templated answer, none of them mean a 500."""
+    result = ingest.extract("Your flight SQ346 departs tomorrow", model=_DeadModel())
+    assert result.trip.bookings == []
+    assert result.problems and "no model" in result.problems[0]
+
+
+def test_prose_around_the_json_is_survivable():
+    """Models fence their output however firmly you ask them not to."""
+    body = "Certainly.\n```json\n" + json.dumps(
+        {"bookings": [_raw()["bookings"][0]], "problems": []}) + "\n```"
+    result = ingest.extract("confirmation", model=_Model(body))
+    assert len(result.trip.bookings) == 1
+
+
+def test_a_model_answering_with_nothing_usable_falls_back():
+    result = ingest.extract("Your flight SQ346 departs tomorrow",
+                            model=_Model("I could not read that."))
+    assert result.trip.bookings == []
     assert not result.ok
 
 

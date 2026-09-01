@@ -127,16 +127,43 @@ def no_action_model(disruption: Disruption, trip: Trip) -> ReachModel:
         # the destination is not reachable at all, and the plans have to search
         # from where the traveller actually is.
         #
-        # And it never settles. Settling says the itinerary resumes as booked
-        # once the day is over, which is true of a delay and false of a
-        # cancellation: nothing carries this traveller to the destination
-        # overnight, so day two is exactly as out of reach as day one. Letting
-        # it settle reported an entire cancelled outbound as harmless — a
-        # 23:55 departure settles five minutes later, so the hotel, the
-        # meeting and the flight home all came back "reachable under this
-        # plan" and the recovery search found nothing to fix.
+        # And it settles late rather than never. Settling at end of day is
+        # true of a delay and false of a cancellation -- nothing carries this
+        # traveller onward overnight, so day two is as out of reach as day
+        # one, and letting it settle immediately reported an entire cancelled
+        # outbound as harmless: a 23:55 departure settles five minutes later,
+        # so the hotel, the meeting and the flight home all came back
+        # "reachable under this plan" and the recovery search found nothing to
+        # fix.
+        #
+        # NEVER settling overshoots just as badly in the other direction, and
+        # that is the version this replaces. Cancelling the 75-minute ZRH->MXP
+        # hop charged S$1,569, of which S$1,359 was a Florence hotel and two
+        # Frecciarossa trains three to five days later -- destroyed not by any
+        # fact about the traveller but because `transit("ZRH","FLR")` is not
+        # one of fifteen rows in a table of LOCAL ground links. An absent row
+        # means "we have no airport-to-hotel time for this pair", never "no
+        # human being can cross this distance in three days". Meanwhile the
+        # flight home read SAFE, since the traveller was conveniently stuck at
+        # its departure airport: a table where a hotel four days out is dead
+        # and the flight home beside it is fine is not a table anyone should
+        # put in front of a judge.
+        #
+        # So: the day after the cancelled leg was due to land. Inside that, the
+        # traveller is where they are and the itinerary is genuinely at risk.
+        # Beyond it we stop claiming this disruption still owns their week --
+        # not because we know they got there, but because we do not, and the
+        # honest direction for a number we cannot support is down.
+        #
+        # It is a judgement, not a derivation, and it is the one figure in the
+        # headline that rests on a constant. Two days would be as arguable as
+        # one; what is not arguable is "forever".
         where = affected.origin or affected.where
-        return ReachModel(arrivals={where: disruption.new_end}, settled_from=None)
+        landed = affected.end or affected.start
+        horizon = datetime.combine(landed.date(), time(23, 59),
+                                   tzinfo=landed.tzinfo) + timedelta(days=1)
+        return ReachModel(arrivals={where: disruption.new_end},
+                          settled_from=max(horizon, day_end) + timedelta(minutes=1))
 
     arrivals = {affected.destination or affected.where: disruption.new_end}
     return ReachModel(arrivals=arrivals, settled_from=day_end + timedelta(minutes=1))
