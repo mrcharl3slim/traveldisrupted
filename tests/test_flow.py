@@ -381,3 +381,36 @@ def test_a_gap_that_names_no_terminal_is_still_answered():
     offers = flow.replacements(trip, hit, gap)
     assert offers, "a disruption answered with silence is the bug"
     assert any(o.mode == "rail" for o in offers), "the train the demo leads with"
+
+
+def test_the_live_path_asks_the_model_and_still_has_a_floor(monkeypatch):
+    """The model contributes searches, not answers. It is consulted on a real
+    disruption -- and whatever it says, the derived searches have already run,
+    so a model that proposes nothing usable costs latency and never an
+    option."""
+    import _model
+    import aerodatabox
+    from demo_trip import anchor, build_trip
+    from plan import recovery_gap
+
+    asked = []
+
+    class _Fake:
+        def invoke(self, messages):
+            asked.append(messages)
+
+            class _Reply:
+                content = '{"probes": []}'      # nothing usable
+            return _Reply()
+
+    monkeypatch.setattr(_model, "get_model", lambda *a, **k: _Fake())
+
+    trip = build_trip(None)
+    now = anchor(None, 12, 2, 38)
+    hit = aerodatabox.disruption("SQ346", anchor(None, 11, 9, 0), "sq346")
+    offers = flow.replacements(trip, hit, recovery_gap(trip, hit, now))
+
+    assert asked, "the model was never asked what to search"
+    assert "Flight codes:" in asked[0][-1]["content"], (
+        "and it was told the vocabulary it may name")
+    assert offers, "the seeded floor answers regardless of what it said"

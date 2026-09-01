@@ -313,12 +313,23 @@ def replacements(trip: Trip, disruption: Disruption, gap: Gap | None = None) -> 
     # baseline. `propose.terminals` derives the places a provider can actually
     # sell from `domain.TRANSIT`, and the ground time to reach them.
     #
-    # No model is passed. The seeded probes are derived, deterministic, and
-    # exactly the searches this function ran before wherever it worked; the
-    # model gets to propose only once that is wired deliberately.
+    # THE MODEL PROPOSES, THE PORTS ANSWER, THE ENGINE PRICES. It contributes
+    # searches and nothing else -- a mode, two places and a window -- so the
+    # worst a wrong proposal can do is spend a provider call on a route with
+    # no departures, which comes back as a named refusal. Every figure the
+    # traveller sees is still computed from what a provider actually sold.
+    #
+    # What it costs, said where it is paid: one model round, bounded by
+    # `propose.Budget`, inside a request somebody is watching. The seed has
+    # already run by then, so a model that is throttled, slow or absent
+    # changes nothing except that the extra searches do not happen --
+    # `get_model` is cached and never raises, and `ask_json` turns any failure
+    # into None. With LLM_PROVIDER=none this is exactly the derived search
+    # above, which is why the suite stays deterministic.
+    import _model
     import propose
 
-    offers, _refused = propose.search(gap)
+    offers, _refused = propose.search(gap, model=_model.get_model())
     return sorted(offers, key=lambda o: o.price)
 
 
