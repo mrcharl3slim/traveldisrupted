@@ -34,8 +34,9 @@
   <header>
     <div>
       <h1>How to test it</h1>
-      <div class="sub">Six things to try, with what to expect. Status, limits and the
-        bug-report checklist live on <a href="/script">/script</a>.</div>
+      <div class="sub">Nine things to try, with what to expect. What this instance
+        is running on lives on <a href="/developer">/developer</a>; the presenter's
+        run-book on <a href="/script">/script</a>.</div>
     </div>
   </header>
 
@@ -63,9 +64,9 @@
   <section>
     <h2>Test 2 · Break one leg</h2>
     <div class="case">
-      <p>Open the itinerary in the right-hand panel (or the trip section on
-        <a href="/book">/book</a>). Every flight has three controls: a duration,
-        <b>Late</b>, and <b>Cancel</b>.</p>
+      <p>Click the trip in the panel on the right — the itinerary opens in the
+        centre, on its own tab beside <b>Chat</b>. Every flight has three
+        controls: a duration, <b>Late</b>, and <b>Cancel</b>.</p>
       <ol class="steps">
         <li>Try <b>30m late</b> first. Then the same leg at <b>6h</b> or <b>12h</b>.</li>
         <li>Then <b>Cancel</b> a leg and compare.</li>
@@ -78,6 +79,10 @@
         absorbs it. Past the buffer, the onward leg breaks and the room goes at risk.
         A cancellation strands you where you started; a delay lands you late.
         Those are different worlds and the plans differ.</div>
+      <div class="expect"><b>Also expect:</b> the delayed leg keeps its place, marked
+        delayed, with the original time kept beside it as reference — late is not gone. And pressing
+        <b>Take this plan</b> twice (a double-click, a stale tab) must answer
+        <em>already handled</em> the second time, not quietly rewrite the trip again.</div>
       <div class="expect nope"><b>Not a bug:</b> the replacement flight is marked
         <em>not paid</em>. It is an intention, not a purchase, and it is not allowed to
         look like one.</div>
@@ -159,9 +164,68 @@
         <em>403</em> if they try to cancel a leg. A link you were not given shows an empty
         list, not somebody else's trips.</div>
       <div class="expect nope"><b>Not a bug, and worth knowing:</b> there is no login. The
-        link <em>is</em> the identity — anyone holding it is that person. Losing a link means
-        <b>remove</b> and share again; it cannot be looked up. "Forget it" in the User profile tab
-        drops the token from this browser.</div>
+        link <em>is</em> the identity — anyone holding it is that person. A fresh browser
+        quietly mints its own identity on first visit, so two strangers can never see each
+        other's trips. Losing a link means <b>remove</b> and share again; it cannot be
+        looked up. "Forget it" in the User profile tab drops the token from this browser.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Test 7 · Where the trip is thin</h2>
+    <div class="case">
+      <p>Right after booking (Test 1), look at the itinerary — before anything
+        is broken at all.</p>
+      <div class="expect"><b>Expect:</b> a <em>where this trip is thin</em> section,
+        flagged on day one: the two flights are <em>separate purchases</em> with the
+        minutes to spare named — nobody owes you that connection — and each leg
+        carries the smallest delay that starts costing money. The connection it
+        warns about is exactly the one Test 2 breaks. Derived from booked times
+        and the engine's own stress test; no probabilities, no weather feed.</div>
+      <div class="expect nope"><b>Not a bug:</b> a train two days after landing is not
+        flagged. An overnight decouples two bookings — burying the one flag that
+        matters under true-but-useless ones would be worse than silence.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Test 8 · The tiers, then the kill switch</h2>
+    <div class="case">
+      <ol class="steps">
+        <li>In the trip's rules, set <b>act</b> ≤ <code>300</code> and
+          <b>hold</b> ≤ <code>500</code>. Save, then <b>Cancel</b> a leg whose best
+          plan costs between the two.</li>
+        <li>Re-arm the trip, then press <b>Kill switch</b> and cancel again.</li>
+      </ol>
+      <div class="expect"><b>Expect (middle tier):</b> the agent still decides — the
+        plan is <em>taken and held</em> — but <em>zero messages leave</em>: the hotel
+        email waits for you and the pending purchase is the hold itself. Below
+        S$300 it acts and sends; above S$500 it only asks.</div>
+      <div class="expect"><b>Expect (kill switch):</b> the same cancellation waits
+        entirely. Every line reads <em>needs approval</em> with one fixed reason,
+        nothing is sent anywhere — the email included — and deadline alerts still
+        flow, because a switch that silences your own warnings is a worse product.</div>
+      <div class="expect nope"><b>Not a bug:</b> the plans stay visible while disarmed.
+        Read-only means read — the switch stops the kitchen, it does not hide the menu.
+        And a profile save must not quietly re-arm a remembered switch.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Test 9 · The paper trail</h2>
+    <div class="case">
+      <ol class="steps">
+        <li>After any of the above, open <b>Paper trail</b> under the itinerary.</li>
+        <li>Export it as plain text from the same panel and read it top to bottom.</li>
+      </ol>
+      <div class="expect"><b>Expect:</b> one entry per decision — extracted, assessed,
+        judged, performed, alerted — each with a timestamp, who or what acted, the fare
+        rule it cites, and the authorization it acted under (<em>within your S$300
+        limit</em>, <em>declined by you</em>, <em>kill switch</em>). A declined line is in
+        there as declined, not missing.</div>
+      <div class="expect nope"><b>Not a bug:</b> the host from Test 6 cannot open it.
+        The trail prices decisions, and the host's whole deal is seeing every time and
+        not one price.</div>
     </div>
   </section>
 </div>
