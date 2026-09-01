@@ -883,6 +883,10 @@ def alerts(trip: str, who: roles.Person = Depends(_who)) -> dict:
 def health() -> dict:
     return {
         "ok": True,
+        # Which commit is actually serving. Render sets RENDER_GIT_COMMIT;
+        # empty locally. Exists so "did the deploy land" is a curl, not a
+        # guess made from page markers.
+        "release": os.environ.get("RENDER_GIT_COMMIT", "")[:7],
         "ports_mode": MODE,
         "degraded": list(degraded),
         "shifted": list(shifted),
