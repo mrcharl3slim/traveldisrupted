@@ -108,7 +108,7 @@
 <div class="wrap">
   <header>
     <div>
-      <div class="sub">Tell me what you want. I'll book it, watch over it, and fix it when it breaks.</div>
+      <div class="sub" id="tagline">Tell me what you want. I'll book it, watch over it, and fix it when it breaks.</div>
     </div>
   </header>
 
@@ -401,7 +401,7 @@ async function confirm(button){
 // rules. Nothing is inferred from past trips.
 function paintMe(){
   $('#me').innerHTML = ME.anonymous
-    ? `Nobody in particular — no link was used. Trips you make here are yours alone.`
+    ? ``
     : `Signed in as <b>${esc(ME.name)}</b>, by a link somebody shared.
        <a href="#" id="me-out">forget it</a>`;
   const out = $('#me-out');
@@ -432,8 +432,6 @@ async function loadProfile(){
   try { p = (await api('/api/profile')).profile; } catch (e) { return; }
   const r = p.permissions || {auto_limit: 0, never: []};
   $('#you').innerHTML = `
-    <div class="m" style="margin-bottom:8px">Said once, applied to every trip and shown
-      on the card as <em>from your profile</em>. Anything you type still wins.</div>
     <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center">
       <span class="m">home</span><input id="you-home" placeholder="singapore" value="${esc(p.home_label || '')}">
       <span class="m">sort by</span>
@@ -883,8 +881,17 @@ $('#say').addEventListener('keydown', e => { if (e.key === 'Enter') $('#send').c
 // and a tab strip to move between them. The profile view is JUST the
 // profile: the sidebar and the composer step out of the way.
 let VIEW = 'chat';
+// The page introduces the view it is showing: booking talk over the chat,
+// profile talk over the profile.
+const TAGLINES = {
+  chat: "Tell me what you want. I'll book it, watch over it, and fix it when it breaks.",
+  trip: "Tell me what you want. I'll book it, watch over it, and fix it when it breaks.",
+  profile: "Tell me about yourself once — home, how you sort, how far I may act "
+    + "without asking. Every trip starts from it.",
+};
 function showView(name){
   VIEW = name;
+  $('#tagline').textContent = TAGLINES[name] || TAGLINES.chat;
   $('#thread').hidden = name !== 'chat';
   $('.bar').hidden = name !== 'chat';
   $('#detail-box').hidden = name !== 'trip';
