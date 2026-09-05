@@ -86,6 +86,39 @@ PLACES: tuple[Place, ...] = (
     Place("SFO", "San Francisco", "US", "America/Los_Angeles"),
     Place("BOM", "Mumbai", "IN", "Asia/Kolkata"),
     Place("DEL", "Delhi", "IN", "Asia/Kolkata"),
+
+    # Mainland China. One timezone for the whole country -- Asia/Shanghai
+    # everywhere, Urumqi included, whatever the sun is doing there -- so these
+    # need no per-city research and cannot be wrong about the clock in the way
+    # a guessed zone would be.
+    #
+    # FLIGHTS ONLY, DELIBERATELY. A row here makes a place searchable by air
+    # and nothing more: the only rail API this reaches is the Swiss timetable,
+    # which does not route China and has never claimed to. Giving these rows a
+    # station would be a promise `search_rail` cannot keep -- it would return
+    # empty and read as a fault rather than as an absence. See the note under
+    # the table.
+    Place("PVG", "Shanghai", "CN", "Asia/Shanghai"),
+    Place("PEK", "Beijing", "CN", "Asia/Shanghai"),
+    Place("CAN", "Guangzhou", "CN", "Asia/Shanghai"),
+    Place("SZX", "Shenzhen", "CN", "Asia/Shanghai"),
+    Place("CTU", "Chengdu", "CN", "Asia/Shanghai"),
+    Place("XIY", "Xi'an", "CN", "Asia/Shanghai"),
+    Place("KMG", "Kunming", "CN", "Asia/Shanghai"),
+    Place("HGH", "Hangzhou", "CN", "Asia/Shanghai"),
+    Place("NKG", "Nanjing", "CN", "Asia/Shanghai"),
+    Place("WUH", "Wuhan", "CN", "Asia/Shanghai"),
+    Place("CKG", "Chongqing", "CN", "Asia/Shanghai"),
+    Place("TSN", "Tianjin", "CN", "Asia/Shanghai"),
+    Place("XMN", "Xiamen", "CN", "Asia/Shanghai"),
+    Place("CSX", "Changsha", "CN", "Asia/Shanghai"),
+    Place("TAO", "Qingdao", "CN", "Asia/Shanghai"),
+    Place("DLC", "Dalian", "CN", "Asia/Shanghai"),
+    Place("SHE", "Shenyang", "CN", "Asia/Shanghai"),
+    Place("HRB", "Harbin", "CN", "Asia/Shanghai"),
+    Place("URC", "Urumqi", "CN", "Asia/Shanghai"),
+    Place("SYX", "Sanya", "CN", "Asia/Shanghai"),
+    Place("HAK", "Haikou", "CN", "Asia/Shanghai"),
 )
 
 #: Spellings a traveller uses that are not the label. Kept separate from the
@@ -100,6 +133,20 @@ ALIASES: dict[str, str] = {
     "nyc": "JFK", "new york city": "JFK",
     "kl": "KUL", "denpasar": "DPS", "saigon": "SGN",
     "tokyo narita": "NRT", "hk": "HKG",
+    # China: the second airport a city is known by, and the spellings a
+    # traveller reaches for. PKX and SHA are real airports of their own; they
+    # resolve to the city because the engine reasons about cities, and picking
+    # the terminal is the airline's job in the search that follows.
+    "hongkong": "HKG", "hong-kong": "HKG",
+    "shanghai": "PVG", "sha": "PVG", "pudong": "PVG", "hongqiao": "PVG",
+    "beijing": "PEK", "peking": "PEK", "pkx": "PEK", "daxing": "PEK",
+    "guangzhou": "CAN", "canton": "CAN",
+    "shenzhen": "SZX", "chengdu": "CTU", "tfu": "CTU",
+    "xian": "XIY", "xi an": "XIY",
+    "kunming": "KMG", "hangzhou": "HGH", "nanjing": "NKG", "wuhan": "WUH",
+    "chongqing": "CKG", "tianjin": "TSN", "xiamen": "XMN", "changsha": "CSX",
+    "qingdao": "TAO", "dalian": "DLC", "shenyang": "SHE", "harbin": "HRB",
+    "urumqi": "URC", "sanya": "SYX", "haikou": "HAK",
 }
 
 #: The Swiss timetable is the only rail API this reaches, so the table above is

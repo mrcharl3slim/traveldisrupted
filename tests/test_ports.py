@@ -118,3 +118,39 @@ def test_live_offers_reproduce_the_ranking():
 def test_a_missing_recording_fails_loudly():
     with pytest.raises(PortError, match="record.py"):
         rail.connections("Bern", "Napoli", DAY)
+
+
+# -- China, by air only ---------------------------------------------------
+
+def test_the_chinese_cities_are_searchable_by_name_and_by_code():
+    """A place is searchable when the table knows it, and not before: before
+    this, "shanghai" stopped the conversation with "I do not know a place
+    called that" while Duffel would have sold the flight."""
+    import places
+
+    for said, code in (("shanghai", "PVG"), ("beijing", "PEK"),
+                       ("peking", "PEK"), ("guangzhou", "CAN"),
+                       ("shenzhen", "SZX"), ("chengdu", "CTU"),
+                       ("xi an", "XIY"), ("urumqi", "URC"), ("PVG", "PVG")):
+        found = places.find(said)
+        assert found and found.code == code, said
+
+
+def test_every_chinese_city_is_on_one_clock():
+    """Mainland China runs a single timezone, Urumqi included. Guessing a
+    zone per city is how a 09:00 meeting lands twelve hours out; there is
+    nothing to guess here, and this says so out loud."""
+    import places
+
+    zones = {p.zone for p in places.PLACES if p.country == "CN"}
+    assert zones == {"Asia/Shanghai"}, zones
+
+
+def test_no_chinese_city_claims_a_station():
+    """A station in the table is a promise `search_rail` can keep, and the
+    only rail API this reaches is the Swiss timetable. Naming a Chinese
+    station would return empty and read as a fault rather than an absence."""
+    import places
+
+    assert not [p.code for p in places.PLACES
+                if p.country == "CN" and p.station_code]
