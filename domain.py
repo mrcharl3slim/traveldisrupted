@@ -52,6 +52,24 @@ TRANSIT: dict[tuple[str, str], int] = {
     ("BCN", "BARCELONA_SANTS"): 25,           # R2 Nord
     ("MAD", "MADRID_ATOCHA"): 30,             # C1 Cercanías
     ("LHR", "LONDON_STP"): 50,                # Piccadilly, one change
+
+    # China, same rule and the same reason: without these an airport and its
+    # own city's station are separate islands, so the engine will not offer a
+    # train to somebody who has just landed. Published typical road times --
+    # roughly right and visible beats precisely wrong and silent, and Pudong
+    # to Hongqiao really is an hour across Shanghai.
+    ("PVG", "SHANGHAI_HQ"): 60,
+    ("PEK", "BEIJING_S"): 50,
+    ("CAN", "GUANGZHOU_S"): 55,
+    ("SZX", "SHENZHEN_N"): 35,
+    ("CTU", "CHENGDU_E"): 45,
+    ("XIY", "XIAN_N"): 35,
+    ("HGH", "HANGZHOU_E"): 40,
+    ("NKG", "NANJING_S"): 45,
+    ("WUH", "WUHAN"): 40,
+    ("CKG", "CHONGQING_W"): 45,
+    ("CSX", "CHANGSHA_S"): 35,
+    ("XMN", "XIAMEN_N"): 45,
 }
 
 # A flight you reach three minutes before pushback is a flight you have missed.

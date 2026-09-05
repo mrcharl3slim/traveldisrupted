@@ -32,6 +32,11 @@ RATES: dict[str, float] = {
     "USD": float(os.environ.get("FX_USD_SGD", "1.30")),
     "GBP": float(os.environ.get("FX_GBP_SGD", "1.75")),
     "CHF": float(os.environ.get("FX_CHF_SGD", "1.60")),
+    # Checkable like the others: CNY 550 x 0.18 = S$99, which is what a
+    # second-class seat on a long high-speed run actually costs. Without a
+    # rate here a Chinese fare would pass through unconverted and print
+    # S$550 -- the relabelling this table exists to prevent.
+    "CNY": float(os.environ.get("FX_CNY_SGD", "0.18")),
     "JPY": float(os.environ.get("FX_JPY_SGD", "0.0115")),
 }
 

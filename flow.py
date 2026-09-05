@@ -100,6 +100,17 @@ def search_rail(origin: str, destination: str, day: datetime) -> list:
     if start.station_code == end.station_code:
         return []                    # a train from a city to itself
 
+    # WHICH RAILWAY. transport.opendata.ch routes Swiss stations and the
+    # international services running out of them; it has never claimed China,
+    # and asking it about Shanghai returns an empty list that reads as "no
+    # train runs" rather than "we asked the wrong railway". The port is chosen
+    # by where the two stations are, and a pair no single railway serves --
+    # Zurich to Shanghai, whatever a map says about the rails between them --
+    # is nothing either can answer, which is an empty list and the truth.
+    port = _railway(start, end)
+    if port is None:
+        return []
+
     # ALWAYS FROM THE TOP OF THE DAY, whatever hour the caller happened to
     # hold. The timetable returns what departs after the moment it is given, so
     # the hour is not cosmetic -- it decides which half of the day exists. It
@@ -109,9 +120,26 @@ def search_rail(origin: str, destination: str, day: datetime) -> list:
     # recording was made at six, and picking the 07:33 service then failed to
     # find it again one request later.
     from_dawn = day.replace(hour=RAIL_HOUR, minute=0, second=0, microsecond=0)
-    return sorted(rail_port.offers(start.station, end.station, from_dawn,
-                                   places.station_map()),
+    return sorted(port.offers(start.station, end.station, from_dawn,
+                              places.station_map()),
                   key=lambda o: o.depart)
+
+
+def _railway(start, end):
+    """The port that can answer for these two stations, or None.
+
+    Two countries, two railways, and no attempt to pretend one covers the
+    other. Adding a third is a row here and a module beside the others -- the
+    contract a rail port owes is one function, `offers`, in the shape
+    `search_rail` already calls.
+    """
+    import chinarail
+
+    if start.country == "CN" and end.country == "CN":
+        return chinarail
+    if start.country != "CN" and end.country != "CN":
+        return rail_port
+    return None
 
 
 def search_hotels(city: str, country: str, check_in: datetime,

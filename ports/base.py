@@ -223,6 +223,21 @@ def get_json(url: str, headers: dict[str, str] | None = None,
         return json.loads(r.read().decode())
 
 
+def get_text(url: str, headers: dict[str, str] | None = None,
+             timeout: int | None = None) -> str:
+    """The same fetch, for a body that is not JSON.
+
+    12306 publishes its station list as a JavaScript assignment rather than
+    as data, and it is the only honest source of the telecodes that keep a
+    traveller off the wrong platform. Parsing it is the port's business;
+    fetching it is this module's, so the timeout and the replay seam stay in
+    one place.
+    """
+    req = urllib.request.Request(url, headers=headers or {})
+    with urllib.request.urlopen(req, timeout=timeout or TIMEOUT) as r:
+        return r.read().decode(errors="replace")
+
+
 #: How many of each list to keep when recording. The recordings are committed
 #: as evidence, and a provider returning ninety-four offers of which the engine
 #: uses four is seven megabytes of repository nobody reads.
