@@ -175,12 +175,17 @@ class Paste(BaseModel):
 #: fine thing to print and useless to search on, and a check-in time is local to
 #: the building. Both have to come from somewhere. A real deployment resolves
 #: them; a demo that pretends to is worse than one that shows its table.
-PLACES: dict[str, tuple[str, str]] = {
-    "Milan": ("MXP", "Europe/Rome"),
-    "Zurich": ("ZRH", "Europe/Zurich"),
-    "Singapore": ("SIN", "Asia/Singapore"),
-    "Florence": ("FLR", "Europe/Rome"),
-}
+#: THE TABLE IS places.py. This was a four-city copy of it -- Milan, Zurich,
+#: Singapore, Florence -- and the moment the real table grew, the copy was
+#: wrong in the quiet direction: a Shanghai hotel search fell through to
+#: ("", "UTC"), so the room came back with no place code on it, which leaves
+#: the presence timeline and the reachability checks unable to say where the
+#: traveller is sleeping. One table, or the second one goes stale the day
+#: somebody adds a city to the first.
+def _city_code_zone(city: str, fallback: str = "") -> tuple[str, str]:
+    """A city a person typed -> its place code and its own clock."""
+    found = places.find(city)
+    return (found.code, found.zone) if found else (fallback, "UTC")
 
 
 def _zone(name: str):
@@ -200,7 +205,8 @@ def _zone_for(code: str):
     search, which is why an unknown airport falls back to UTC rather than to the
     zone of whoever is looking at the page.
     """
-    return _zone(next((z for c, z in PLACES.values() if c == code.upper()), "UTC"))
+    found = places.by_code(code)
+    return _zone(found.zone if found else "UTC")
 
 
 def _day(iso: str, zone) -> datetime:
@@ -1066,7 +1072,7 @@ def search_hotels(city: str, country: str = "IT", check_in: str = "",
                   check_out: str = "") -> dict:
     from base import PortError
 
-    code, zone_name = PLACES.get(city, ("", "UTC"))
+    code, zone_name = _city_code_zone(city)
     zone = _zone(zone_name)
     try:
         found = flow.search_hotels(city, country, _day(check_in, zone),
@@ -2044,7 +2050,7 @@ def select(body: Selection, who: roles.Person = Depends(_owner)) -> dict:
 
         stays = []
         for want in body.hotels:
-            code, zone_name = PLACES.get(want.city, (want.code, "UTC"))
+            code, zone_name = _city_code_zone(want.city, want.code)
             zone = _zone(zone_name)
             found = flow.search_hotels(want.city, want.country,
                                        _day(want.check_in, zone),

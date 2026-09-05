@@ -263,6 +263,38 @@ def test_rules_can_be_changed_after_booking_and_are_listed(client):
 
 
 # --------------------------------------------------------------------------
+# one table of places, not two
+# --------------------------------------------------------------------------
+
+
+def test_a_hotel_search_resolves_every_city_the_table_knows(client, monkeypatch):
+    """serve.py kept a four-city copy of places.py to turn a city name into a
+    code and a clock. The moment the real table grew it was wrong in the quiet
+    direction: Shanghai fell through to ("", "UTC"), so the room came back
+    with no place code -- and a room nobody can place is one the presence
+    timeline and the reachability checks cannot reason about at all."""
+    seen = {}
+
+    def fake(city, country, check_in, check_out, code=""):
+        seen.update(city=city, country=country, code=code,
+                    zone=str(check_in.tzinfo))
+        return []
+
+    monkeypatch.setattr(serve.flow, "search_hotels", fake)
+    answered = client.get("/api/search/hotels", params={
+        "city": "Shanghai", "country": "CN", "check_in": DAY, "check_out": OUT})
+    assert answered.status_code == 200
+    assert seen["code"] == "PVG", "the room has to know where it is"
+    assert seen["zone"] == "Asia/Shanghai", "check-in is local to the building"
+    assert answered.json()["code"] == "PVG"
+
+    # and the cities the old copy did know still resolve the same way
+    client.get("/api/search/hotels", params={
+        "city": "Milan", "country": "IT", "check_in": DAY, "check_out": OUT})
+    assert seen["code"] == "MXP" and seen["zone"] == "Europe/Rome"
+
+
+# --------------------------------------------------------------------------
 # nothing waits for a reload
 # --------------------------------------------------------------------------
 
