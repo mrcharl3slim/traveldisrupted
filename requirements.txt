@@ -10,9 +10,28 @@ boto3>=1.35                   # imported directly by _model.py, so pinned here
                               # rather than relied on as a langchain-aws
                               # transitive — a dependency you import is a
                               # dependency you declare
+botocore>=1.35                # and the same rule again: _model.py imports
+                              # botocore.config.Config for the read timeout.
+                              # boto3 pins it tightly, so this is the safer of
+                              # the two exposures — and a rule that holds only
+                              # where it is cheap is not a rule
 langchain-anthropic>=0.3      # LLM_PROVIDER=anthropic
+langchain-groq>=0.3           # LLM_PROVIDER=groq — declared for the same
+                              # reason boto3 is: _model.py imports it, and a
+                              # provider the switch offers is not optional
+                              # to whoever picks it. The README told them to
+                              # install it by hand, which is a build that
+                              # works on the machine where somebody read the
+                              # README and nowhere else.
 fastapi>=0.115                # day 9-10
 uvicorn>=0.32
+pydantic>=2.7                 # serve.py declares its request bodies with it.
+                              # The real exposure of the three: FastAPI has
+                              # already moved across a major version of
+                              # pydantic once, and the day it does again a
+                              # transitive would resolve to whatever the new
+                              # floor allows rather than to what these models
+                              # were written against
 # starlette's TestClient needs httpx. Pinned here rather than left to a
 # developer's virtualenv: the HTTP tests silently skipping is how two
 # ship-blocking bugs reached a deployed instance behind a green suite.

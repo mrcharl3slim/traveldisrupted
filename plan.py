@@ -22,11 +22,17 @@ every plan including doing nothing, so it does not belong in net_cash -- only
 the S$57 of taxes that acting
 claws back does. It does belong in total_damage, because the money is gone.
 
-TODO (day 9-10): a moved timed-entry slot can collide with a later booking --
+KNOWN AND OPEN: a moved timed-entry slot can collide with a later booking --
 Plan A's 13 Oct 11:30 museum entry sits on the same day as the 09:15 Como tour.
-The prototype flagged this in prose. Detecting it properly needs the same
-reachability walk applied to the rewritten itinerary, which is a day's work and
-is scheduled, not skipped.
+The prototype flagged this in prose and the engine still does not: `build`
+prices the move without walking the rewritten itinerary again.
+
+`builder.clashes` already computes precisely this, and is wired only into the
+appointment path. Closing it means running it over the trip a plan WOULD
+produce and letting the count rank alongside missed commitments -- the same
+lexicographic key `generate` already sorts on. That is a day's work, not a
+rewrite, and it is stated in README section 5 rather than left in this
+docstring for somebody to find.
 """
 
 from __future__ import annotations

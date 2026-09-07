@@ -1,11 +1,11 @@
-"""One switch decides the provider, exactly as twin/_model.py does.
+"""One switch decides the provider.
 
     LLM_PROVIDER=bedrock | anthropic | groq | none
 
 WHY A SWITCH AND NOT A CHOICE. Bedrock is the sponsor stack and where this is
-judged; the Anthropic API iterates in seconds on a laptop at 1 a.m.; Groq is
-already in lab/.env. None is worth rewriting the agent for, so the agent never
-learns which one it got.
+judged; the Anthropic API iterates in seconds on a laptop at 1 a.m.; Groq has
+a free tier that needs no AWS account at all. None is worth rewriting the agent
+for, so the agent never learns which one it got.
 
 "none" is not a degraded mode to apologise for -- it is the mode the demo runs
 in. Every LLM call in this system has a deterministic fallback, because the
@@ -14,13 +14,14 @@ arithmetic, and arithmetic should not become unavailable when a token expires.
 The model earns its place on the two jobs code cannot do: reading fare prose,
 and explaining a plan to someone who has been awake for fourteen hours.
 
-DEFAULTS COPIED FROM twin/, NOT CHOSEN FRESH. Bedrock model access is granted
-per account and per region, and this account has haiku-4-5 working in
-ap-southeast-1. An earlier version of this file defaulted to a Sonnet model id
+DEFAULTS CHOSEN AGAINST THIS ACCOUNT, NOT FROM A DOCS PAGE. Bedrock model
+access is granted per account and per region, and this account has haiku-4-5
+working in ap-southeast-1. An earlier version of this file defaulted to a Sonnet model id
 that nobody had enabled -- it would have raised AccessDeniedException on the
 first live run, most likely the night before submission. The adaptive retry
 config is copied for the same reason: a fresh AWS account has low Bedrock
-quota, and a demo asking questions quickly will hit it.
+quota, and a demo asking questions quickly will hit it. Both defaults are
+settings that were verified to work here rather than picked from a list.
 """
 
 from __future__ import annotations

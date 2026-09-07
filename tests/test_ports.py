@@ -234,3 +234,50 @@ def test_a_train_row_is_validated_rather_than_trusted():
     parts[3] = "NOT-A-TRAIN"
     assert chinarail._row("|".join(parts), day) is None
     assert chinarail._row("too|short", day) is None
+
+
+def test_every_third_party_import_is_declared():
+    """A dependency you import is a dependency you declare.
+
+    Written first for the providers -- LLM_PROVIDER=groq was supported by
+    _model.py and missing from requirements.txt, so choosing it failed on a
+    missing module -- and then immediately caught two more of the same shape:
+    `pydantic`, which serve.py declares every request body with, and
+    `botocore`, whose Config sets the read timeout. Both worked because
+    something else pulled them in, and both would break silently the day that
+    something else restructured its dependencies. FastAPI has already moved
+    across a major version of pydantic once.
+
+    Derived from the imports rather than listed, so the next one fails here
+    instead of on somebody's fresh checkout.
+    """
+    import ast
+    import pathlib as _pathlib
+    import sys as _sys
+
+    root = _pathlib.Path(__file__).resolve().parent.parent
+    files = (list(root.glob("*.py")) + list((root / "ports").glob("*.py"))
+             + list((root / "data").glob("*.py")))
+    assert files, "the layout moved; this test is looking in the wrong place"
+
+    local = {p.stem for p in root.rglob("*.py")}
+    outside: dict[str, str] = {}
+    for f in files:
+        for node in ast.walk(ast.parse(f.read_text())):
+            if isinstance(node, ast.Import):
+                names = [a.name.split(".")[0] for a in node.names]
+            elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+                names = [node.module.split(".")[0]]
+            else:
+                continue
+            for name in names:
+                if (name not in _sys.stdlib_module_names and name not in local
+                        and name != "__future__"):
+                    outside.setdefault(name, f.name)
+
+    declared = (root / "requirements.txt").read_text().lower()
+    undeclared = {mod: where for mod, where in outside.items()
+                  if mod.replace("_", "-") not in declared}
+    assert not undeclared, (
+        "imported and not declared: "
+        + "; ".join(f"{m} ({w})" for m, w in sorted(undeclared.items())))
