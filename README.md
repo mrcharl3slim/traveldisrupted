@@ -50,8 +50,9 @@ demonstration of the mechanism rather than a promise to a traveller.
 
 Needs **Python 3.11** (3.10 works). No API keys. No network. No database.
 
+From the repository root:
+
 ```bash
-cd downstream
 python3 -m venv .venv
 source .venv/bin/activate           # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
@@ -386,9 +387,6 @@ engine never learns where its data came from.
 ---
 
 ## 5. Limits, stated rather than hidden
-
-These are in the README because a judge finding them is worse than us saying
-them.
 
 - **Swiss rail fares cannot be quoted.** transport.opendata.ch returns
   timetables, not prices, and SBB publishes no free fare API. The rail fare

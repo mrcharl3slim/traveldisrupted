@@ -1,7 +1,7 @@
 """Record and replay, so a live demo cannot be killed by a live API.
 
-THE POSTURE, borrowed from twin/store.py. A port has three modes and a strong
-opinion about which one runs on stage:
+THE POSTURE. A port has three modes and a strong opinion about which one runs
+on stage:
 
     replay (default)  read the recorded response. No network, no latency, no
                       rate limit, no surprise. This is what runs in front of

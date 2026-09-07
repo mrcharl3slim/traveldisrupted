@@ -1,9 +1,8 @@
 # Render Blueprint. Import this rather than clicking through the dashboard, so
 # the deployment is reviewable in the repo instead of living in a browser tab.
 #
-# Its own service, separate from lostphone, deliberately: different API keys,
-# independent deploys, and two URLs to open in front of judges on the same day.
-# A broken build on one must not take the other down.
+# A service of its own, deliberately: its own API keys and its own deploy
+# cadence, so nothing else in this repository can take it down on demo day.
 #
 # Free instances sleep when idle and take about a minute to wake. Open the URL a
 # few minutes before demoing.
