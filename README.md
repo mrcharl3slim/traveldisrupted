@@ -63,7 +63,8 @@ Then any of:
 ```bash
 python cli.py                  # the whole engine, in a terminal, ~1 second
 python serve.py                # the web app  ->  http://127.0.0.1:8000
-python -m pytest tests/ -q     # 516 passed, 10 skipped, no keys, no network
+python evaluate.py             # the decision harness — 20 cases, no keys
+python -m pytest tests/ -q     # 522 passed, 10 skipped, no keys, no network
 python mcp_server.py           # the engine as MCP tools, over stdio
 ```
 
@@ -333,6 +334,7 @@ engine never learns where its data came from.
 | `static/developer.html` | `/developer` — the API surface. |
 | `static/app.css`, `static/app.js` | Shared styling and the small amount of shared script. |
 | `mcp_server.py` | The engine as MCP tools over stdio, so *any* agent can ask what one delay costs. The claim is not "we built an agent" but "the replanning engine is a tool other agents can call." |
+| `evaluate.py` | The decision harness. Twenty situations, each with the decision a competent human would make, graded against what the engine actually decides — through `flow.replan`, `permit.judge` and `ports.base.call`, the same entry points the web app calls. Standard library only, replay-backed, so a PASS is repeatable on another laptop. `--verbose` shows the reasoning, `--json` is for CI, and it exits non-zero so it can gate a deploy. |
 | `cli.py` | The impact map in a terminal. Exists so *"computed, not typed"* can be checked in ten seconds. `--base today \| +N \| YYYY-MM-DD \| written`. |
 | `store.py` | Where trips live between requests. Memory by default; Postgres when `DATABASE_URL` is set. An unreachable database degrades rather than 500s. |
 | `data/demo_trip.py` | The 11–17 October trip as structured facts. Contains no consequence — no severity, no total, no plan. If any appear here, the demo has become a mockup again. |
@@ -352,7 +354,7 @@ engine never learns where its data came from.
 | `.env.example` | The settings you are most likely to change — port mode, provider keys, model, storage — with where to get each key. The operational knobs (`DOWNSTREAM_WATCH`, `DOWNSTREAM_WEBHOOK`, `DOWNSTREAM_ADMIN_TOKEN`, `FX_*`) are documented in the table in §1 rather than here. |
 | `CAPABILITIES.md` | The long-form walkthrough of every capability, feature by feature. |
 
-### Tests — 516 pass with no keys and no network
+### Tests — 522 pass with no keys and no network
 
 `tests/conftest.py` sets up the import path; everything else is a suite.
 
@@ -383,6 +385,7 @@ engine never learns where its data came from.
 | `test_story.py` | The `/story` walkthrough, end to end. |
 | `test_mcp.py` | The MCP tool surface. |
 | `test_urls.py` | Deep links resolve. |
+| `test_evaluate.py` | The decision harness — that every case decides as expected, and that a permission engine which ignores the traveller's rules is actually caught. A harness that cannot fail is a decoration. |
 
 ---
 
